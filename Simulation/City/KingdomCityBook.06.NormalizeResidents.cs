@@ -5,6 +5,7 @@ namespace ThousandAndFirst.Simulation.City
 	{
 		private void NormalizeResidentColumns()
 		{
+			bool legacyResidence = SchemaVersion < 5;
 			ResidentIds = Repair(ResidentIds);
 			ResidentNames = Repair(ResidentNames);
 			ResidentOrigins = Repair(ResidentOrigins);
@@ -13,6 +14,7 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentArrivedTicks = Repair(ResidentArrivedTicks);
 			ResidentArrived = Repair(ResidentArrived);
 			ResidentHomeWorkIds = Repair(ResidentHomeWorkIds);
+			ResidentResidences = Repair(ResidentResidences);
 			ResidentJobWorkIds = Repair(ResidentJobWorkIds);
 			ResidentJobRoles = Repair(ResidentJobRoles);
 			ResidentDayShapes = Repair(ResidentDayShapes);
@@ -52,11 +54,16 @@ namespace ThousandAndFirst.Simulation.City
 				SchemaVersion = KingdomCityRules.SchemaVersion;
 			}
 			if (SchemaVersion == 3) SchemaVersion = KingdomCityRules.SchemaVersion;
-			int residents = Shortest(new int[23]
+			if (legacyResidence)
+			{
+				while (ResidentResidences.Count < ResidentIds.Count) ResidentResidences.Add("");
+				SchemaVersion = KingdomCityRules.SchemaVersion;
+			}
+			int residents = Shortest(new int[24]
 			{
 				ResidentIds.Count, ResidentNames.Count, ResidentOrigins.Count,
 				ResidentOriginCodes.Count, ResidentCreedCodes.Count, ResidentArrivedTicks.Count,
-				ResidentArrived.Count, ResidentHomeWorkIds.Count,
+				ResidentArrived.Count, ResidentHomeWorkIds.Count, ResidentResidences.Count,
 				ResidentJobWorkIds.Count, ResidentJobRoles.Count, ResidentDayShapes.Count,
 				ResidentStandings.Count, ResidentCauses.Count, ResidentBoundZoneIds.Count,
 				ResidentRoofStanding.Count, ResidentRoofTicks.Count, ResidentRoofWarnedTicks.Count,
@@ -75,6 +82,7 @@ namespace ThousandAndFirst.Simulation.City
 			Trim(ResidentArrivedTicks, residents);
 			Trim(ResidentArrived, residents);
 			Trim(ResidentHomeWorkIds, residents);
+			Trim(ResidentResidences, residents);
 			Trim(ResidentJobWorkIds, residents);
 			Trim(ResidentJobRoles, residents);
 			Trim(ResidentDayShapes, residents);

@@ -37,12 +37,16 @@ namespace ThousandAndFirst
 					|| !string.Equals(Resident.GetStringProperty(
 						KingdomLodging.HomePlotIdProperty), Receipt.SourcePlotId,
 						StringComparison.Ordinal)) return false;
-				Resident.SetStringProperty(KingdomLodging.HomePlotIdProperty, null);
+				if (!Simulation.City.KingdomResidents.TryAssignResidence(System, Z, Resident, null))
+					return Fail("The old home authority could not clear; the cause remains retryable.", out Failure);
 				if (!string.IsNullOrEmpty(Resident.GetStringProperty(
 					KingdomLodging.HomePlotIdProperty)))
 					return Fail("The exact old home did not clear; the durable cause remains retryable.",
 						out Failure);
 			}
+			if (state == KingdomLabDepartureProjection.Active
+				&& !Simulation.City.KingdomResidents.TryAssignResidence(System, Z, Resident, null))
+				return Fail("The cleared home authority could not recover.", out Failure);
 			// Idempotent on both sides of the save cut after HomePlotId clears. A reload sees
 			// an Active projection and still invalidates the derived cohabitation cache before
 			// the existing roof brink is (re)opened.

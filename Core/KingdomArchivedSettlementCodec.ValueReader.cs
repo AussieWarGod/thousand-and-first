@@ -163,6 +163,10 @@ namespace ThousandAndFirst
 			if (Type == typeof(Simulation.City.KingdomCityBook))
 			{
 				Simulation.City.KingdomCityBook city = (Simulation.City.KingdomCityBook)result;
+				if (SchemaVersion < ResidenceVersion) city.ResidentResidences = null;
+				if (SchemaVersion >= ResidenceVersion && city.SchemaVersion != Simulation.City.KingdomCityRules.SchemaVersion
+					|| !city.TryMigrateResidenceStorage())
+					throw new InvalidDataException("Archived city residence storage is invalid.");
 				if (SchemaVersion < SubsidenceStorageVersion)
 				{
 					city.SubsidenceModel = null;
@@ -170,8 +174,9 @@ namespace ThousandAndFirst
 						throw new InvalidDataException("Archived city subsidence migration has invalid provenance.");
 					if (city.SchemaVersion == 3) city.SchemaVersion = Simulation.City.KingdomCityRules.SchemaVersion;
 				}
-				else if (!city.HasValidSubsidenceStorage())
+				else if (!city.TryMigrateSubsidenceStorage())
 					throw new InvalidDataException("Archived city subsidence storage is invalid.");
+				if (city.SchemaVersion == 4) city.SchemaVersion = Simulation.City.KingdomCityRules.SchemaVersion;
 			}
 			if (Type == typeof(KingdomGrowthFirstGuestOpportunity)
 				&& !HistoricalPhysicalFirstGuestOpportunity(

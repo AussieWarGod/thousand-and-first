@@ -1,5 +1,127 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+All four engine compile modes pass across 3121 production C# sources;
+the cold-install inventory contains 3155 files. Absent-owner loss uses new `sr3` claims while
+retaining historical local-body claims. Full source suites pass; native replay remains pending.
+See [current status](docs/STATUS.md) for scoped acceptance.
+
+
+## Absent-owner home damage — native defect reproduced
+
+At `e5bac3f675b80a8ca771402010e6a8a005e83337`, a real three-person Quickstart household has
+one original citizen away on the adjacent claim. Production rung-roof capture includes only the
+two local members: absent-owner matches are zero. A controlled condemnation fault and the
+production loss callback likewise record only two people. Source-map settlement correctly
+clears the absent owner's home, but their roof brink and loss tick remain absent. Restoring the
+wear fault and returning the exact citizen lets ordinary lodging rehouse them; the final census
+still proves four housed founders, two rooms, six beds and 34 clear floor cells.
+
+Closed failed archive: `home-map-damage/e5bac3f6/native-1-fail/result.json`; SHA-256
+`d2107aa0f2a5d46ca9f3ccad03199b1482c8502a4e01d8ea3f1ec809c333a201`. All 3,478 sealed inputs/3,437 C#
+files and the exact owned stop verify. Strict log fails on the retained correctness assertion;
+this is a failed behavioral case, not acceptance. Four compile modes, 66 persona checks,
+documentation/metadata checks and CI34929011082 pass. The first persona check's diagnostic-step
+classification failure remains retained. Gameplay code is unchanged from149daf47.
+
+This probes current production roof capture and the condemnation callback on actual paid
+housing. Wear damage/restoration and map transfers are controlled setup; full ordinary
+subsidence, paid repair and damaged-home cold load remain unproved. The fix must carry durable
+map-qualified home ownership through capture, frozen-plan application and recovery, preserve
+historical `sr1`/`sr2` obligations, and record the original loss tick for absent owners. #230 stays
+open; all-building #229/#251 and Beta acceptance remain incomplete.
+
+## Save while a citizen is away — native chain passes
+
+Native `a70658a9a9f12090ac51b7ae9e963cd6b74aa49a` saves after genuine Quickstart construction
+with three original founders home and one on the adjacent claimed map. All four canonical
+home/profile records and exact body bindings match before and after cold activation. The absent
+owner's household retains its three reservations before the harness fetches the remote body.
+The exact citizen returns through the ordinary settlement pass, all four founders remain housed
+in two enclosed rooms/six beds, and a new fire pays one timber/two drams once. No home repair.
+
+Closed archive: `home-map-absent/a70658a9/native-1-pass/result.json`; SHA-256
+`6fa93561cb08933f0f9631f51da7ea0695117b36b6a4d7322a87e9cde4496b55`. Complete source/load profiles have
+3,476/3,478 sealed inputs, including 3,435 C# files each; both strict logs and owned shutdowns
+verify. All four engine compile modes, six host-oracle tests, 66 persona checks, documentation/
+metadata checks and CI 34927613292 pass. Production bytes remain unchanged from 149daf47.
+
+Internal claiming and zero-energy transfers are controlled setup. The capacity check precedes
+the harness's remote lookup; it does not establish that the engine never loaded that map itself.
+Ordinary walking/work travel, unloaded-city accounting, unique physical bed use, home damage/
+replacement while absent and historical migration remain open in #230. Source audit identifies
+absent-owner condemnation timing as the next native target. All-building quality and function
+remain #229/#251; no new Alpha or Beta acceptance is claimed.
+
+## Home-record cold load — controlled chain passes
+
+Native `5c82d435bcea89eea7bbef29e9df760e8e9b603e` completes genuine Quickstart construction,
+a same-city map visit, real save, exact owned shutdown and a fresh-process load. All four
+founders' canonical home/profile records and body bindings match before and after activation.
+The same resident then revisits the existing second claim and returns through the ordinary
+settlement pass with the same home and reserved household capacity. The loaded city commissions
+a new fire, paying one timber and two drams once. Four founders remain housed in two enclosed
+rooms with six beds and 34 clear floor cells after 8,400 ordinary turns (8,402 game turns).
+
+Closed archive: `home-map-save/5c82d435/native-3-revalidated-pass/result.json`;
+SHA-256 `3e00e5f5cf3686e9f50b7b7bddf21052a8cdfad1e3baf4deb5d361e19b9ed6d3`. Source/load profiles have 3,473/3,475 exact sealed inputs,
+including 3,432 C# files each. Both strict logs and owned shutdowns pass. Host validator
+`02cbfc926d9e560020e14ed0a8e855ce6f236104` corrects space-grouped diagnostic parsing; the
+archive proves identical runtime and Harness bytes to the native pin and lists the three
+host-test/documentation-only changes. Six oracle tests include the real field grammar.
+No game replay or saved-state repair was used to correct the host verdict.
+
+Scope: save occurs after return. Internal claiming and zero-energy transfers are disclosed
+setup. Saving while absent, ordinary walking/work travel, home damage/replacement, unloaded
+accounting, unique usable sleeping places and historical migration remain required in #230.
+This does not establish all-building or Beta acceptance; #229/#251 remain open.
+
+Retained failed attempts: `home-map-save/cafe0866/native-1-fail/` records the fixture's wrong
+fresh-generation stage on cold replay; `home-map-save/5c82d435/native-2-startup-fail/` records
+a stalled engine splash with no scenario execution; `native-3-oracle-fail/` preserves the old
+parser rejection. `native-3-revalidation-incomplete/` retains an archive attempt that refused
+stale validator metadata before recipe verification completed. None was rewritten as PASS.
+
+## Residence integration checkpoint
+
+City schema 5 / archive 20 add canonical map-qualified residence facts. Full licensed suites
+pass 15,048 main and 5,934 portable cases, zero skips. Coverage includes named-field and
+historical archive migration, unchanged older hash bases, frozen subsidence claims, mixed death
+receipts, malformed columns and duplicate live bed claims through all resident mutation paths.
+`home-map/residence-storage-20260915-2/` retains the checks and full production comparison.
+
+Four engine compile modes pass across 3119 production C# sources; the cold-install inventory contains 3153 files.
+## Controlled home-map regression passes
+
+Native `149daf472019ca2553f2ca19a26ea8ba037d87a7` completed 8,400 ordinary construction turns:
+four original founders housed, two enclosed rooms, six beds and 34 clear floor cells. During
+the controlled adjacent-map visit, occupancy remained 1→1 and the exact resident appeared once.
+Home-work ID 89973561 and the map-qualified home plot survived while the current-map binding
+changed correctly. After physical return, an ordinary settlement pass retained home/capacity.
+The fixture never repaired home state. Strict Player.log, full 3,471-input / 3,430-C# recipe and
+owned shutdown pass. Archive: `home-map/149daf47/native-live-1-pass/result.json`;
+SHA-256 `25f4b1df1fcd7444b8e5190e67017c8eee1f207bdf5ba5abae3bfe92655e2cda`.
+
+Behavioral row 32 is NATIVE_PASS for this narrow regression. Internal claim entry and zero-energy
+transfers are disclosed setup. Ordinary expansion/walking, home/work routines, unique usable
+sleeping places, unloaded accounting, changed-building recovery and cold load remain #230.
+Every building still needs architectural and functional acceptance under #229/#251.
+
+The local evidence audit verifies this new artifact and 67/76 total referenced entries. Nine
+historical archive paths are missing under this evidence root; their existing unresolved scope
+remains unchanged. This audit does not grant acceptance to missing historical evidence.
+
+## Retained multi-map home regression — prior production failure
+
+`home-map-native-check` completes real Quickstart homes, then verifies bed reservation, home
+work ID and home plot during a controlled visit to another claimed local map. Native729f2332
+observed occupancy1→0, home-work1937578638→0 and home-plot→null while the same living citizen's
+current map changed correctly. The correctness assertion fails; no production fix yet.
+
+Internal claim entry and zero-energy resident/founder transfers are disclosed. Both bodies
+return physically without repairing lost housing state. No ordinary expansion/walking,
+second paid district, unloaded population or cold-load acceptance. Full sealed inputs,
+owned shutdown and retained failed attempts are recorded in STATUS and issue #230.
+
 ## Recruitment admission and report follow-through — scoped PASS
 
 Native807a89fc proves report-policy agreement with a scoped extension catalogue/option-read probe,
@@ -75,7 +197,7 @@ still housed and defensive after 8,400 ordinary turns, two enclosed homes, six b
 floor cells. The next paid commission debits one timber/two drams. Native neutral-assault probe
 and whole-zone rendering/restoration pass. Both owned processes are stopped; 3,449 warm/3,451 cold
 inputs match exactly. Archive `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`,
-SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145789ced7f6ed`.
 The probe uses two unplaced NPCs and assigns only its own attacker Snapjaws allegiance before
 asserting neutral feeling and actual retaliation. It fabricates no city population or housing.
 This source proof is not private package delivery acceptance; broader ecology remains #237.
@@ -487,7 +609,7 @@ or current ordinary subscriber acceptance. See [stock validation](/tmp/taf-quick
 
 Strict four-mode C#7.3 compilation and compatibility ABI pass across 3045 production C# sources.
 Current census:431,086 physical lines/1414 direct-XRL imports/zero line-cap failures. Ordinary
-inputs3041/3045, developer3146/3150 with105 Harness shards. The derived cold-install inventory contains 3076 files;
+inputs3041/3045, developer3146/3153 with105 Harness shards. The derived cold-install inventory contains 3076 files;
 this staging manifest does not establish an installation or Steam subscription.
 Production SHA256`ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`,
 compiler SHA256`987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`.

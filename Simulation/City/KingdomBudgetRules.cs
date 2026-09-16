@@ -49,16 +49,13 @@ namespace ThousandAndFirst.Simulation.City
 		internal const int HeartbeatToldLinesPerSlice = 1;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0: the ceiling the three-city model in RAM
-		/// answers to. The former 256-KiB ceiling priced only two owned cities.</summary>
-		internal const long ModelBytesCeiling = 384L * 1024L;
+		/// answers to, including a maximum bounded residence record for every resident.</summary>
+		internal const long ModelBytesCeiling = 1280L * 1024L;
 
-		/// <summary>Advisory rung under the model ceiling. Repinned with the pre-release retirement
-		/// of the flat forty-work proxy: the bound now prices every City-stage plot in four zones,
-		/// and the current composed realm remains below this rung. Resident-row authority added two
-		/// shared evidence references per row. Un-deferring the third owned city makes the live
-		/// composed bound about 287 KiB, so warning/failure move to 320/384 KiB. The formula and
-		/// caps remain the contract; this is not an unbounded allowance.</summary>
-		internal const long ModelBytesWarn = 320L * 1024L;
+		/// <summary>The composed three-city bound is 1,038,614 bytes including 2048-character
+		/// residence heaps. Warning/failure are 1152/1280 KiB. The previous 320/384-KiB rungs
+		/// omitted these new durable household facts; all row and wire caps remain enforced.</summary>
+		internal const long ModelBytesWarn = 1152L * 1024L;
 
 		/// <summary>LIVING-CITY-ARCHITECTURE §3.10: jobs considered by one planning slice.</summary>
 		internal const int PlannerMaxJobs = 16;

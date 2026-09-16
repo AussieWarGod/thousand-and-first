@@ -46,7 +46,7 @@ namespace ThousandAndFirst
 					List<KingdomSubsidenceRungRoof> roofs = new List<KingdomSubsidenceRungRoof>();
 					if (KingdomLodging.Enabled && plot != "" && !KingdomLodgingRules.IsCondemned(before)
 						&& KingdomLodgingRules.IsCondemned(after)
-						&& !CaptureRungRoofs(system, owner.City, survey, plot, roofs, residents)) return false;
+						&& !CaptureRungRoofs(system, owner.City, survey, plot, KingdomCityRules.StableId(work.IDIfAssigned), roofs, residents)) return false;
 					string name = KingdomDesign.ReferenceFor(work, work.ShortDisplayName);
 					parts.Add(work.IDIfAssigned, wear);
 					works.Add(new KingdomSubsidenceRungWork(KingdomCityRules.StableId(work.IDIfAssigned),
@@ -82,11 +82,12 @@ namespace ThousandAndFirst
 					if (KingdomLodging.Enabled && work.PlotId != "" && !KingdomLodgingRules.IsCondemned(work.BeforeWear)
 						&& KingdomLodgingRules.IsCondemned(work.AfterWear)
 						&& (!owner.City.TryReadExact(out _, out _)
-							|| !CaptureRungRoofs(system, owner.City, survey, work.PlotId, currentRoofs, residents))) return false;
+							|| !CaptureRungRoofs(system, owner.City, survey, work.PlotId, work.WorkId, currentRoofs, residents))) return false;
 					if (currentRoofs.Count != work.Roofs.Count) return false;
 					for (int i = 0; i < currentRoofs.Count; i++)
 						if (currentRoofs[i].ResidentId != work.Roofs[i].ResidentId
-							|| currentRoofs[i].BodyObjectId != work.Roofs[i].BodyObjectId) return false;
+							|| currentRoofs[i].BodyObjectId != work.Roofs[i].BodyObjectId
+							|| currentRoofs[i].HomeZoneId != work.Roofs[i].HomeZoneId) return false;
 					foreach (KingdomSubsidenceRungRoof roof in work.Roofs)
 					{
 						if (!RungRoofExact(frame, work, roof, out KingdomCityBook.SubsidenceRoofRow row)
@@ -115,26 +116,5 @@ namespace ThousandAndFirst
 					&& wear.Wear >= 0 && wear.Wear <= KingdomMaterialRules.MaxWearPercent);
 		}
 
-		private static bool CaptureRungRoofs(KingdomSystem system, KingdomCityBook city,
-			KingdomSurvey survey, string plot, List<KingdomSubsidenceRungRoof> roofs,
-			Dictionary<string, GameObject> residents)
-		{
-			foreach (GameObject body in survey.CitizenBodies)
-			{
-				if (!GameObject.Validate(body) || !KingdomCitizenship.BelongsTo(system, body)
-					|| body.GetStringProperty(KingdomLodging.HomePlotIdProperty) != plot
-					|| string.IsNullOrEmpty(body.GetStringProperty("KingdomName"))) continue;
-				if (roofs.Count >= KingdomSubsidenceRungRules.MaxRoofs
-					|| string.IsNullOrEmpty(body.IDIfAssigned)
-					|| !city.TryCaptureSubsidenceRoof(KingdomResidents.IdOf(body),
-						out KingdomCityBook.SubsidenceRoofRow row)) return false;
-				if (residents.TryGetValue(body.IDIfAssigned, out GameObject prior) && !ReferenceEquals(prior, body)) return false;
-				residents[body.IDIfAssigned] = body;
-				roofs.Add(new KingdomSubsidenceRungRoof(row.ResidentId, body.IDIfAssigned,
-					row.RoofStanding, row.Reached, row.Warned, KingdomSubsidenceEffectPhase.Prepared));
-			}
-			roofs.Sort((left, right) => left.ResidentId.CompareTo(right.ResidentId));
-			return true;
-		}
 	}
 }

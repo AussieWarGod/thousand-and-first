@@ -218,8 +218,9 @@ namespace ThousandAndFirst
 					fieldValue = SchemaVersion < PhysicalHappeningVersion ? 1 : 2;
 				if (Type == typeof(Simulation.City.KingdomCityBook)
 					&& string.Equals(fields[i].Name, "SchemaVersion", StringComparison.Ordinal)
-					&& SchemaVersion < SubsidenceStorageVersion)
-					fieldValue = SchemaVersion < SemanticSelectionVersion ? 2 : 3;
+					&& SchemaVersion < ResidenceVersion)
+					fieldValue = SchemaVersion < SemanticSelectionVersion ? 2
+						: SchemaVersion < SubsidenceStorageVersion ? 3 : 4;
 				if (Type == typeof(KingdomGrowthBook)
 					&& string.Equals(fields[i].Name, "FormatVersion", StringComparison.Ordinal)
 					&& SchemaVersion < PhysicalFirstGuestVersion)

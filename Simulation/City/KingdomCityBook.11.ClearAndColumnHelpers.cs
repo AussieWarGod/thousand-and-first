@@ -43,6 +43,7 @@ namespace ThousandAndFirst.Simulation.City
 			ResidentArrivedTicks.Clear();
 			ResidentArrived.Clear();
 			ResidentHomeWorkIds.Clear();
+			ResidentResidences.Clear();
 			ResidentJobWorkIds.Clear();
 			ResidentJobRoles.Clear();
 			ResidentDayShapes.Clear();

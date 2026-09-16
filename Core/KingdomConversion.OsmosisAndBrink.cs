@@ -41,7 +41,7 @@ namespace ThousandAndFirst
 				// stretch is spent and buys nothing at all.
 				return;
 			}
-			string plotId = Resident.GetStringProperty(KingdomLodging.HomePlotIdProperty);
+			string plotId = KingdomLodging.LocalHomePlot(Z, Resident);
 			List<GameObject> household;
 			if (string.IsNullOrEmpty(plotId) || !Roofs.TryGetValue(plotId, out household) || household.Count < 2)
 			{
