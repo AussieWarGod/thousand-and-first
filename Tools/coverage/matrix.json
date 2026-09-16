@@ -30,7 +30,7 @@
           "scope": "Production founding transaction (found-first-city persona) on a fresh marsh camp, seed #176323182: stagedigest founded=false -> realize (production KingdomScenarioRealizer.foundfirstcity, claimedzones=1, stage=Camp) -> stagedigest founded=true, stage=Camp -> resourcedigest -> status. Terminal SCRIPT-COMPLETE, 15 journal rows, persona_matrix.py assert passed, strict Player.log check passed, owned process stopped and profile record sealed. No advance/growth, no negative path, no save/cold-load; this proves only the founding transaction itself.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
@@ -516,7 +516,7 @@
           "scope": "subsidence-native-checks persona on founding-first-city, seed #140300876: stagedigest founded=false -> subsidence-check (native-subsidence cases=8 passed=8 failed=0: physical-city-fixture, partial-one-of-five, remaining-four-summary-interruption, same-tick-summary-recovery, same-tick-no-replay, synthetic-terminal-chronicle-loss, synthetic-empty-ledger-reset-aba, synthetic-unseen-homecoming-news, all PASS) -> stagedigest founded=true, stage=City -> SCRIPT-COMPLETE. persona_matrix.py assert returned 'expectations met'. Real founding and 50 physical residents; seeded elapsed checkpoint (not simulated world turns). Retains created realm and effects. Does not sign ordinary subsidence under real world-turn advance, interrupted carriers, ruin, or save/load.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
@@ -541,7 +541,7 @@
           "scope": "lifecycle-founding-road-refusal persona on founding-first-city, seed #640920938. Documents the honest bounded refusal of construction-lifecycle-open on the ordinary founding road (row 20): five chunked 100-turn open-wait readings each report 'this settlement has no dedicated stockpile to pay from', then lifecycle-open REFUSED at chunk 5/5 (500 ordinary turns exhausted) with verbatim reading 'native-lifecycle refused at lifecycle-open: no dedicated stockpile appeared within 500 ordinary engine turns of waiting; last reading: this settlement has no dedicated stockpile to pay from', then SCRIPT-STOPPED at verb 13 of 18. This is the documented, intended terminal for this persona (ordinary founding realize places no camp kit and dedicates no stockpile; dedication is a founder-interactive act no sealed script drives) -- proof the wait was genuinely exhausted, not skipped. lifecycle-build/lifecycle-grown/lifecycle-save/final stagedigest were never reached, by design.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
