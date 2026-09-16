@@ -93,6 +93,7 @@ namespace ThousandAndFirst.Simulation.City
 				ResidentArrivedTicks.Add(row.ArrivedTick);
 				ResidentArrived.Add(row.Arrived ?? "");
 				ResidentHomeWorkIds.Add(row.HomeWorkId);
+				ResidentResidences.Add(row.Residence ?? "");
 				ResidentJobWorkIds.Add(row.JobWorkId);
 				ResidentJobRoles.Add(row.JobRole);
 				ResidentDayShapes.Add((int)row.DayShape);

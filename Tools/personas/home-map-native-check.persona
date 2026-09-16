@@ -1,0 +1,9 @@
+# Paid Quickstart homes; internal same-city claim and zero-energy resident transfer are synthetic setup.
+# Correctness assertions must fail if a visit frees the bed or clears home identity. Not ordinary travel acceptance.
+DESCRIPTION=Retain a real founder's home and reserved bed while visiting another local map of the same city
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle marsh yes;lifecycle-open;advance 8400;home-map-native;stagedigest
+VERBS=lifecycle-open,home-map-native
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,lifecycle-open:OK,advance:OK,home-map-native:OK~cases=1 passed=1 failed=0,stagedigest:OK,COMPLETE
+SET=growth,native-regression
+TIMEOUT=1800

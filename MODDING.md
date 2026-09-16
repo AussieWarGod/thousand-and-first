@@ -1896,6 +1896,14 @@ records as `ss5`, which embeds frozen option, slide-batch, rung-report, failed-r
 retains owed reporting instead of inventing delivery proof. `ss1:new` and `ss1:legacy` remain
 explicit unadmitted markers; empty or malformed current state is not either marker. These are
 private recovery records, not extension APIs: third-party mods must not author or replace them.
+New roof-loss claims use `sr3` with an explicit home map, the frozen work/plot identity, and
+an exact resident/body binding. They can retain an absent owner's loss at the original due tick
+without loading the remote map; any available body must still match its binding. Historical
+`sr1`/`sr2` claims keep their original local-body obligations and wire interpretation. Publication
+compares the exact residence value and list carrier as well as the existing owner/roof fields.
+Observing a missing home retains an existing loss/warning timestamp; a newly observed loss is
+unwarned and starts no departure deadline. These are private recovery records. Native damage,
+interrupted application and cold-load acceptance for this change remain pending.
 The `sa1` announcement record retains a per-city monotone transition ordinal, frozen text/tick,
 flag proof and queue-attempt phase. Returned means the call returned, not that the player saw it.
 Interrupted intent is retained for Homecoming acknowledgement, never blindly replayed.

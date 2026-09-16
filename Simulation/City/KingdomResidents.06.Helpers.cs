@@ -21,12 +21,6 @@ namespace ThousandAndFirst.Simulation.City
 			string zoneId, Dictionary<string, int> homes, long TimeTicks, string Origin = null,
 			string Arrived = null)
 		{
-			int homeWorkId = 0;
-			string plotId = settler.GetStringProperty(KingdomLodging.HomePlotIdProperty);
-			if (!string.IsNullOrEmpty(plotId) && homes != null)
-			{
-				homes.TryGetValue(plotId, out homeWorkId);
-			}
 			string origin = Origin ?? settler.GetStringProperty("KingdomOrigin") ?? "";
 			int originCode = KingdomResidentRules.OriginCode(origin);
 			int creedCode = KingdomCityRules.StableId(settler.GetStringProperty(KingdomCreed.CreedProperty));
@@ -46,20 +40,20 @@ namespace ThousandAndFirst.Simulation.City
 			KingdomResidentRow existing;
 			if (state.TryResidentIndex(id, out index) && state.TryResident(index, out existing))
 			{
-				return existing
+				return ReadResidence(state, existing
 					.WithReading(NameOf(settler, existing.Name), origin, originCode, creedCode,
-						homeWorkId, jobWorkId, 0, dayShape)
+						existing.HomeWorkId, jobWorkId, 0, dayShape)
 					.WithKeptCreeds(keptCreeds)
 					.WithBoundZone(zoneId)
 					.WithStanding(existing.Standing == KingdomResidentStanding.Expedition
 						? KingdomResidentStanding.Expedition : KingdomResidentStanding.Resident,
-						KingdomStandingCause.None);
+						KingdomStandingCause.None), settler, zoneId, homes);
 			}
-			return new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
-				(TimeTicks > 0L) ? TimeTicks : 0L, homeWorkId, jobWorkId, 0, dayShape,
+			return ReadResidence(state, new KingdomResidentRow(id, NameOf(settler, null), originCode, creedCode,
+				(TimeTicks > 0L) ? TimeTicks : 0L, 0, jobWorkId, 0, dayShape,
 				KingdomResidentStanding.Resident, KingdomStandingCause.None, zoneId,
 				KingdomBrinkWindow.None, KingdomBrinkWindow.None, null, 0, keptCreeds, origin,
-				string.IsNullOrEmpty(Arrived) ? DateAt(TimeTicks) : Arrived);
+				string.IsNullOrEmpty(Arrived) ? DateAt(TimeTicks) : Arrived), settler, zoneId, homes);
 		}
 
 		private static string DateAt(long Tick)

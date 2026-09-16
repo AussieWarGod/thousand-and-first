@@ -271,6 +271,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(book.TryPublish(Peopled(), out fault), fault.ToString());
 			book.ResidentIds.Add(11);
 			book.ResidentNames.Add("Nobody");
+			book.ResidentResidences.Add("");
 			bool stands;
 			long reached;
 			long warned;

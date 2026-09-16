@@ -56,21 +56,12 @@ namespace ThousandAndFirst
 		// Returns the occupancy map it settled on, or null when the module has nothing to do here.
 		// RunBrink is false for the arrival gate, which asks the same question without charging
 		// anybody a pass of the grace Addendum 4b gives them.
-		private static Dictionary<string, List<GameObject>> Settle(KingdomSystem System, Zone Z,
+		private static Dictionary<string, List<HouseholdMember>> Settle(KingdomSystem System, Zone Z,
 			bool RunBrink, KingdomSurvey Survey = null)
 		{
 			if (!Enabled || System == null || !System.Founded || Z == null)
 			{
 				return null;
-			}
-			List<GameObject> residents = ResidentsIn(Z);
-			if (residents.Count == 0)
-			{
-				// Nobody to settle, and an EMPTY map rather than none at all: a settlement with no
-				// citizens standing in it still has housing, or has none, and the arrival gate has
-				// to be able to tell those two apart. A camp with no roof yet takes nobody, which
-				// is the rule that shipped before this module and is unchanged by it.
-				return new Dictionary<string, List<GameObject>>();
 			}
 			if (!TryBenefitIndex(Z, Survey, out KingdomBenefitIndex benefits,
 				out string failure))
@@ -79,50 +70,31 @@ namespace ThousandAndFirst
 				return null;
 			}
 			List<GameObject> homes = HousingIn(Z, benefits);
-			Dictionary<string, GameObject> homeByPlot = new Dictionary<string, GameObject>();
-			for (int i = 0; i < homes.Count; i++)
+			var standing = new List<GameObject>();
+			foreach (GameObject home in homes) if (!IsCondemned(home)) standing.Add(home);
+			if (!Simulation.City.KingdomResidents.TryReconcileHomes(System, Z, standing)) return null;
+			var occupancy = ReadHouseholds(Z, homes, out List<GameObject> unassigned);
+			if (occupancy == null) return null;
+			foreach (GameObject resident in ResidentsIn(Z))
 			{
-				string plotId = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
-				if (!string.IsNullOrEmpty(plotId) && !homeByPlot.ContainsKey(plotId))
-				{
-					homeByPlot[plotId] = homes[i];
-				}
+				string plot = AssignedPlot(occupancy, resident);
+				if (plot == null) continue;
+				GameObject home = standing.Find(item => item.GetStringProperty(KingdomPlots.PlotIdProperty) == plot);
+				if (home == null || !Simulation.City.KingdomResidents.TryAssignResidence(System, Z, resident, home))
+					return null;
 			}
-			Dictionary<string, List<GameObject>> occupancy = new Dictionary<string, List<GameObject>>();
-			List<GameObject> unassigned = new List<GameObject>();
-			for (int i = 0; i < residents.Count; i++)
+			foreach (GameObject resident in unassigned)
 			{
-				GameObject resident = residents[i];
-				string plotId = resident.GetStringProperty(HomePlotIdProperty);
-				if (!string.IsNullOrEmpty(plotId) && homeByPlot.TryGetValue(plotId,
-					out GameObject assignedHome) && !IsCondemned(assignedHome))
-				{
-					AddOccupant(occupancy, plotId, resident);
-					continue;
-				}
-				if (!string.IsNullOrEmpty(plotId))
-				{
-					// The plot they were assigned to is gone (struck, or never built after a
-					// save from an older version). Something changed, so the stale pointer is
-					// cleared rather than left dangling, and they are reconsidered below exactly
-					// like a resident who never had a home.
-					resident.SetStringProperty(HomePlotIdProperty, null);
-					// Whoever they were living beside, they are not living beside them now, so
-					// the cohabitation clock osmosis reads restarts here rather than crediting a
-					// household that has stopped existing.
-					KingdomConversion.ForgetCohabitation(resident);
-				}
-				unassigned.Add(resident);
-			}
-			for (int i = 0; i < unassigned.Count; i++)
-			{
-				AssignOne(System, Z, unassigned[i], homes, occupancy, benefits, RunBrink);
+				bool hadHome = !string.IsNullOrEmpty(resident.GetStringProperty(HomePlotIdProperty));
+				if (!Simulation.City.KingdomResidents.TryAssignResidence(System, Z, resident, null)) return null;
+				if (hadHome) KingdomConversion.ForgetCohabitation(resident);
+				AssignOne(System, Z, resident, homes, occupancy, benefits, RunBrink);
 			}
 			return occupancy;
 		}
 
 		private static void AssignOne(KingdomSystem System, Zone Z, GameObject Resident,
-			List<GameObject> Homes, Dictionary<string, List<GameObject>> Occupancy,
+			List<GameObject> Homes, Dictionary<string, List<HouseholdMember>> Occupancy,
 			KingdomBenefitIndex Benefits, bool RunBrink)
 		{
 			GameObject winningHome;
@@ -141,7 +113,7 @@ namespace ThousandAndFirst
 				}
 				return;
 			}
-			Resident.SetStringProperty(HomePlotIdProperty, winningPlotId);
+			if (!Simulation.City.KingdomResidents.TryAssignResidence(System, Z, Resident, winningHome)) return;
 			// A new roof is a new household, so the cohabitation clock starts from tonight. They
 			// do not inherit the days they spent under somebody else's roof, or outside.
 			KingdomConversion.ForgetCohabitation(Resident);
@@ -183,7 +155,7 @@ namespace ThousandAndFirst
 		/// roof without turning it into a hard vacancy lock; the durable legendary-trader marker
 		/// retains the prior generic choice law. All mutation remains in <see cref="AssignOne"/>.</summary>
 		private static string ChooseHome(Zone Z, GameObject Resident, List<GameObject> Homes,
-			Dictionary<string, List<GameObject>> Occupancy, KingdomBenefitIndex Benefits,
+			Dictionary<string, List<HouseholdMember>> Occupancy, KingdomBenefitIndex Benefits,
 			out GameObject WinningHome,
 			out KingdomLodgingRules.UnhousedReason Reason,
 			out KingdomLodgingRules.Closeness RoomiestRefused, out List<string> Needs)
@@ -226,7 +198,7 @@ namespace ThousandAndFirst
 						QuartersOf(home, Benefits));
 					continue;
 				}
-				List<GameObject> occupants;
+				List<HouseholdMember> occupants;
 				Occupancy.TryGetValue(plotId, out occupants);
 				int occupantCount = occupants == null ? 0 : occupants.Count;
 				if (!KingdomLodgingRules.HasFreeBed(capacity, occupantCount)) continue;

@@ -13,7 +13,7 @@ namespace ThousandAndFirst.Tests
 		public void FreshBookHasExplicitVersionedUnadmittedStorage()
 		{
 			KingdomCityBook city = new KingdomCityBook();
-			ClassicAssert.AreEqual(4, city.SchemaVersion);
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, city.SchemaVersion);
 			ClassicAssert.AreEqual(KingdomSubsidenceStepCodec.FreshWire, city.SubsidenceModel);
 			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 		}
@@ -31,7 +31,7 @@ namespace ThousandAndFirst.Tests
 				city.SchemaVersion = schema;
 				city.ProcessedThroughTick = 777L;
 			});
-			ClassicAssert.AreEqual(4, city.SchemaVersion);
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, city.SchemaVersion);
 			ClassicAssert.AreEqual(KingdomSubsidenceStepCodec.LegacyWire, city.SubsidenceModel);
 			ClassicAssert.AreEqual(777L, city.ProcessedThroughTick);
 			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("ss1:new")]
 		[TestCase("ss1:legacy")]
-		public void CurrentNamedReadPreservesExplicitRecord(string wire)
+		public void Version4NamedReadPreservesExplicitRecord(string wire)
 		{
 			KingdomCityBook city = new KingdomCityBook();
 			city.ReadNamedState(() => { city.SchemaVersion = 4; city.SubsidenceModel = wire; });
@@ -67,7 +67,7 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase(-1)]
 		[TestCase(0)]
-		[TestCase(5)]
+		[TestCase(KingdomCityRules.SchemaVersion + 1)]
 		public void MissingOrUnknownNamedSchemaCannotAuthorizeLegacyAdmission(int schema)
 		{
 			KingdomCityBook city = new KingdomCityBook();

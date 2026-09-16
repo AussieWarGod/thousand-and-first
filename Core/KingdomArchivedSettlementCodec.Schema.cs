@@ -79,6 +79,9 @@ namespace ThousandAndFirst
 		/// rather than interpreting new default fields.</summary>
 		private static bool SchemaField(Type Type, string Name, int SchemaVersion)
 		{
+			if (SchemaVersion < ResidenceVersion
+				&& Type == typeof(Simulation.City.KingdomCityBook)
+				&& string.Equals(Name, "ResidentResidences", StringComparison.Ordinal)) return false;
 			if (SchemaVersion < SubsidenceStorageVersion
 				&& Type == typeof(Simulation.City.KingdomCityBook)
 				&& string.Equals(Name, "SubsidenceModel", StringComparison.Ordinal)) return false;
