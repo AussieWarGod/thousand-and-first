@@ -111,7 +111,7 @@ namespace ThousandAndFirst.Simulation.City
 					(byte)ResidentCreedChannels[i],
 					ResidentKeptCreeds[i],
 					ResidentOrigins[i],
-					ResidentArrived[i]);
+					ResidentArrived[i], ResidentResidences[i]);
 			}
 			KingdomClockRow[] clocks = new KingdomClockRow[ClockKinds.Count];
 			for (int i = 0; i < clocks.Length; i++)
@@ -183,7 +183,8 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			for (int i = 0; i < ResidentIds.Count; i++)
 			{
-				if (!Within(ResidentJobRoles[i], byte.MinValue, byte.MaxValue)
+				if (!ValidResidence(ResidentResidences[i])
+					|| !Within(ResidentJobRoles[i], byte.MinValue, byte.MaxValue)
 					|| !DefinedIn(typeof(KingdomDayShape), ResidentDayShapes[i])
 					|| !DefinedIn(typeof(KingdomResidentStanding), ResidentStandings[i])
 					|| !DefinedIn(typeof(KingdomStandingCause), ResidentCauses[i])

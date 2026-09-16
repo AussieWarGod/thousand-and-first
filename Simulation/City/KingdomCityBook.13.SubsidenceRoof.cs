@@ -9,17 +9,18 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			internal readonly KingdomCityBook City;
 			internal readonly int ResidentId, HomeWorkId, Standing;
-			internal readonly string ZoneId, SettlementId;
+			internal readonly string ZoneId, SettlementId, Residence;
 			internal readonly bool RoofStanding;
 			internal readonly long Reached, Warned;
 			internal readonly List<int> Ids, Homes, Standings, Roofs;
-			internal readonly List<string> Zones;
+			internal readonly List<string> Zones, Residences;
 			internal readonly List<long> ReachedTicks, WarnedTicks;
 			internal SubsidenceRoofRow(KingdomCityBook city, int index)
 			{
 				City = city; SettlementId = city.SettlementId;
 				ResidentId = city.ResidentIds[index]; HomeWorkId = city.ResidentHomeWorkIds[index];
 				Standing = city.ResidentStandings[index]; ZoneId = city.ResidentBoundZoneIds[index];
+				Residence = city.ResidentResidences[index]; Residences = city.ResidentResidences;
 				RoofStanding = city.ResidentRoofStanding[index] != 0;
 				Reached = city.ResidentRoofTicks[index]; Warned = city.ResidentRoofWarnedTicks[index];
 				Ids = city.ResidentIds; Homes = city.ResidentHomeWorkIds; Standings = city.ResidentStandings;
@@ -32,6 +33,7 @@ namespace ThousandAndFirst.Simulation.City
 				return other != null && ReferenceEquals(City, other.City) && SettlementId == other.SettlementId
 					&& ResidentId == other.ResidentId
 					&& HomeWorkId == other.HomeWorkId && Standing == other.Standing && ZoneId == other.ZoneId
+					&& Residence == other.Residence && ReferenceEquals(Residences, other.Residences)
 					&& ReferenceEquals(Ids, other.Ids) && ReferenceEquals(Homes, other.Homes)
 					&& ReferenceEquals(Standings, other.Standings) && ReferenceEquals(Roofs, other.Roofs)
 					&& ReferenceEquals(Zones, other.Zones) && ReferenceEquals(ReachedTicks, other.ReachedTicks)
@@ -63,7 +65,7 @@ namespace ThousandAndFirst.Simulation.City
 				|| prior.Reached != current.Reached || prior.Warned != current.Warned
 				|| !KingdomSubsidenceRungRules.AdmitsRoofWrite(stepWire, prior.ResidentId,
 					prior.HomeWorkId, prior.ZoneId, prior.Standing, prior.RoofStanding,
-					prior.Reached, prior.Warned, stands, reached, warned)
+					prior.Reached, prior.Warned, stands, reached, warned, prior.Residence)
 				|| !TryResidentRow(prior.ResidentId, out int index)) return false;
 			ResidentRoofStanding[index] = stands ? 1 : 0;
 			ResidentRoofTicks[index] = reached;

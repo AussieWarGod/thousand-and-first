@@ -11,7 +11,7 @@ using RoofRow = ThousandAndFirst.Simulation.City.KingdomCityBook.SubsidenceRoofR
 namespace ThousandAndFirst.Tests
 {
 	// Executes real carrier storage. Parent effect proofs supply model premises, not native custody evidence.
-	public sealed class KingdomSubsidenceRoofCarrierTests
+	public sealed partial class KingdomSubsidenceRoofCarrierTests
 	{
 		[TestCase("ss1:new")] [TestCase("ss1:legacy")]
 		public void ExplicitUnadmittedStorageCanBeCapturedButCannotAuthorizeRoofPublication(string wire)
@@ -169,7 +169,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase("ids")] [TestCase("homes")] [TestCase("standings")] [TestCase("zones")]
-		[TestCase("roofs")] [TestCase("reached")] [TestCase("warned")]
+		[TestCase("roofs")] [TestCase("reached")] [TestCase("warned")] [TestCase("residences")]
 		public void EqualReplacementListsDoNotSatisfyRawCarrierCompareAndSwap(string column)
 		{
 			KingdomCityBook city = Bound("roof-intent");
@@ -177,6 +177,7 @@ namespace ThousandAndFirst.Tests
 			switch (column)
 			{
 				case "ids": city.ResidentIds = new List<int>(city.ResidentIds); break;
+				case "residences": city.ResidentResidences = new List<string>(city.ResidentResidences); break;
 				case "homes": city.ResidentHomeWorkIds = new List<int>(city.ResidentHomeWorkIds); break;
 				case "standings": city.ResidentStandings = new List<int>(city.ResidentStandings); break;
 				case "zones": city.ResidentBoundZoneIds = new List<string>(city.ResidentBoundZoneIds); break;
@@ -268,12 +269,14 @@ namespace ThousandAndFirst.Tests
 			city.SubsidenceModel = Wire(Parent(phase, standing));
 			return city;
 		}
-		private static KingdomSubsidenceStepBook Parent(string phase, bool standing = false)
+		private static KingdomSubsidenceStepBook Parent(string phase, bool standing = false, bool homeAuthority = false)
 		{
 			KingdomSubsidenceStepBook book = RungFixture.Settling(false);
 			if (phase == "unplanned") return book;
 			KingdomSubsidenceRungWork work = RungFixture.Work(roofs: new[] {
-				RungFixture.Roof(11, standing), RungFixture.Roof(12) });
+				homeAuthority ? new KingdomSubsidenceRungRoof(11, "roof-body-11", standing,
+					standing ? RungFixture.Due + 10 : 0, standing ? RungFixture.Due + 20 : 0,
+					KingdomSubsidenceEffectPhase.Prepared, RungFixture.Zone) : RungFixture.Roof(11, standing), RungFixture.Roof(12) });
 			KingdomSubsidenceRungPlan plan = new KingdomSubsidenceRungPlan(book.Active.Id,
 				book.RealmId, book.SettlementId, RungFixture.Zone, GrowthStage.City, GrowthStage.Town,
 				book.Active.DueTick, RungFixture.Prepared, book.Active.Completed, new[] { work });

@@ -39,6 +39,7 @@ namespace ThousandAndFirst
 					if (roof == null || roof.ResidentId <= lastResident
 						|| !residents.Add(roof.ResidentId) || !bodies.Add(roof.BodyObjectId)
 						|| !Text(roof.BodyObjectId, 512, false) || !Phase(roof.Phase)
+						|| roof.HomeZoneId != null && roof.HomeZoneId != plan.ZoneId
 						|| roof.BeforeReached < 0 || roof.BeforeWarned < 0
 						|| !roof.BeforeStanding && (roof.BeforeReached != 0 || roof.BeforeWarned != 0)
 						|| roof.BeforeReached > plan.PreparedTick || roof.BeforeWarned > plan.PreparedTick

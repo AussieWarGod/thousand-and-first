@@ -40,6 +40,32 @@ namespace ThousandAndFirst.Tests
 			payload.Unchanged(source);
 		}
 
+		[TestCase("prepared")] [TestCase("roof-intent")] [TestCase("roof-proved")]
+		[TestCase("quarantined")]
+		public void Version4FrozenLoadAddsOnlyUnknownResidenceAndKeepsTheExactPendingRung(string phase)
+		{
+			KingdomCityBook source = Frozen(phase, true);
+			NamedPayload payload = new NamedPayload(source);
+			var loaded = new KingdomCityBook();
+			loaded.ReadNamedState(() =>
+			{
+				payload.ReadInto(loaded);
+				loaded.SchemaVersion = 4;
+				loaded.ResidentResidences = null;
+			});
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, loaded.SchemaVersion);
+			ClassicAssert.IsTrue(loaded.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(loaded.TryReadExact(out var state, out _));
+			ClassicAssert.AreEqual(2, state.ResidentCount);
+			CollectionAssert.AreEqual(new[] { "", "" }, loaded.ResidentResidences);
+			foreach (FieldInfo field in typeof(KingdomCityBook).GetFields(BindingFlags.Public | BindingFlags.Instance))
+			{
+				if (field.Name == "SchemaVersion" || field.Name == "ResidentResidences") continue;
+				ClassicAssert.AreEqual(field.GetValue(source), field.GetValue(loaded), field.Name);
+			}
+			payload.Unchanged(source);
+		}
+
 		[TestCase(false)] [TestCase(true)]
 		public void RepeatedLiveNormalizationPreservesHealthyFrozenAuthorityWithoutWholeBookPublication(bool standing)
 		{
@@ -198,7 +224,7 @@ namespace ThousandAndFirst.Tests
 				case "negative-clock": city.ProcessedThroughTick = -1; break;
 				case "foreign-owner": city.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('d', 64); break;
 				case "old-schema": city.SchemaVersion = 3; break;
-				case "future-schema": city.SchemaVersion = 5; break;
+				case "future-schema": city.SchemaVersion = KingdomCityRules.SchemaVersion + 1; break;
 				case "missing-wire": city.SubsidenceModel = null; break;
 				case "empty-wire": city.SubsidenceModel = ""; break;
 				case "malformed-wire": city.SubsidenceModel = "not-a-subsidence-record"; break;
