@@ -205,7 +205,8 @@ namespace ThousandAndFirst
 				});
 				return false;
 			}
-			Dictionary<string, List<GameObject>> occupancy = ProjectedOccupancy(Z, benefits);
+			Dictionary<string, List<HouseholdMember>> occupancy = ProjectedOccupancy(Z, benefits);
+			if (occupancy == null) return RefuseResidenceObservation(Z, out Reason, out ObservationHash);
 			QolProfile profile = KingdomQol.ProfileOf(Newcomer);
 			List<string> needs = new List<string>(profile.Needs);
 			List<string> refuses = new List<string>(profile.Refuses);
@@ -246,7 +247,7 @@ namespace ThousandAndFirst
 					}));
 					continue;
 				}
-				List<GameObject> occupants;
+				List<HouseholdMember> occupants;
 				occupancy.TryGetValue(plotId, out occupants);
 				List<string> occupantEvidence;
 				KingdomLodgingRules.Closeness quarters = KingdomFaith.EducatedCloseness(

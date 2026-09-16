@@ -53,6 +53,10 @@ BOOKKEEPING = frozenset(
         "yield-frames-complete",
         "travel-out-complete",
         "travel-return-complete",
+        # The away walker's egress plan off the surveyed heart ground (Harness/KingdomScenarioTravel.cs
+        # PlanEgress): the rite ground is a camp open only to the south, so the founder steps
+        # south before the westward row and north again on return. Wiring, never a scripted verb.
+        "travel-egress",
         # Written once per quickstart-lifecycle boot, right after QUICKSTART-BOOT-BEGIN
         # (Harness/KingdomQuickstartLifecycleRunnerPatch.cs), never for quickstart-boot/-save/
         # -build. It describes the runner's OWN wiring for this run, not a verb the script asked
@@ -603,7 +607,7 @@ def significant(rows: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
     # These bounded observations do not occupy scripted EXPECT positions. A failed
     # observation remains significant, so diagnosis cannot silently lose evidence.
     diagnostics = {"TESTGROUND-CENSUS", "camp-resident-movement", "camp-vortex-origin",
-                   "camp-heart-chain-removal"}
+                   "camp-heart-chain-removal", "home-map-damage-observation"}
     return [row for row in rows if row[0] not in BOOKKEEPING
             and not (row[0] in diagnostics and row[1] == "OK")]
 
@@ -671,6 +675,40 @@ def status_digest_stable(rows: list[tuple[str, str, str]]) -> list[str]:
     return []
 
 
+def home_damage(rows: list[tuple[str, str, str]]) -> list[str]:
+    """Require the detailed native witness as well as its successful dispatch row."""
+    observed = [(i, row) for i, row in enumerate(rows) if row[0] == "home-map-damage-observation"]
+    completed = [(i, row) for i, row in enumerate(rows) if row[0] == "home-map-damage-native"]
+    if not observed and not completed:
+        return []
+    if len(observed) != 1 or len(completed) != 1:
+        return ["home damage requires exactly one observation and one completed verb"]
+    at, detail = observed[0]
+    end, result = completed[0]
+    if at >= end or detail[1] != "OK" or result[1] != "OK":
+        return ["home damage observation must succeed before its successful verb"]
+    fields: dict[str, str] = {}
+    for item in detail[2].split("; "):
+        key, separator, value = item.partition("=")
+        if not separator or key in fields:
+            return ["home damage observation has malformed or duplicate fields"]
+        fields[key] = value
+    expected = {"captured": "3", "absent-owner-matches": "1", "recorded": "3",
+                "absent-brink": "true", "home-cleared": "true", "chronology-retained": "true",
+                "ordinary-rehousing": "true", "synthetic-damage": "true", "synthetic-repair": "true",
+                "synthetic-housing": "false", "paid-repair": "false"}
+    if set(fields) != set(expected) | {"resident", "body", "due"} or any(
+            fields.get(key) != value for key, value in expected.items()):
+        return ["home damage observation is incomplete or does not prove the required recovery"]
+    if (not re.fullmatch(r"[1-9][0-9]*", fields["resident"])
+            or not re.fullmatch(r"0|[1-9][0-9]*", fields["due"])
+            or not fields["body"] or len(fields["body"]) > 512):
+        return ["home damage observation has invalid owner or loss tick"]
+    if result[2] != "native-home-damage cases=1 passed=1 failed=0; " + detail[2]:
+        return ["home damage detailed observation and completed result disagree"]
+    return []
+
+
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
     if manifest.get("RELOAD"):
         return [
@@ -679,6 +717,7 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
+    problems.extend(home_damage(read_journal(journal)))
     if manifest.get("CHECK") == "quickstart-housing":
         spec = importlib.util.spec_from_file_location(
             "taf_persona_housing", os.path.join(os.path.dirname(__file__), "persona_housing.py"))

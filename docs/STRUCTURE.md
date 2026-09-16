@@ -1,8 +1,16 @@
 # Structural release contract
 
-## Unreleased recruitment census
+## Absent-owner roof-loss checkpoint
 
-3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
+3121 staged production C# files; 441,757 physical lines; 1459 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `1b3b64a48e2ed33bcb65389e91bfa3c1b6d7f577156327667903f709cd987451`.
+[Automated delta review](STRUCTURE_REVIEW_HOME_LOSS.md) covers canonical home ownership,
+legacy claim preservation, guarded roof publication and observed home loss. Native replay
+remains pending; architectural and functional Beta requirements remain open in #229/#251.
+
+## Earlier recruitment census
+
+3112 staged production C# files; 441,029 physical lines; 1457 files with direct `XRL` imports;
 zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
 Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
 builder replace independent recruit draws. No saved fields change; new body profiles are ordinary

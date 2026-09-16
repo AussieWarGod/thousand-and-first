@@ -79,15 +79,16 @@ namespace ThousandAndFirst
 	internal sealed class KingdomSubsidenceRungRoof
 	{
 		internal readonly int ResidentId;
-		internal readonly string BodyObjectId;
+		internal readonly string BodyObjectId, HomeZoneId;
 		internal readonly bool BeforeStanding;
 		internal readonly long BeforeReached, BeforeWarned;
 		internal readonly KingdomSubsidenceEffectPhase Phase;
 
 		internal KingdomSubsidenceRungRoof(int residentId, string bodyObjectId,
 			bool beforeStanding, long beforeReached, long beforeWarned,
-			KingdomSubsidenceEffectPhase phase)
+			KingdomSubsidenceEffectPhase phase, string homeZoneId = null)
 		{
+			HomeZoneId = homeZoneId;
 			ResidentId = residentId; BodyObjectId = bodyObjectId; BeforeStanding = beforeStanding;
 			BeforeReached = beforeReached; BeforeWarned = beforeWarned; Phase = phase;
 		}
@@ -95,7 +96,7 @@ namespace ThousandAndFirst
 		internal KingdomSubsidenceRungRoof With(KingdomSubsidenceEffectPhase phase)
 		{
 			return new KingdomSubsidenceRungRoof(ResidentId, BodyObjectId,
-				BeforeStanding, BeforeReached, BeforeWarned, phase);
+				BeforeStanding, BeforeReached, BeforeWarned, phase, HomeZoneId);
 		}
 	}
 }

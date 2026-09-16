@@ -195,6 +195,73 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.Less(Read(paths[i]).Split('\n').Length, 300, paths[i]);
 		}
 
+		[Test]
+		public void RemovalProofNamesTheFirstFailedIdentityPredicateAndLogsEveryRefusal()
+		{
+			// Issue #212: HandOver at f93450c5 entered InspectionRequired with the shared
+			// sentence and nothing in Player.log said which identity field had changed. The
+			// proof now walks the same predicates in the same short-circuit order, names the
+			// first failure, and every refusal is logged once with job, phase and identities.
+			string proof = Read("Growth/KingdomScaffold.RemovalProof.cs");
+			string commit = Between(proof, "public static bool TryCommitScaffoldRemovalProof(",
+				"private static string IdentityRefusal(");
+			AssertOrdered(commit,
+				"IdentityRefusal(System, Z, cell, Successor, Blueprint, ScaffoldId,",
+				"if (refused != null)",
+				"KingdomConstructionRules.ScaffoldRemovalIdentityRefusal(refused)",
+				"Scaffold absence is not globally exact.",
+				"A renamed, moved, or duplicate scaffold still carries the receipt.",
+				"Scaffold-removal proof carries foreign or opposite-typed evidence.",
+				"Scaffold-removal proof changed during registry reproof.");
+			ClassicAssert.AreEqual(5, Count(commit, "return Refuse(Job, ScaffoldId, Successor,"),
+				"every refusal of the proof is named in the log");
+			StringAssert.DoesNotContain("return Fail(", commit);
+			StringAssert.DoesNotContain(
+				"\"Scaffold-removal intent or successor identity changed.\"", proof);
+
+			string walk = Between(proof, "private static string IdentityRefusal(",
+				"private static bool Refuse(");
+			AssertOrdered(walk,
+				"if (Cell == null) return KingdomConstructionRules.ScaffoldRemovalCellPredicate;",
+				"string.IsNullOrEmpty(Blueprint)", "ScaffoldRemovalBlueprintPredicate",
+				"!ScaffoldRoute && !Improvement", "ScaffoldRemovalRoutePredicate",
+				"KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(Job.Phase,",
+				"HasRemovalProof(Successor, ScaffoldId)", "ScaffoldRemovalPhasePredicate",
+				"KingdomConstruction.Owns(System, Z, Job)", "ScaffoldRemovalOwnerPredicate",
+				"KingdomConstruction.IsCurrent(Job)", "ScaffoldRemovalCurrentPredicate",
+				"HasExactScaffoldRemovalIntent(Successor, ScaffoldId)", "ScaffoldRemovalIntentPredicate",
+				"IsExactSuccessor(Successor, Z, Cell, Job, Blueprint)", "ScaffoldRemovalSuccessorPredicate",
+				"KingdomGatehouseRules.IsGatehouse(Job.TargetKey)",
+				"KingdomGatehouse.ProjectionComplete(Successor, Z)", "ScaffoldRemovalGatehousePredicate",
+				"KingdomConstruction.FindExactId(Z, Job.OutputId, out exactSuccessor)",
+				"ScaffoldRemovalOutputPredicate",
+				"!ReferenceEquals(exactSuccessor, Successor)", "ScaffoldRemovalSameOutputPredicate",
+				"return null;");
+			foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
+				"RemoveIntProperty", "RemoveStringProperty", "Destroy(", "AddObject(" })
+				StringAssert.DoesNotContain(forbidden, walk);
+
+			string refuse = proof.Substring(proof.IndexOf("private static bool Refuse(",
+				StringComparison.Ordinal));
+			AssertOrdered(refuse,
+				"KingdomLog.Log(\"construction: scaffold-removal proof refused: \" + Message",
+				"\" job=\"", "\" phase=\"", "\" physical=\"", "\" route=\"", "\" subject=\"",
+				"\" output=\"", "\" scaffold=\"", "\" successor=\"",
+				"return Fail(Message, out Failure);");
+
+			// The Harness trace that names the same predicates for the paid chain still exists.
+			StringAssert.Contains("\"; admitted-phase=\"",
+				Read("Harness/KingdomCampHeartChainRemovalTrace.cs"));
+		}
+
+		private static int Count(string Source, string Term)
+		{
+			int count = 0;
+			for (int at = Source.IndexOf(Term, StringComparison.Ordinal); at >= 0;
+				at = Source.IndexOf(Term, at + Term.Length, StringComparison.Ordinal)) count++;
+			return count;
+		}
+
 		private static string Read(string Path)
 		{
 			return TestMain.ReadRepositoryText(Path);

@@ -37,18 +37,20 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>The fields only. LIVING-CITY-ARCHITECTURE §0.0(c), widened first for creed
 		/// history and again when W2 retired the parallel roster authority: exact origin and frozen
 		/// arrival presentation evidence now ride the row as two shared string references. The row
-		/// declares 115 bytes; 120 buys honest alignment headroom. Strings already existed on the
+		/// declares 123 bytes; 128 buys alignment headroom, including its residence reference. Strings already existed on the
 		/// compatibility carrier/body and are shared rather than counted as new unique heaps.
 		/// </summary>
-		internal const int ResidentRowStructBytes = 120;
+		internal const int ResidentRowStructBytes = 128;
 
-		/// <summary>One unique heap string per resident. The only heap string in the MODEL: zone ids
+		/// <summary>One unique heap string per resident. Existing presentation heap: zone ids
 		/// and design keys are shared references. LIVING-CITY-ARCHITECTURE §0.0(c). (The knowledge
 		/// siting put a second composed string on the settlement container beside the model — see
 		/// <see cref="ResearchHeaderBytes"/>, which names it and does not yet price it.)</summary>
 		internal const int ResidentNameBytes = 64;
 
-		internal const int ResidentRowBytes = ResidentRowStructBytes + ResidentNameBytes;
+		// UTF-16 payload, object header, terminator and alignment. Empty legacy records share "".
+		internal const int ResidenceHeapBytes = 32 + 2 * KingdomResidenceRules.MaxWireLength;
+		internal const int ResidentRowBytes = ResidentRowStructBytes + ResidentNameBytes + ResidenceHeapBytes;
 
 		/// <summary>kind 4 + NextDueTick 8 + ordinal 4. LIVING-CITY-ARCHITECTURE §0.0(c).</summary>
 		internal const int ClockRowBytes = 16;

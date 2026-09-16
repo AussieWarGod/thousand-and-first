@@ -108,7 +108,7 @@ namespace ThousandAndFirst.Harness
 					Require(Setup.Owned.Count == 7 && !Setup.Liquids[2].IsFreshWater(), "brine/factory control refused");
 					MasterToken = System.MasterResumeToken; MasterApplied = System.MasterAppliedResumeToken;
 					EnrollTick = Game.TimeTicks; EnrollTurns = Game.Turns; Roster(3); Controls();
-					Phase = 1; Armed = true; SetClock(); Evidence.Append("\nenrolled=3; dedicated=1; personal=12; brine=10; donor=16; dedication=actual-setup-check-in-before-baseline"); return;
+					Phase = 1; Armed = true; SetClock(); Evidence.Append("\ndedication-survey ").Append(Setup.DedicationSurvey).Append("\nenrolled=3; dedicated=1; personal=12; brine=10; donor=16; dedication=actual-setup-check-in-before-baseline"); return;
 				}
 				Span(1200, true); Controls(); Roster(Departures == 0 ? 3 : 2);
 				if (verb == KingdomWaterMaintenanceNativeProvider.RefillVerb)
@@ -160,9 +160,9 @@ namespace ThousandAndFirst.Harness
 					Checkpoint = System.LastHeartbeatTick; Require(Checkpoint > 0 && Checkpoint <= tick, "raw heartbeat checkpoint invalid");
 					Days = checked((int)((tick - Checkpoint) / 1200)); Require(Days <= 2, "unexpected multi-day heartbeat backlog");
 					PopulationBefore = System.Population; DryBefore = System.DryStreak; LedgerBefore = Ledger.UpkeepDrawn; DeparturesBefore = Departures;
-					Need = PopulationBefore * Days; Paid = 0; ConsumeStage = 0;
-					Require(survey.StoredWater == StoreWater && survey.Settlers.Count == PopulationBefore && survey.Citizens == PopulationBefore
-						&& survey.Stores.Count == 2 && survey.Stores.Contains(Setup.Liquids[0]) && survey.Stores.Contains(Setup.Liquids[2]),
+					Need = PopulationBefore * Days; Paid = 0; ConsumeStage = 0; int heartWater = KingdomWaterMaintenanceHeartStores.Water(survey, Zone, Setup.Liquids, out int heartStores, out _);
+					Require(survey.StoredWater == StoreWater + heartWater && survey.Settlers.Count == PopulationBefore && survey.Citizens == PopulationBefore
+						&& survey.Stores.Count == 2 + heartStores && survey.Stores.Contains(Setup.Liquids[0]) && survey.Stores.Contains(Setup.Liquids[2]),
 						"real active survey did not isolate enrolled people/dedicated fresh water"); return;
 				}
 				Require(InHeartbeat, "upkeep/departure lacked enclosing heartbeat");

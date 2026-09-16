@@ -56,6 +56,11 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.RowCapExceeded;
 				return false;
 			}
+			if (!KingdomResidenceRules.ValidRows(rows))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
 			for (int i = 0; i < count; i++)
 			{
 				for (int j = i + 1; j < count; j++)

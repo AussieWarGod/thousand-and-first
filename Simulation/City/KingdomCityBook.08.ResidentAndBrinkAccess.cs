@@ -38,7 +38,7 @@ namespace ThousandAndFirst.Simulation.City
 				&& Rows(ResidentNames) == count && Rows(ResidentOrigins) == count
 				&& Rows(ResidentOriginCodes) == count && Rows(ResidentCreedCodes) == count
 				&& Rows(ResidentArrivedTicks) == count && Rows(ResidentArrived) == count
-				&& Rows(ResidentHomeWorkIds) == count
+				&& Rows(ResidentHomeWorkIds) == count && Rows(ResidentResidences) == count
 				&& Rows(ResidentJobWorkIds) == count && Rows(ResidentJobRoles) == count
 				&& Rows(ResidentDayShapes) == count && Rows(ResidentStandings) == count
 				&& Rows(ResidentCauses) == count && Rows(ResidentBoundZoneIds) == count
