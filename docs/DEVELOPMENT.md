@@ -11,6 +11,17 @@ For city growth, plots, roads, support economy or multi-tile scenarios, also rea
 and linked work for both agents: physical expansion around a roughly 20-resident benchmark,
 three-cell roads, useful public space and layout rewards, without arbitrary population gates.
 Keep the original Beta, Quickstart reliability and complex behavioral coverage goals in scope.
+For building layouts, citizens or recruitment, also read
+[HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md): architectural quality applies to every
+building, citizens need correct physical home maps, and population must reflect coherent
+cultures and player/city reputation. Issues #229–#231 preserve the required work. Existing
+synthetic stress fixtures are not ordinary layout or population acceptance.
+Use [LAYOUT-STUDIO.md](LAYOUT-STUDIO.md) for the shared visual/CLI draft loop before costly
+native layout runs. It exposes room boundaries and usable space while retaining the normal
+XML, material, commissioning and native behavior gates.
+Before accepting building behavior for Beta, use [BUILDING-BEHAVIOUR.md](BUILDING-BEHAVIOUR.md)
+to inventory all shipped configurations and link their distinct obligations to actual scenarios.
+Architectural quality and functional coverage are separate requirements; mapping is not acceptance.
 
 ## Short edit loop
 
@@ -49,6 +60,10 @@ and installed data. It refuses an ambient test filter, restores and runs both pr
 and stops at the first failure. This makes the same fast local route available to both agents;
 the release source-test step uses this same command with the configured licensed Base directory.
 It defaults to `$HOME/.dotnet/dotnet`; set `TAF_DOTNET` when the pinned SDK is installed elsewhere.
+Historical XML test inputs should end in `.xml.fixture` and become `.xml` only inside an
+isolated test repository. The gallery scans XML streams by their root element, so ordinary XML
+fixtures in the source checkout can otherwise alter its catalogue enumeration.
+
 Keep restore beside its matching run. Never overlap .NET builds in one checkout or run this
 helper against a checkout being tested by another process. Use an isolated worktree for
 independent work. Never overlap native game scenarios or compete with the release Steam host.
@@ -86,6 +101,13 @@ or test counts. Describe it as evidence from the original run on identical input
 a new run. Changed inputs require the relevant scenarios again. New behavior needs a real
 behavioral test, not only source-text assertions. Disclose synthetic setup and untested cases.
 Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
+Restore borrowed identities and ownership before destroying synthetic fault objects: native
+graveyards retain tombstones. Prove production recovery before and after such probes; a live
+object census alone cannot prove cleanup.
+
+For AI counterexamples, assert native faction feelings and combat eligibility before the trigger.
+Two default NPCs are allies; a single assault need not provoke retaliation. Use an explicitly
+owned neutral fixture, retain boundary values on refusal, and never rewrite real citizen factions.
 
 Before a long city scenario, check fixture calls against their production contracts. Authored
 housing needs the normal plot-crowding and ground checks before typed plot-payload preflight;
@@ -96,6 +118,14 @@ a newly finished building can spend them on its own next improvement. Keep unrel
 and their reserved lanes outside the largest heart footprint being tested. Run available read-only
 preflights before long waits, and retain both the verdict and detailed production reason on refusal.
 These checks apply to both agents; they do not replace observing the actual paid transition.
+For component lookup, use the frozen stateful anchor (`fixture:storage`), not its palette slot
+(`storage`). Reused lifecycle observers may intentionally require the original design; a home
+conversion needs its own post-conversion cohort check while preserving the original startup check.
+Before fixing a numeric room expectation, inspect the frozen variant and its actual furnishings:
+a hearth-only room and a hearth-and-table room reserve different amounts of usable floor.
+Compiled stateful anchor identities include `@x,y`; use semantic-role lookup for live components
+or strip that identity suffix when counting a decoded snapshot. Test such counters against actual
+compiled variants before a native run, and preflight them before payment.
 For long population fixtures, preflight the production subsidence equilibrium at the highest tested
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending
@@ -107,7 +137,8 @@ contains every fixture work; capturing an old smaller book can miss newly mispla
 Retain the actual bound assessment's reason;
 a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 When a shared failure sentence covers several predicates, record their actual boundary values and
-caller before another long run. Journal unexpected production refusals immediately to avoid spending
+caller before another long run. Inspect existing `architecture: foreign slot` lines in `Player.log`
+first; they already identify the blocking object, blueprint, cell and ground classification. Journal unexpected production refusals immediately to avoid spending
 the remainder of a construction wait on a job already requiring inspection.
 Commissioning clearance does not prove completion-time clearance: resident movement during the
 construction wait can repopulate future wall cells. Place the late resident at the actual paid
@@ -126,6 +157,8 @@ ingress after all fixture buildings and stores are placed, before costly enrollm
 Before waiting through a paid upgrade chain, compare each authored delta's added material kinds
 with its source upgrade bill across the tested facings and historical baselines. Include all
 non-natural, non-existing-authority additions, not only pieces changed by the current feature.
+Compare the complete authored snapshot plus plot wrapper against the construction payload cap,
+not only the inner architecture codec cap. Include registry round trips before a long native chain.
 Run the main-only `KingdomCampHeartTests` fixture for heart catalogue edits; an empty portable
 selector is a failed check, not portable coverage. Keep native exact-payment expectations aligned
 with the authored bill and retain the production material-claim refusal.
@@ -137,6 +170,9 @@ ledger reason when a ready-looking action never starts. Explicitly identify synt
 expecting construction-input observations to reference them.
 A cropped quiet-window capture cannot exclude a blocking prompt. Use the existing full native
 window capture when the view is incomplete; never infer a completed turn from process responsiveness.
+Door fixtures must prove both physical and lock state: furniture entry can open a door, and native
+`PerformClose` restores `Locked` from `WasLocked`. Close before locking, then assert the actual
+production ingress reading. Restore the original open/lock flags after reversible probes.
 Preserve a changed profile as invalid evidence with expected and actual inventories, not a new seal.
 Check the sealed options file early during a long native run. If it changes, retain the difference
 and stop before further expensive setup: that run cannot establish acceptance. Input can reach the

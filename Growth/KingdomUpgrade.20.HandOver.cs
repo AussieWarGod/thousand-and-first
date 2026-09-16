@@ -17,7 +17,7 @@ namespace ThousandAndFirst
 	public static partial class KingdomUpgrade
 	{
 		/// <summary>
-		/// Rechecks a paid handover before standing eligible bodies off newly annexed wall cells.
+		/// Rechecks a paid handover before standing eligible bodies off newly blocked wall cells.
 		/// Residents may return during construction, so commissioning clearance is insufficient.
 		/// Uses the plot route's protected-body, destination and rollback rules, then reproves
 		/// endpoints, content custody and strict ground after movement callbacks. A refusal keeps
@@ -48,6 +48,8 @@ namespace ThousandAndFirst
 					return false;
 				if (!KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Predecessor,
 					Successor, Layout, true, out Failure, TolerateMovableOccupants: true)) return false;
+				if (!KingdomArchitectureStamper.TryProveRenovationOccupants(system, zone, before, Layout,
+					true, out _, out Failure)) return false;
 				bool cleared = KingdomPlots.TryClearEnvelopeOccupants(system, zone, Predecessor,
 					Layout, before.Rect, out int moved, out int beasts, out Cell post, out Failure);
 				if (moved > 0 || post != null)
@@ -63,7 +65,9 @@ namespace ThousandAndFirst
 				if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor, Successor,
 					cell, Intent, true, out Failure)) return false;
 				return KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Predecessor,
-					Successor, Layout, true, out Failure);
+					Successor, Layout, true, out Failure)
+					&& KingdomArchitectureStamper.TryProveRenovationOccupants(system, zone, before, Layout,
+						false, out _, out Failure);
 			}
 		}
 

@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <title>Thousand and First · Layout studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 15px/1.5 system-ui;
+      background: #10191f;
+      color: #e9e6db;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+    }
+    header {
+      padding: 22px 30px;
+      border-bottom: 1px solid #3b4a4f;
+    }
+    h1 {
+      font: 500 28px Georgia;
+      margin: 0;
+    }
+    h2 {
+      font-size: 17px;
+    }
+    header p {
+      margin: 5px 0;
+      color: #aebbbd;
+    }
+    main {
+      padding: 20px 30px;
+      max-width: 1600px;
+      margin: auto;
+    }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    label {
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: #b8c6c7;
+    }
+    input,
+    select,
+    button,
+    textarea {
+      font: inherit;
+      border: 1px solid #506267;
+      border-radius: 4px;
+      background: #1e3038;
+      color: #fff;
+      padding: 7px;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:hover {
+      background: #37504e;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    textarea {
+      width: 100%;
+      font: 13px/1.5 monospace;
+      tab-size: 2;
+    }
+    #case {
+      max-width: 640px;
+    }
+    #filter {
+      width: 180px;
+    }
+    .plans {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin: 20px 0;
+    }
+    .panel {
+      background: #16242b;
+      padding: 16px;
+      border: 1px solid #34454b;
+      border-radius: 6px;
+    }
+    .plan svg {
+      width: 100%;
+      max-height: 470px;
+      background: #10191f;
+    }
+    .plan g {
+      cursor: crosshair;
+    }
+    .stats {
+      color: #c4d2cc;
+    }
+    #message {
+      min-height: 24px;
+      color: #efc97e;
+      white-space: pre-wrap;
+      margin: 10px 0;
+    }
+    .legend {
+      font-size: 13px;
+      color: #b8c6c7;
+    }
+    .details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13px;
+    }
+    td,
+    th {
+      padding: 6px;
+      border-bottom: 1px solid #34454b;
+      text-align: left;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+    details {
+      margin-top: 14px;
+    }
+    summary {
+      cursor: pointer;
+    }
+    a {
+      color: #b8dcb6;
+    }
+    .note {
+      font-size: 13px;
+      color: #aebbbd;
+    }
+    #width,
+    #height {
+      width: 75px;
+    }
+    @media (max-width: 850px) {
+      .plans,
+      .details {
+        grid-template-columns: 1fr;
+      }
+      main,
+      header {
+        padding: 14px;
+      }
+    }
+  </style>
+  <header>
+    <h1>Layout studio</h1>
+    <p>
+      The Thousand and First · Rooms, workspaces and the ground between them
+    </p>
+  </header>
+  <main>
+    <div class="toolbar">
+      <label
+        >Find a layout<input id="filter" placeholder="tent, forge, court…"
+      /></label>
+      <label>Building / lot / variant<select id="case"></select></label
+      ><label
+        >View facing<select id="pose">
+          <option>north</option>
+          <option>east</option>
+          <option>south</option>
+          <option>west</option>
+        </select></label
+      >
+    </div>
+    <div id="message" role="status"></div>
+    <div class="toolbar">
+      <label
+        >Tool<select id="tool">
+          <option value="paint">Place one glyph</option>
+          <option value="room">Draw room: select two corners</option>
+        </select></label
+      >
+      <label>Paint glyph<select id="paint"></select></label
+      ><label>Room wall<select id="wall"></select></label
+      ><label>Room floor<select id="floor"></select></label>
+      <button id="undo">Undo</button><button id="redo">Redo</button
+      ><label>Width<input id="width" type="number" min="1" max="20" /></label
+      ><label>Height<input id="height" type="number" min="1" max="18" /></label
+      ><button id="resize">Resize draft</button>
+    </div>
+    <p class="legend">
+      Grey: physical wall · Gold: native door · Red floor: interior open to
+      outside/yard · Red outline: inaccessible fixture. Hover cells for resolved
+      objects and uses.
+    </p>
+    <div class="plans">
+      <section class="panel">
+        <h2>Source</h2>
+        <div id="before" class="plan"></div>
+        <p id="beforeStats" class="stats"></p>
+      </section>
+      <section class="panel">
+        <h2>Draft</h2>
+        <div id="after" class="plan"></div>
+        <p id="afterStats" class="stats"></p>
+      </section>
+    </div>
+    <div class="details">
+      <section class="panel">
+        <h2>Spaces and uses</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Space</th>
+              <th>Area</th>
+              <th>Free floor</th>
+              <th>Beds</th>
+              <th>Free / bed</th>
+            </tr>
+          </thead>
+          <tbody id="spaces"></tbody>
+        </table>
+        <details open>
+          <summary>Access, exposed beds and assumptions</summary>
+          <pre id="findings"></pre>
+        </details>
+        <details>
+          <summary>Furniture and activity roles by space</summary>
+          <pre id="roles"></pre>
+        </details>
+      </section>
+      <section class="panel">
+        <h2>Ordinary architecture XML</h2>
+        <p class="note" id="source"></p>
+        <textarea
+          id="xml"
+          rows="18"
+          spellcheck="false"
+          aria-label="Draft map XML"
+        ></textarea>
+        <div class="toolbar">
+          <button id="apply">Review XML</button
+          ><button id="export">Export draft XML</button
+          ><button id="report">Export room report</button>
+        </div>
+        <p class="note">
+          Drafts stay in this tab. Export before closing. This editor never
+          writes source files. Generated maps require changes to their authored
+          source/generator.
+        </p>
+        <p class="note">
+          Room readings are design feedback, not gameplay quality or native
+          acceptance. Run the existing catalogue, material, transition and
+          behavioral checks before installation.
+        </p>
+      </section>
+    </div>
+  </main>
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id),
+      drafts = new Map();
+    let cases = [],
+      selected = null,
+      current = null,
+      generation = 0,
+      corner = null;
+    const message = (text) => ($("message").textContent = text);
+    function state() {
+      if (!drafts.has(selected.map))
+        drafts.set(selected.map, { xml: null, undo: [], redo: [] });
+      return drafts.get(selected.map);
+    }
+    async function request(xml) {
+      const response = await fetch("/api/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Layout-Session": "__SESSION_TOKEN__",
+        },
+        body: JSON.stringify({ case: selected.id, xml, pose: $("pose").value }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error);
+      return data;
+    }
+    function stats(r) {
+      const fit = r.fits_selected_lot ? `fits ${r.selected_lot}` : `needs ${r.minimum_lot} or larger lot`;
+      return `${r.rooms} enclosed rooms · ${r.enclosed_beds}/${r.beds} sleep fixtures in rooms · ${r.doors} doors · ${fit}`;
+    }
+    function fillGlyphs(r) {
+      for (const id of ["paint", "wall", "floor"]) {
+        const previous = $(id).value;
+        $(id).replaceChildren();
+        for (const g of [{ Char: "." }, ...r.glyphs]) {
+          if (id === "wall" && (!g.Structure || g.Pass !== "blocked")) continue;
+          if (
+            id === "floor" &&
+            (g.Object ||
+              g.Structure ||
+              g.Pass !== "walk" ||
+              g.Claim !== "building")
+          )
+            continue;
+          const option = document.createElement("option");
+          option.value = g.Char;
+          option.textContent = `${g.Char} · ${g.Object || g.Structure || g.Ground || "unclaimed"} ${g.Anchors || ""}`;
+          $(id).append(option);
+        }
+        if ([...$(id).options].some((o) => o.value === previous))
+          $(id).value = previous;
+      }
+    }
+    async function review() {
+      const version = ++generation;
+      corner = null;
+      current = null;
+      $("xml").disabled = true;
+      $("export").disabled = $("report").disabled = true;
+      try {
+        const s = state();
+        const [before, after] = await Promise.all([
+          request(null),
+          request(s.xml),
+        ]);
+        if (version !== generation) return;
+        current = after;
+        $("xml").disabled = false;
+        if (s.xml === null) s.xml = after.xml;
+        $("xml").value = s.xml;
+        $("before").innerHTML = before.svg;
+        $("after").innerHTML = after.svg;
+        $("beforeStats").textContent = stats(before);
+        $("afterStats").textContent = stats(after);
+        $("source").textContent = `${after.source} · ${after.map}`;
+        $("width").value = after.width;
+        $("height").value = after.height;
+        fillGlyphs(after);
+        $("spaces").replaceChildren();
+        for (const room of after.spaces.filter((x) => x.kind !== "exterior")) {
+          const tr = document.createElement("tr");
+          for (const value of [
+            `${room.id}: ${room.kind}`,
+            room.area,
+            room.free_floor,
+            room.beds,
+            room.free_floor_per_bed ?? "—",
+          ]) {
+            const td = document.createElement("td");
+            td.textContent = value;
+            tr.append(td);
+          }
+          $("spaces").append(tr);
+        }
+        $("findings").textContent = JSON.stringify(
+          {
+            exposed_beds: after.exposed_beds,
+            inaccessible_fixtures: after.inaccessible_fixtures,
+            unproved_blueprints: after.unknown_blueprints,
+            existing_checker_issues: after.issues,
+            assumptions: after.assumptions,
+          },
+          null,
+          2,
+        );
+        $("roles").textContent = JSON.stringify(
+          after.spaces
+            .filter((x) => x.kind !== "exterior")
+            .map((x) => ({ space: x.id, roles: x.roles })),
+          null,
+          2,
+        );
+        $("undo").disabled = !s.undo.length;
+        $("redo").disabled = !s.redo.length;
+        $("export").disabled = $("report").disabled = false;
+        message(
+          after.unknown_blueprints.length
+            ? "Some physical shapes are unproved. Launch with --qud-base for the installed objects."
+            : "Draft reviewed. Room enclosure is measured independently of its cover label.",
+        );
+      } catch (error) {
+        if (version === generation) {
+          $("xml").disabled = false;
+          message(error.message);
+        }
+      }
+    }
+    function commit(xml) {
+      const s = state();
+      if (s.xml !== xml) {
+        s.undo.push(s.xml);
+        if (s.undo.length > 100) s.undo.shift();
+        s.redo = [];
+        s.xml = xml;
+      }
+      $("xml").value = xml;
+      return review();
+    }
+    function edit(change) {
+      try {
+        const doc = new DOMParser().parseFromString(
+          $("xml").value,
+          "application/xml",
+        );
+        if (
+          doc.querySelector("parsererror") ||
+          doc.documentElement.tagName !== "map"
+        )
+          throw Error("Correct the map XML before drawing.");
+        const map = doc.documentElement,
+          rows = [...map.querySelectorAll(":scope > row")].map((x) => [
+            ...x.getAttribute("Cells"),
+          ]);
+        change(rows, map);
+        for (const r of [...map.querySelectorAll(":scope > row")]) r.remove();
+        for (const row of rows) {
+          const r = doc.createElement("row");
+          r.setAttribute("Cells", row.join(""));
+          map.append(r);
+        }
+        map.setAttribute("Width", rows[0].length);
+        map.setAttribute("Height", rows.length);
+        const building = new Set(
+            [...map.querySelectorAll(":scope > glyph")]
+              .filter((x) => x.getAttribute("Claim") === "building")
+              .map((x) => x.getAttribute("Char")),
+          ),
+          points = [];
+        rows.forEach((r, y) =>
+          r.forEach((c, x) => {
+            if (building.has(c)) points.push([x, y]);
+          }),
+        );
+        if (map.hasAttribute("Footprint") && points.length) {
+          const xs = points.map((p) => p[0]),
+            ys = points.map((p) => p[1]),
+            x = Math.min(...xs),
+            y = Math.min(...ys);
+          map.setAttribute(
+            "Footprint",
+            `${x},${y},${Math.max(...xs) - x + 1}x${Math.max(...ys) - y + 1}`,
+          );
+        }
+        commit(new XMLSerializer().serializeToString(map));
+      } catch (error) {
+        message(error.message);
+      }
+    }
+    $("after").addEventListener("click", (event) => {
+      const cell = event.target.closest("g[data-x]");
+      if (!cell || !current) return;
+      const x = Number(cell.dataset.x),
+        y = Number(cell.dataset.y);
+      if ($("tool").value === "paint") {
+        edit((rows) => (rows[y][x] = $("paint").value));
+        return;
+      }
+      if (!corner) {
+        corner = [x, y];
+        message(
+          `First corner ${x},${y}. Select the opposite corner; existing draft cells will be replaced.`,
+        );
+        return;
+      }
+      const [a, b] = corner;
+      corner = null;
+      if (Math.abs(a - x) < 2 || Math.abs(b - y) < 2) {
+        message(
+          "A room needs at least a 3×3 outline to contain interior cells.",
+        );
+        return;
+      }
+      const wall = $("wall").value,
+        floor = $("floor").value;
+      if (!wall || !floor) {
+        message(
+          "Define a wall glyph and a clear interior floor glyph in the XML first.",
+        );
+        return;
+      }
+      edit((rows) => {
+        for (let j = Math.min(b, y); j <= Math.max(b, y); j++)
+          for (let i = Math.min(a, x); i <= Math.max(a, x); i++)
+            rows[j][i] =
+              i === a || i === x || j === b || j === y ? wall : floor;
+      });
+    });
+    $("resize").onclick = () => {
+      const w = Number($("width").value),
+        h = Number($("height").value);
+      if (
+        !Number.isInteger(w) ||
+        !Number.isInteger(h) ||
+        w < 1 ||
+        w > 20 ||
+        h < 1 ||
+        h > 18
+      ) {
+        message("Map bounds: width 1–20, height 1–18.");
+        return;
+      }
+      edit((rows) => {
+        while (rows.length < h) rows.push(Array(w).fill("."));
+        rows.length = h;
+        for (const row of rows) {
+          while (row.length < w) row.push(".");
+          row.length = w;
+        }
+      });
+    };
+    $("apply").onclick = () => commit($("xml").value);
+    $("xml").oninput = () => {
+      $("export").disabled = $("report").disabled = true;
+    };
+    $("undo").onclick = () => {
+      const s = state();
+      if (s.undo.length) {
+        s.redo.push(s.xml);
+        s.xml = s.undo.pop();
+        review();
+      }
+    };
+    $("redo").onclick = () => {
+      const s = state();
+      if (s.redo.length) {
+        s.undo.push(s.xml);
+        s.xml = s.redo.pop();
+        review();
+      }
+    };
+    function download(name, text, type) {
+      const link = document.createElement("a"),
+        url = URL.createObjectURL(new Blob([text], { type }));
+      link.href = url;
+      link.download = name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    $("export").onclick = () =>
+      download(
+        `${current.map}.draft.xml`,
+        current.xml + "\n",
+        "application/xml",
+      );
+    $("report").onclick = () => {
+      const { svg, ...report } = current;
+      download(
+        `${current.map}.review.json`,
+        JSON.stringify(report, null, 2) + "\n",
+        "application/json",
+      );
+    };
+    function choose() {
+      stash();
+      selected = cases.find((x) => x.id === Number($("case").value));
+      if (selected) {
+        $("xml").value = state().xml || "";
+        review();
+      }
+    }
+    function stash() {
+      if (!selected || $("xml").disabled || !$("xml").value) return;
+      const s = state();
+      if (s.xml !== null && s.xml !== $("xml").value) {
+        s.undo.push(s.xml);
+        if (s.undo.length > 100) s.undo.shift();
+        s.redo = [];
+        s.xml = $("xml").value;
+      }
+    }
+    function filter() {
+      const prior = selected?.id,
+        text = $("filter").value.toLowerCase();
+      $("case").replaceChildren();
+      for (const item of cases.filter((x) =>
+        x.label.toLowerCase().includes(text),
+      )) {
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = item.label;
+        $("case").append(option);
+      }
+      if ([...$("case").options].some((x) => Number(x.value) === prior))
+        $("case").value = prior;
+      if ($("case").options.length) choose();
+    }
+    $("filter").oninput = filter;
+    $("case").onchange = choose;
+    $("pose").onchange = () => { stash(); review(); };
+    $("tool").onchange = () => {
+      corner = null;
+    };
+    fetch("/api/cases")
+      .then((r) => r.json())
+      .then((data) => {
+        cases = data;
+        selected = cases.find((x) => x.building === "tent" && !x.retained && x.size === x.minimum_size);
+        filter();
+      })
+      .catch((error) => message(error.message));
+  </script>
+</html>

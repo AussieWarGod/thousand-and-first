@@ -18,6 +18,17 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Core\KingdomFoundingRegardRules.cs" />
+    <Compile Include="KingdomFoundingRegardTests.cs" />
+    <Compile Include="KingdomStrikeClosureTests.cs" />
+    <Compile Include="..\Simulation\Kernel\KingdomRecruitmentRules.cs" />
+    <Compile Include="KingdomRecruitmentRulesTests.cs" />
+    <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
+    <Compile Include="KingdomRetainedTransitionTests.cs" />
+    <Compile Include="KingdomLodgingRoomTests.cs" />
+    <Compile Include="KingdomRoomEnclosureBoundsTests.cs" />
+    <Compile Include="..\Growth\KingdomLodgingRoomRules.cs" />
+    <Compile Include="KingdomConstructionPayloadBoundsTests.cs" />
     <Compile Include="KingdomScenarioLoadResumeTests.cs" />
     <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
@@ -795,6 +806,7 @@
     <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
     <Compile Include="KingdomCampHeartTests.cs" />
+    <Compile Include="KingdomCanvasHomeTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
 	<Compile Include="KingdomCeremonyLogicalSource.cs" />
 	<Compile Include="KingdomCeremonyStructureSourceTests.cs" />

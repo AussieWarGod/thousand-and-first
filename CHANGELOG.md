@@ -1,50 +1,80 @@
 # Changelog
 
-**Pending heart progression repair (unreleased)**
+Current 3112-file census is line-cap green: 441,029 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
-Follow completed heart upgrades across successive receipts, and admit the exact next paid
-improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
-The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
-Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
-strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
-Native acceptance is pending.
-Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
-founding survey stakes while the heart grows around them; foreign markers remain protected.
-Controlled native obstruction/retry passed through tier three at `3742ffeb`; survey-marker
-cases remain unexecuted.
-Allow the surveyed heart to grow over exact unpaid foot tracks, preserving those tracks. Paid
-paving, foreign and ambiguous road objects remain protected. Narrow road probes passed in the
-failed `710fa082` run; tier-three track retention later passed at `3742ffeb`. Full progression
-and retention through tier four remain unproved.
-Repeat lawful resident clearance at paid handover and retry, with exact endpoints, custody and
-strict ground rechecked after movement. Add native late-resident, protected-occupant and forced
-no-destination cases. These bounded tier-three cases passed at `3742ffeb`; higher persistence
-and full-chain acceptance remain pending.
-Fund the six new timber floors when upgrading the moot yard to the great court. Previously
-the missing shaped-timber claim blocked the upgrade before payment. Expand authored-delta
-regressions to cover every added material across all fallback heart transitions and facings,
-including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
-of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
-Add a developer court-save variant with physical city evidence, retained fact files and a
-post-serialization comparison. Preflight the next ordinary paid job before long waits and
-retain original stock across the disclosed one-timber save fixture. Add dedicated cold-load
-dispatch, preactivation/activation comparison and the next ordinary paid action, with strict
-host import and journal/fact checks. All four engine compile modes pass using an authentic
-upstream 2.2.3 reference after the installed Hearthpyre update invalidated that reference (#217).
-Native continuation remains pending. This does not add Hearthpyre 2.2.4 support or establish
-native persistence acceptance.
+All notable changes to The Thousand and First. Historical entries retain their original scope;
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
+records current acceptance.
 
-Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
-The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
+**Unreleased development**
 
-All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
-minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
+- Added a developer court-save variant with physical city evidence, retained fact files and a
+  post-serialization comparison; the next ordinary paid job is preflighted before long waits and
+  original stock is retained across the disclosed one-timber save fixture. Dedicated cold-load
+  dispatch, preactivation/activation comparison and the next ordinary paid action carry strict
+  host import and journal/fact checks. No higher-heart native save/load has completed; this does
+  not establish native persistence acceptance.
 
-Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
-`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
-below it.
+- Recruitment availability respects the civic-story setting, including ordinary extension
+  profiles outside the first-guest allowlist. Native admission/load checks now compare actual
+  body, culture, species, name, origin and resident map. Real Quickstart admission and cold load
+  preserve the same fifth citizen and starter home; shortage/refill and next paid job also pass.
+
+- New settlers draw coherent native bodies, origins and names with player/city reputation
+  weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
+  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native selection,
+  hostile wait/recovery and frozen identity checks pass; one human guest also passes actual
+  admission, housing and cold load. Broader cultures, multi-map life and balance remain open.
+  Empty recruitment retains its due arrival while other city work continues; Charter explains
+  the reputation block alongside housing needs.
+
+- Striking a completed building awaiting its own construction closure now explains that
+  pending work instead of claiming another receipt owns it. Foreign-job refusals and strike
+  permissions remain unchanged. Native fire/larder refusal, recovery, removal and exact salvage pass;
+  whole-catalogue and teardown cold-load coverage remain open.
+
+- Developer coverage tooling now inventories every shipped building configuration and its
+  architectural/functional obligations before Beta. Missing and stale scenario links remain
+  visible; static validity and broad test results never count as whole-catalogue acceptance.
+
+- New realms freeze the founder's reputation into their own inbound standings once.
+  Later city actions evolve that baseline independently; outgoing policy remains separate.
+  Existing cities and interrupted older founding transactions retain their history.
+  Native founding, independent city regard, personal spillover and cold-load persistence pass.
+  Historical interrupted founding remains unproved natively; this is not in public 0.3.7.
+
+## [0.3.7] — 2026-09-15 (Alpha)
+
+Alpha update for enclosed housing, defensive founders and paid construction recovery.
+Public 0.3.7 is published, verified and finalized on one subscribed client.
+
+- Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
+  Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
+  furniture and room programme. Medium plots are available from Camp.
+- Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
+  furniture occupy space even when Qud permits walking over them; shared halls and doorways
+  must remain clear. Extra bunks still count toward crowding.
+- Anchor new civilian founders at the camp with defensive engagement before their first turn.
+  Preserve ordinary work, idle goals and retaliation without proactive target acquisition. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Recover a paid housing conversion after exact restoration of a missing or moved fixture.
+  Preserve original storage contents and payment; permit flooring beneath only its exact paid
+  predecessor. Foreign furniture and copied receipts grant no placement exception.
+- Retain exact historical transition prices for paid receipts while new quotes use current prices.
+- Follow successive paid heart upgrades, recheck eligible residents entering new wall sites,
+  retain authenticated founding stakes and unpaid tracks, fund added court floors, and admit
+  the existing architecture payload within bounded construction receipts.
+- Add a visual layout workbench with enclosure, furniture-access and clear-floor audits.
+
+Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
+24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
+and walkable-furniture obstructions. A further seven-day source/cold pair checks defensive founders
+on the previously failed marsh seed; other seeds and terrain remain unproved. Higher-heart progression uses disclosed synthetic population
+and support; it does not establish ordinary balance or multi-map city coverage. Full building
+redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
+outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation
+after load remain tracked limitations. Hearthpyre compatibility remains deferred until Beta.
 
 ## [0.3.6] — 2026-09-13 (Alpha)
 

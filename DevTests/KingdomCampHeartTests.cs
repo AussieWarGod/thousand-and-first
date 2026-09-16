@@ -378,6 +378,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CourtRenovationTurnsAnOccupiedMootFloorIntoAnInnerWall()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			var moot = Map(corpus, "civic-heartmoot-l2");
+			var court = Map(corpus, "civic-heartcourt-xl3");
+			int[] oldMain = Single(moot, "main"), newMain = Single(court, "main");
+			var before = At(moot, oldMain[0] + 3, oldMain[1]);
+			var after = At(court, newMain[0] + 3, newMain[1]);
+			ClassicAssert.AreEqual(ArchitecturePassability.Walkable, before.Passability);
+			ClassicAssert.AreEqual(ArchitecturePassability.Blocked, after.Passability);
+			ClassicAssert.IsTrue(KingdomPlotRules.NewBlockingUpgradeCell(true, true,
+				before.Passability, after.Passability));
+		}
+
+		[Test]
 		public void CourtRenovationPaysForEachNewTimberFloor()
 		{
 			var corpus = KingdomArchitectureCorpusFixture.Load();
@@ -391,6 +406,52 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.AreEqual(floors, bill.Get(KingdomMaterial.ShapedTimber),
 					"the renovated pavilion funds each newly authored timber floor: " + facing);
 			}
+		}
+
+		[Test]
+		public void EveryHeartPayloadFitsThePaidRegistryAndSurvivesItsCodec()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			var failures = new List<string>();
+			int checkedLayouts = 0;
+			foreach (var rung in Rungs)
+				foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+				{
+					var snapshot = Compile(corpus, rung[0], facing);
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+						out string encoded, out string failure), failure);
+					// The outer v2 wire adds four bounded coordinates, a UTF-8 skin and a digest.
+					// Use maximal legal coordinates/skin so a small native default does not hide the cap.
+					string skin = Convert.ToBase64String(new System.Text.UTF8Encoding(false, true)
+						.GetBytes(new string('界', 256)));
+					string preimage = "v2|1000|1000|1023|1023|" + skin + "|" + encoded;
+					string hash;
+					using (var sha = System.Security.Cryptography.SHA256.Create())
+						hash = BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(preimage)))
+							.Replace("-", "").ToLowerInvariant();
+					string payload = preimage + "|" + hash;
+					var job = new KingdomConstructionJob
+					{
+						Id = "10000000000000000000000000000001", OwnerKey = "realm", ZoneId = "zone",
+						Route = KingdomConstructionRoute.Improvement, Phase = KingdomConstructionPhase.Published,
+						Projection = KingdomConstructionRules.ProjectionFor(KingdomConstructionRoute.Improvement),
+						X = 12, Y = 9, SubjectId = "heart", TargetKey = rung[0], Payload = payload,
+						CreatedTick = 10, StartedTick = 10, DueTick = 20, UpdatedTick = 10, Revision = 1,
+						Claims = KingdomConstructionRules.NewClaims(0, new KingdomMaterialDebitCost())
+					};
+					if (!KingdomConstructionRules.TryEncode(new[] { job }, out string wire))
+						failures.Add(rung[0] + " " + facing + " cannot fit " + payload.Length + " payload chars");
+					else
+					{
+						ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var rows));
+						ClassicAssert.AreEqual(payload, rows.Single().Payload);
+						ClassicAssert.AreEqual(job.Id, rows.Single().Id);
+						ClassicAssert.AreEqual(job.TargetKey, rows.Single().TargetKey);
+					}
+					checkedLayouts++;
+				}
+			ClassicAssert.AreEqual(20, checkedLayouts);
+			ClassicAssert.IsEmpty(failures, string.Join("\n", failures));
 		}
 
 		[Test]

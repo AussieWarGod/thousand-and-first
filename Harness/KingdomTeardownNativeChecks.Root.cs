@@ -56,6 +56,10 @@ namespace ThousandAndFirst.Harness
 					&& KingdomConstruction.CanSupersedeTerminalReceipt(System, Zone, Built, row);
 				KingdomTeardownStrikeReadiness.Verdict verdict = KingdomTeardownStrikeReadiness.Judge(
 					true, present, found, terminal, supersedable);
+				if (verdict == KingdomTeardownStrikeReadiness.Verdict.WaitClosure)
+					CheckClosureRefusal(Built, row, Evidence);
+				if (verdict == KingdomTeardownStrikeReadiness.Verdict.Strike)
+					Require(ClosureRefusalObserved, Name + ": the real closure refusal window was not observed");
 				Evidence.Append("; case=").Append(Name)
 					.Append(" receipt=").Append(present ? receipt : "none")
 					.Append(" receipt-source=").Append(KingdomTeardownStrikeReadiness.ReceiptSource(present, found))

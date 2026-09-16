@@ -116,6 +116,22 @@ namespace ThousandAndFirst
 				&& Job.SourceId == ObjectId && Job.SubjectId == ObjectId);
 		}
 
+		internal const string PendingStrikeClosureMessage =
+			"The settlement is still completing this building's last work order. Try again after it finishes.";
+
+		/// <summary>Identifies an exact completed object's unfinished closure for feedback only.
+		/// Does not grant supersession or treat foreign, malformed or quarantined work as a wait.</summary>
+		internal static bool HasPendingOwnTerminalClosure(KingdomConstructionJob Job,
+			string OwnerKey, string ZoneId, string ReceiptId, string ObjectId)
+		{
+			return ValidJob(Job) && Job.Phase == KingdomConstructionPhase.Complete
+				&& !Job.Compacted && Job.Id == ReceiptId && Job.OwnerKey == OwnerKey
+				&& Job.ZoneId == ZoneId && !string.IsNullOrEmpty(ObjectId)
+				&& !TerminalClosureSettled(Job)
+				&& (Job.OutputId == ObjectId || (string.IsNullOrEmpty(Job.OutputId)
+					&& Job.SourceId == ObjectId && Job.SubjectId == ObjectId));
+		}
+
 		/// <summary>Last row/active slot is reserved for one durable saturation diagnostic.</summary>
 		public static bool CapacityInspectionRequired(int TotalRows, int ActiveRows)
 		{

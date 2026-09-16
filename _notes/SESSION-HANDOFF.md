@@ -1,5 +1,40 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Coherent recruitment draft
+
+Current development: 3112 staged sources / 3146 package files. Six-faction coherent
+recruitment implemented; full licensed 15,019/5,909 cases and four engine modes pass. Native
+catalogue/frozen-guest and expanded hostile-wait checks passed at 10d4c2a5; physical admission/home/cold-load/multi-map proof
+remains owed under #231/#230. No saved fields change. docs/STATUS.md and common Git handoff
+own exact scope and live handles; previous entries below retain original evidence.
+
+## Unreleased strike feedback
+
+Current census: 3108 staged sources. Branch `codex/strike-closure-feedback` distinguishes an
+owned completed job awaiting closure from foreign work. Permissions are unchanged. Shared
+pure fixture and real teardown refusal/recovery checks pass at `abf41251`. Native 16,800-turn
+fire/larder chain, exact salvage, borrowed-receipt restoration, full sealed profile recipe,
+strict log and owned shutdown pass; no native teardown cold-load claim. PR #253 owns integration.
+Full licensed 15,004/5,895 cases and four engine compile modes pass. Current process handles
+live in common Git `taf-workstate.md`.
+
+## Building-wide Beta coverage
+
+The author requires every building to meet the architectural standard AND work as intended
+before Beta (#251/#229). Use `docs/BUILDING-BEHAVIOUR.md` and the shared coverage tool to
+inventory all shipped configurations. Initial 1,390 configurations / 9,730 obligations remain
+unmapped; that describes evidence attribution, not a new bug count or a claim that no tests exist.
+Complete mappings alone never grant native acceptance. Common Git handoff owns live state.
+
+## Unreleased founding reputation work
+
+Current development census: 3107 staged sources. Worktree `/home/r/work/taf-reputation-population`,
+branch `codex/reputation-populations`; snapshot inheritance implemented, recruitment integration
+pending. Native warm/cold acceptance at `40477cb7`, full licensed integration (14,988 main /
+5,880 portable, zero skips) and current structural review are recorded in docs/STATUS.md.
+Shared live handles remain in the common Git `taf-workstate.md`.
+
+
 ## Accepted city design direction — 2026-09-14
 
 Read [city growth and land-use direction](../docs/CITY-GROWTH-BALANCE.md) before changing
@@ -12,8 +47,8 @@ See STATUS for acceptance; the common Git-directory handoff owns current process
 
 ## Current source census — pending heart repair
 
-3100 staged sources; 440,299 physical lines; 1446 direct-XRL files; zero cap failures;
-3131 cold-install files. Inventory `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`. Native acceptance remains pending.
+3106 staged sources; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
+3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. Native acceptance remains pending.
 Use the shared Git-directory handoff for live process ownership and current validation.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11

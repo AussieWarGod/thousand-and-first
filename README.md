@@ -4,23 +4,24 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.6 public Alpha playtest.**
-Public 0.3.6 is published and finalized; one subscribed installation was verified.
+**Status: 0.3.7 public Alpha playtest.**
+Public 0.3.7 is published and finalized; one subscribed installation was verified.
 See the linked release ledger for exact evidence and remaining coverage limits.
-Back up saves before updating.
-Current evidence and remaining test limits live in
-[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
-historical test counts do not sign later changes.
+Back up saves before updating. Current evidence and remaining coverage limits live in
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
-This Alpha fixes settlement lighting and full-zone city sight immediately after claiming
-an active zone, including Kingdom Quickstart. You no longer need to leave and return before
-the claimed map becomes visible. Drawing restores normal gameplay sight after each frame.
+This Alpha adds enclosed starter housing and measures room privacy from physical rooms,
+furniture and clear access. Beds and chairs reserve space even when Qud lets people walk over
+them. New civilian founders begin anchored at their camp with defensive engagement, and paid home conversions recover after
+exact fixture restoration while preserving the original storage contents and payment.
 
-Private 0.3.6 automated checks cover ordinary construction, four housed founders, six beds, real save and
-cold load, and all 2,000 cells in actual source and loaded render frames. The completed first
-heart is open rite ground with seven canvas walls; starter shelters provide housing.
-The private package and one subscribed installation match the verified native source. See
-[the native test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/HEART-SIGHT-NATIVE.md).
+Successive settlement-heart upgrades preserve their paid history and recheck new wall sites
+before construction completes. A shared visual workbench helps authors inspect room layouts.
+Four-founder housing and paid save/load continuation have native checks; the higher-heart
+stress scenario uses synthetic city support. Multi-map balance, wider roads, useful public
+spaces, reputation-weighted populations and all-building redesign remain Beta work. Historical
+renovations and polity reconciliation after load retain known limitations in the issue tracker.
+Hearthpyre compatibility work is deferred until Beta.
 
 ## What the mod adds
 

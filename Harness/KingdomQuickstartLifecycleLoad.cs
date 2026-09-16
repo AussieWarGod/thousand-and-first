@@ -111,13 +111,16 @@ namespace ThousandAndFirst.Harness
 			int water = KingdomGrowth.CountStoredWater(zone);
 			if (water != Witness.StoredWater)
 				return "the loaded settlement holds " + water + " drams, not the saved " + Witness.StoredWater;
-			bool settlement = KingdomQuickstartHousingLoad.ClaimsScript()
-				? KingdomQuickstartHousingLoad.Observe(Game, zone, system, out string settlementFailure)
+			bool settlement = KingdomPaidHousingNativeProvider.ClaimsScript()
+				? KingdomPaidHousingWitness.ObserveCohort(Game, zone, system, "loaded", out string settlementFailure)
+				: KingdomQuickstartHousingLoad.ClaimsScript()
+				? KingdomQuickstartHousingLoad.Observe(Game, zone, system, out settlementFailure)
 				: KingdomQuickstartSettlementChecks.Observe(Game, zone, system, "loaded", out settlementFailure);
 			if (!settlement)
 				return settlementFailure;
 			if (KingdomGuestSaveNativeProvider.ClaimsScript()) KingdomGuestSaveWitness.VerifyLoaded(Game);
 			if (KingdomHeartSightNativeProvider.ClaimsScript()) KingdomHeartSightWitness.VerifyLoaded(Game);
+			if (KingdomPaidHousingNativeProvider.ClaimsScript()) KingdomPaidHousingWitness.VerifyLoaded(Game);
 			// Every value here was read from the loaded game a moment ago: the system, the
 			// standing object, its own cell and that cell's zone. None is copied from the witness.
 			Observed = "realmId=" + system.RealmId + "; cityId=" + cityId + "; saveId=" + Game.GameID
@@ -139,8 +142,15 @@ namespace ThousandAndFirst.Harness
 		/// </summary>
 		internal static bool Next(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness)
 		{
-			string observed;
-			string failure = Act(Game, Witness, out observed);
+			string observed = null;
+			string failure;
+			if (KingdomSurvey.HasBoundPass) failure = "next action found an existing survey scope";
+			else if (KingdomSurvey.TryBindLocalOperation(The.ZoneManager?.ActiveZone,
+				Game?.GetSystem<KingdomSystem>(), out var scope, out failure))
+			{
+				using (scope) failure = Act(Game, Witness, out observed);
+				if (KingdomSurvey.HasBoundPass) failure = "next action leaked its survey scope";
+			}
 			KingdomScenarioJournal.Append(NextRow, failure == null, failure == null
 				? KingdomQuickstartLifecycleSteps.Stamped("native-lifecycle step=next-action; " + observed)
 					: KingdomQuickstartLifecycleSteps.Refuse("next-action", failure));

@@ -1,11 +1,40 @@
 # Structural release contract
 
-## Pending heart repair source census
+## Unreleased recruitment census
 
-3100 staged production C# files / 440,354 physical lines: 0 exceed 300 lines, 0 are exactly 300,
-therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
-1446 files with direct `XRL` imports; 0 of those exceed the line limit.
-Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`. The semantic review ledger does not yet bind this inventory.
+3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
+builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
+XML. The automated [delta review](STRUCTURE_REVIEW_RECRUITMENT.md) and STRUCTURE_REVIEW.json
+bind this inventory; native acceptance remains separately scoped in STATUS.
+
+## Accepted strike closure census
+
+3108 staged production C# files; 440,888 physical lines; 1451 files with direct `XRL` imports;
+zero files at or above 300 lines. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The new engine adapter explains an existing refusal; pure rules validate exact completed-job
+identity. Strike permissions and saved fields are unchanged. The automated [delta review](STRUCTURE_REVIEW_STRIKE_CLOSURE.md) and STRUCTURE_REVIEW.json
+bind this inventory. Native fire/larder scope is recorded in STATUS.md. The earlier review
+below binds its original founding-reputation input.
+
+## Accepted founding reputation census
+
+3107 staged production C# files; 440,850 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`. One engine-free snapshot/publication helper replaces the
+embedded founding codec; the engine adapter captures eligible reputation and publishes validated roots.
+The automated [delta review](STRUCTURE_REVIEW_FOUNDING_REGARD.md) and STRUCTURE_REVIEW.json
+bind this exact production inventory. Native warm/cold scope is recorded in STATUS.md.
+Public 0.3.7 evidence below is historical to this change.
+
+
+## Refreshed Alpha 0.3.7 candidate census
+
+3106 staged production C# files / 440,880 physical lines; zero at or above 300 lines.
+1450 files with direct `XRL` imports; none exceed the cap. Cold-install inventory: 3139 files.
+Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The automated [delta review](STRUCTURE_REVIEW_0_3_7.md) and STRUCTURE_REVIEW.json bind this
+inventory. Native evidence retains its original source pins; candidate delivery remains pending.
 
 ## Current Alpha 0.3.6 candidate census
 

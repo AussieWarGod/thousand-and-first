@@ -181,6 +181,37 @@ namespace ThousandAndFirst.DevTests
 	public sealed class KingdomPolityLedgerTests
 	{
 		[Test]
+		public void FreshUnboundLedgerIsCanonicalBeforeAnyNormalizationOrFounding()
+		{
+			var ledger = new KingdomPolityLedger();
+			ClassicAssert.IsFalse(ledger.IdentityBound);
+			ClassicAssert.AreEqual(KingdomPolityPresentationState.Unobserved, ledger.Options.Presentation);
+			ClassicAssert.AreEqual(long.MaxValue, ledger.Options.FutureCauseFloorTick);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+			byte[] wire = KingdomPolityCodec.EncodeEnvelope(ledger);
+			var loaded = KingdomPolityCodec.DecodeEnvelopeRaw(wire);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(loaded, out failure), failure);
+			CollectionAssert.AreEqual(wire, KingdomPolityCodec.EncodeEnvelope(loaded));
+		}
+
+		[Test]
+		public void HistoricalZeroOptionDefaultStillNormalizesButConflictingStateDoesNot()
+		{
+			var legacy = new KingdomPolityLedger();
+			legacy.Options.FutureCauseFloorTick = 0L;
+			ClassicAssert.IsFalse(KingdomPolityRules.TryValidate(legacy, out _));
+			KingdomPolityRules.Normalize(legacy);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(legacy, out string failure), failure);
+			ClassicAssert.AreEqual(long.MaxValue, legacy.Options.FutureCauseFloorTick);
+			var conflicting = new KingdomPolityLedger();
+			conflicting.Options.FutureCauseFloorTick = 0L;
+			conflicting.Options.EnableEpoch = 1L;
+			KingdomPolityRules.Normalize(conflicting);
+			ClassicAssert.AreEqual(KingdomPolitySchemaState.Quarantined, conflicting.SchemaState);
+			ClassicAssert.AreEqual(0L, conflicting.Options.FutureCauseFloorTick);
+		}
+
+		[Test]
 		public void FullSemanticGraphRoundTripsCanonically()
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();

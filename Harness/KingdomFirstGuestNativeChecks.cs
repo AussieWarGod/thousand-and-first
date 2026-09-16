@@ -85,6 +85,7 @@ namespace ThousandAndFirst.Harness
 			private readonly Zone Zone;
 			private readonly List<GameObject> Owned = new List<GameObject>();
 			private KingdomSystem System;
+			private KingdomRecruitmentNativeChecks Recruitment;
 			private string Raw, Stored;
 			private int Emissions, Notes, PassOne;
 			internal bool Armed, Done;
@@ -98,6 +99,8 @@ namespace ThousandAndFirst.Harness
 			internal void Start()
 			{
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
+				Recruitment = new KingdomRecruitmentNativeChecks(System, Game, Require);
+				Recruitment.Probe(Evidence);
 				Require(System.Population == 0 && System.ClaimedZones.Contains(Zone.ZoneID),
 					"the real founding is not an empty claimed camp");
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System,
@@ -114,7 +117,8 @@ namespace ThousandAndFirst.Harness
 				Require(Emissions == 0 && !KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"a first guest was already awaiting an answer before any turn passed");
 				Armed = true;
-				Phase = 1;
+				Phase = 0;
+				Recruitment.BeginWaiting(Zone, Evidence);
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
 					.Append("; next-arrival tick=").Append(System.NextArrivalTick)
 					.Append("; dedicated drams=").Append(KingdomGrowth.CountStoredWater(Zone))
@@ -130,14 +134,22 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			internal void Check()
 			{
-				Require(Phase >= 1 && !Done, "first-guest setup did not run");
+				Require(Phase >= 0 && !Done, "first-guest setup did not run");
 				Require(Fault == null, "the message observer faulted: " + Fault);
 				Require(!KingdomScenarioAdvance.Pending, "turns are still owed");
+				if (Phase == 0)
+				{
+					Recruitment.CheckWaiting(Zone, Evidence);
+					Require(Emissions == 0, "empty pool opened a first guest message");
+					Phase = 1;
+					return;
+				}
 				Require(Game.TimeTicks >= System.NextArrivalTick
 					|| KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"the clock never reached the first arrival tick");
 				Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"no first guest is awaiting an answer after a real due pass");
+				Recruitment.Observe(Evidence);
 				Require(Emissions == 1, "the opening message was written " + Emissions
 					+ " time(s), not exactly once");
 				Require(Logged() == 1, "the retained message log holds " + Logged()

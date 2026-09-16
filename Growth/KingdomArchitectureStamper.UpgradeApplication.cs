@@ -70,6 +70,9 @@ namespace ThousandAndFirst
 					out Failure)) return false;
 			}
 
+			if (!TryProveRenovationOccupants(global::XRL.The.Game?.GetSystem<KingdomSystem>(), Z,
+				beforeIntent, Successor, false, out _, out Failure)) return false;
+
 			if (!marked)
 			{
 				if (!TryVerifyComplete(Owner, Z, out Failure)) return false;

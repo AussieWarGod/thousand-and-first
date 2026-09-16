@@ -223,9 +223,12 @@ namespace ThousandAndFirst.Tests
 				preflight);
 			AssertOrdered(preflight,
 				"out Failure, TolerateMovableOccupants: true)) return false;",
+				"if (!TryPlacementPassability(Successor, Z,",
 				"foreach (int packed in impacted)",
-				"if ((item.IsCreature || item.IsPlayer()) && Successor.Rect.Contains(x, y)",
-				"&& !beforeIntent.Rect.Contains(x, y)) continue;",
+				"if (item.IsCreature || item.IsPlayer())",
+				"if (successorSlots.TryGetValue(packed, out ArchitecturePassability declared)",
+				"&& !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;",
+				"if (Successor.Rect.Contains(x, y) && !beforeIntent.Rect.Contains(x, y)) continue;",
 				"foreign or protected state occupies authored successor ground at ");
 			string application = Read("Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
 			StringAssert.DoesNotContain("TolerateMovableOccupants", application);
@@ -233,7 +236,7 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// The improvement route clears its annexed ground through the plot clearance, not a copy
-		/// of it: same ladder, same destinations, same walk-back, same sentences. Only annexed,
+		/// of it: same ladder, same destinations, same walk-back, same sentences. Only newly
 		/// blocked cells are scanned, and the whole successor rect is excluded as a destination.
 		/// </summary>
 		[Test]
@@ -242,11 +245,11 @@ namespace ThousandAndFirst.Tests
 			string clearance = Read("Growth/KingdomPlot2.26e.EnvelopeClearance.cs");
 			AssertOrdered(clearance,
 				"internal static bool TryClearEnvelopeOccupants(",
-				"KingdomArchitectureStamper.TryPlacementPassability(Successor, Z,",
-				"if (!KingdomPlotRules.SlotBlocksOccupant(slot.Value)) continue;",
-				"if (Before.Contains(slot.Key % Z.Width, slot.Key / Z.Width)) continue;",
-				"return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(annexed.Keys),",
-				"annexed, Successor.Rect, out Moved, out Beasts, out Post,",
+				"KingdomArchitectureRuntime.TryRead(Owner, out var before, out Refusal)",
+				"before.Rect.X2 != Before.X2 || before.Rect.Y2 != Before.Y2)",
+				"KingdomArchitectureStamper.TryNewBlockingCells(Z, before, Successor,",
+				"return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(newlyBlocked.Keys),",
+				"newlyBlocked, Successor.Rect, out Moved, out Beasts, out Post,",
 				"internal static void SayEnvelopeCleared(",
 				"SayPlotWorkCleared(System, Owner, Name,",
 				"KingdomPlotRules.SettlersMoved(Moved, Beasts), Raised, Fault);",
@@ -308,7 +311,9 @@ namespace ThousandAndFirst.Tests
 				"if (!cleared) return false;",
 				"!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,",
 				"!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor, Successor,",
-				"Successor, Layout, true, out Failure);");
+				"Successor, Layout, true, out Failure)",
+				"TryProveRenovationOccupants(system, zone, before, Layout,",
+				"false, out _, out Failure);");
 			string contents = Read("Growth/KingdomUpgrade.24.HandoverContents.cs");
 			AssertOrdered(contents,
 				"if (!intent.HandoverEffectsDone)",
@@ -432,6 +437,32 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("RetryOrQuarantineAuthoredLayout", handover);
 			StringAssert.Contains("KingdomConstruction.FinishProjection(ref Job, false, false",
 				handover);
+		}
+
+		[Test]
+		public void RetainedNewWallsRequireProtectedBodyProofAndStrictPaidReproof()
+		{
+			string renovation = Read("Growth/KingdomArchitectureStamper.RenovationOccupants.cs");
+			AssertOrdered(renovation, "TryPlacementPassability(Before, Z,", "TryPlacementPassability(After, Z,",
+				"oldSlots.TryGetValue(slot.Key, out var before)", "KingdomPlotRules.NewBlockingUpgradeCell(",
+				"Before.Rect.Contains(slot.Key % Z.Width, slot.Key / Z.Width), known, before, slot.Value)");
+			AssertOrdered(renovation, "if (!Before.Rect.Contains(x, y)) continue;",
+				"if (!GameObject.Validate(item) || !item.IsCreature && !item.IsPlayer()) continue;",
+				"if (TolerateMovable && KingdomPlots.IsMovableEnvelopeOccupant(System, Z, item)) continue;",
+				"a living occupant stands on renovation ground at ");
+			AssertOrdered(Read("Growth/KingdomArchitectureStamper.UpgradePreflight.cs"),
+				"TryProveRenovationOccupants(System, Z, beforeIntent, Successor, true,",
+				"foreach (int packed in impacted)", "if (item.IsCreature || item.IsPlayer())",
+				"if (beforeIntent.Rect.Contains(x, y) && newlyBlocked.ContainsKey(packed)) continue;");
+			AssertOrdered(Read("Growth/KingdomArchitectureStamper.UpgradeApplication.cs"),
+				"TryProveRenovationOccupants(", "beforeIntent, Successor, false, out _, out Failure)",
+				"if (!marked)", "TryBeginUpgradeReceipt(", "TryRemoveUpgradeSlot(");
+			AssertOrdered(Read("Growth/KingdomUpgrade.20.HandOver.cs"),
+				"TryProveRenovationOccupants(system, zone, before, Layout,",
+				"true, out _, out Failure)", "TryClearEnvelopeOccupants(",
+				"ExactHandoverEndpointsAfterCallback(", "VerifyHandoverContentCustody(",
+				"TryProveRenovationOccupants(system, zone, before, Layout,",
+				"false, out _, out Failure)");
 		}
 
 		private static string Read(string Relative)

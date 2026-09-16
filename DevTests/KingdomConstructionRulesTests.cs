@@ -57,6 +57,35 @@ namespace ThousandAndFirst.Tests
 			return job;
 		}
 
+		[TestCase(8192)]
+		[TestCase(8193)]
+		[TestCase(32768)]
+		public void LargePayloadRoundTripsWithoutChangingThePaidJob(int length)
+		{
+			var job = Job(KingdomConstructionRoute.Improvement);
+			job.Payload = new string('x', length);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var rows));
+			ClassicAssert.AreEqual(job.Payload, rows[0].Payload);
+			ClassicAssert.AreEqual(job.Id, rows[0].Id);
+			ClassicAssert.AreEqual(job.Claims.MaterialRequested, rows[0].Claims.MaterialRequested);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(rows, out string canonical));
+			ClassicAssert.AreEqual(wire, canonical);
+		}
+
+		[Test]
+		public void OversizedPayloadRefusesBothWriterAndUntrustedRegistryReader()
+		{
+			var job = Job(KingdomConstructionRoute.Improvement);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			job.Payload = new string('x', KingdomConstructionRules.MaxPayloadChars + 1);
+			ClassicAssert.IsFalse(KingdomConstructionRules.TryEncode(new[] { job }, out _));
+			string[] lines = wire.Split('\n');
+			string[] fields = lines[1].Split('|');
+			fields[19] = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(job.Payload));
+			ClassicAssert.IsFalse(KingdomConstructionRules.TryDecode(lines[0] + "\n" + string.Join("|", fields), out _));
+		}
+
 		[Test]
 		public void StampedZeroCostStrikeResumesPublishedReceiptAfterReload()
 		{
@@ -1101,6 +1130,29 @@ namespace ThousandAndFirst.Tests
 				KingdomConstructionRules.MaxRows, 0));
 			ClassicAssert.IsTrue(KingdomConstructionRules.CapacityInspectionRequired(0,
 				KingdomConstructionRules.MaxActiveRows - 1));
+		}
+
+		[Test]
+		public void PendingStrikeClosureSurvivesRegistryReloadAndEndsOnlyAfterRealClosure()
+		{
+			KingdomConstructionJob job = Job(KingdomConstructionRoute.PlotCommission,
+				Phase: KingdomConstructionPhase.Complete);
+			job.OutputId = "building-1";
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var rows));
+			KingdomConstructionJob restored = rows[0];
+			ClassicAssert.IsTrue(KingdomConstructionRules.HasPendingOwnTerminalClosure(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanSupersedeTerminal(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(rows, out string after));
+			ClassicAssert.AreEqual(wire, after);
+			restored.Outbox = SettledOutbox(restored.Id, "raised");
+			restored.PhysicalPhase = KingdomPhysicalPhase.EffectsSettled;
+			ClassicAssert.IsFalse(KingdomConstructionRules.HasPendingOwnTerminalClosure(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsTrue(KingdomConstructionRules.CanSupersedeTerminal(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
 		}
 
 		[Test]

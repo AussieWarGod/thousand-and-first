@@ -5030,11 +5030,14 @@ def materialize(repository: Path) -> GenerationResult:
             footprint_height,
         )
 
+    authored_bindings = [binding for _path, root in roots
+                         for plan in root.findall("plan") for binding in plan.findall("binding")]
     for _path, root in roots:
         for source_plan in root.findall("plan"):
             source_plan_key = source_plan.get("Key", "")
-            authored_bindings = source_plan.findall("binding")
             for source_binding in source_plan.findall("binding"):
+                if source_binding.get("Retained") == "yes":
+                    continue  # Historical small stakes retain readers, not new generated offers.
                 tiers = source_binding.findall("tier")
                 if not tiers:
                     continue

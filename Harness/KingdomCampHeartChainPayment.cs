@@ -41,7 +41,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 				if (Target == 3) { ProveChainEnvelopeOccupancy(); ProveChainRoadWear(); }
-				else ProveChainSurveyStakes();
+				else { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
 			}
 
 			private void CheckChainPaid()
@@ -73,10 +73,8 @@ namespace ThousandAndFirst.Harness
 				foreach (var supplied in ChainSupplied)
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
-				Require(KingdomPlots.RecoverFoundingHeart(System, Zone),
-					"founding recovery refused while the next paid heart improvement is working");
-				if (ChainTarget == 3)
-					KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId);
+				RequireChainFoundingRecovery("while the next paid heart improvement is working");
+				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTarget == 4);
 			}
 
 			private void CheckChainComplete()
@@ -91,7 +89,7 @@ namespace ThousandAndFirst.Harness
 			{
 				RequireChainTrack();
 				RequireChainSupportInPass(Survey);
-				if (ChainTarget == 3) Require(KingdomCampHeartChainHandoverOccupancy.Proved,
+				Require(KingdomCampHeartChainHandoverOccupancy.Proved,
 					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
 					"controlled obstruction and Outstanding handover retry were not witnessed");
@@ -126,9 +124,28 @@ namespace ThousandAndFirst.Harness
 				RequireSameBodies(ChainBrush, bodies, "chain sentinel brush");
 			}
 
+			private void RequireChainFoundingRecovery(string Phase)
+			{
+				if (!KingdomPlots.RecoverFoundingHeart(System, Zone))
+					Require(false, "founding recovery refused " + Phase + "; "
+						+ KingdomPlots.FoundingHeartRecoveryFailureForHarness(Zone));
+			}
+
 			private KingdomUpgrade.Assessment AssessChain(out string Context)
 			{
-				var survey = Census();
+				Require(!KingdomSurvey.HasBoundPass, "chain assessment found an outstanding survey");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
+					out string failure), failure);
+				KingdomUpgrade.Assessment result;
+				using (scope) result = AssessChainInPass(out Context);
+				Require(!KingdomSurvey.HasBoundPass, "chain assessment left its survey bound");
+				return result;
+			}
+
+			private KingdomUpgrade.Assessment AssessChainInPass(out string Context)
+			{
+				var survey = KingdomSurvey.ActiveFor(Zone);
+				Require(survey != null, "chain assessment lacks its production survey");
 				var active = new List<string>();
 				foreach (var root in survey.Improvements)
 					if (root.GetPart<XRL.World.Parts.r_KingdomImprovement>()?.Working == true)

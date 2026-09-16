@@ -32,7 +32,7 @@
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs (first-guest-setup/check)",
       "status": "NATIVE_PASS",
-      "note": "Native 660ba354 passes the real two-due-pass correspondence scenario. Synthetic founding and water are disclosed. Physical guest admission/citizenship is tracked separately as a coverage gap.",
+      "note": "Native 10d4c2a5 adds an all-hostile wait and original-head recovery, then proves one correspondence emission across two later checks while preserving the guest through renewed hostility. Synthetic camp/store/reputation and unplaced samples are disclosed. Earlier proof retains its exact scope. Physical admission/citizenship and cold load are separate obligations. Native807a89fc additionally proves the configured-story report edge with scoped extension/option-read controls; exact original input binding retained.",
       "evidence": [
         {
           "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
@@ -43,6 +43,28 @@
           "scope": "synthetic founded roofless camp and water; 12000 real turns; actual message observer and next-need read; strict log and owned stop; no physical admission/citizenship, rendered UI or save/load",
           "historicalScope": true,
           "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "807a89fcb23f8aef7a677dd162569d9d6115425b",
+          "artifactPath": "recruitment/807a89fc/native-4-pass/result.json",
+          "artifactSha256": "4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4",
+          "artifactBytes": 4070,
+          "verdict": "PASS - twelve native samples; hostile wait and recovery; frozen identity; story-policy report agrees with both selection routes",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation, unplaced bodies and scoped catalogue/option-read override. Road checkpoint proves downstream processing only; no physical admission or cold load. Later harness-only startup observer change means this retains its original full input inventory.",
+          "historicalScope": true,
+          "inventoryDigest": "992daf57a6423f86f1955bb58cec9b6ed6bac916b0b7ffc88fc30f17f2e16dfe",
           "currentDevCoverage": false
         }
       ]
@@ -223,7 +245,7 @@
       "negative": "NEGATIVE_PASS",
       "driver": "Harness/KingdomTeardownNativeProvider.cs (teardown-setup/check)",
       "status": "NATIVE_PASS",
-      "note": "Native b27a26c2 passes both sequenced cases after 16800 real turns. Exact strike receipts must be Complete/Settled, original roots and their city work rows absent, and a repeated strike refused. Two synthetic crew survive without homes; synthetic bills remain disclosed. Unassigned stockpile identity and stale work-row seal failures are retained in docs/QUICKSTART-HOTFIX-PROGRESS.md and separate native archives. No save/cold-load teardown claim.",
+      "note": "Native abf41251 passes both sequenced cases after 16800 ordinary turns, including each real closure window, repeated public-action refusal without registry/building mutation, restored borrowed-receipt counterexample, eventual Complete/Settled strike receipts, removed roots/work rows, exact salvage and repeated-strike refusal. Synthetic founding, two stationary workers and material bills are disclosed. Earlier failures and b27a26c2 evidence remain historical. No save/cold-load teardown or catalogue-wide claim.",
       "evidence": [
         {
           "commit": "b27a26c2ecc094c03bd50432fb3f66ed9d7a5b6d",
@@ -234,6 +256,17 @@
           "scope": "seed #43101, synthetic two-person crew and material bills; 16800 ordinary turns; fire zero salvage and larder positive salvage; exact closed profile, 3344 C# inputs, owned stop; save/load untested",
           "historicalScope": true,
           "inventoryDigest": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "abf41251f3a7c063c7710df4179b0bdb0e283e8b",
+          "artifactPath": "strike-closure/abf41251/native-1-pass/result.json",
+          "artifactSha256": "bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538",
+          "artifactBytes": 3447,
+          "verdict": "PASS - real closure refusals, unchanged durable work, restored foreign receipt, eventual removal and exact salvage",
+          "scope": "Seed #43101; synthetic founding, two stationary crew and material bills; reversible borrowed-receipt probe; 16800 ordinary turns; fire zero salvage and larder positive salvage; 3454 full pinned profile inputs including 3414 C#; strict final log and owned stop; no save/cold load or ordinary-play acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c",
           "currentDevCoverage": false
         }
       ]
@@ -358,7 +391,7 @@
       "negative": "NATIVE_PASS (overflow path)",
       "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, IMPLEMENTED_UNEXECUTED.",
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, with exact abf41251 native evidence; that does not revalidate this separate overflow path.",
       "evidence": [
         {
           "commit": "6ba1969",
@@ -853,7 +886,7 @@
       "negative": "NEGATIVE_PASS",
       "driver": "Harness/KingdomGuestActionsNativeProvider.cs; guest-actions-native-check and guest-actions-quickstart-native-check",
       "status": "NATIVE_PASS",
-      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI or all-seed survival claim. Row28 records the separate exact guest save/cold-load scenario; the older action-only evidence is unchanged.",
+      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI or all-seed survival claim. Row28 records the separate exact guest save/cold-load scenario; the older action-only evidence is unchanged. Native9cc75930 repeats the genuine Quickstart chain with reputation recruitment: actual guest768 Yywur, human culture/species, frozen blueprint/name/origin, living roll and bound map agree before and after cold load. Four founders occupy two real rooms/sixbeds; no synthetic residents or homes. Repeated startup applies its controlled founding-reputation change once. The prior duplicate-initialization failure is archived.",
       "evidence": [
         {
           "commit": "895e700e3f459d859bb3985b7427f36bfddfa571",
@@ -876,6 +909,17 @@
           "historicalScope": true,
           "inventoryDigest": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
         }
       ]
     },
@@ -969,7 +1013,7 @@
       "negative": "NATIVE_PASS for unfunded commission and two stale guest retries; oracle mutations cover missing/repeated/reordered rows, changed identity/receipts, nonconserved or remote refill and profile drift; interrupted enrollment remains COVERAGE_GAP",
       "driver": "Harness/KingdomGuestSaveNativeProvider.cs; Harness/KingdomGuestSaveSupply.cs; Harness/KingdomGuestSaveWitness.cs; Tools/personas/guest-save-lifecycle-native-check.persona; Tools/guest_save_check.py",
       "status": "NATIVE_PASS",
-      "note": "Native source 4c97470d, validator b11e26fb. Earlier a4d2bc20 complete scenario failed at water0/needed2; 76baa664 lost founder 516 to a giant dragonfly before recruitment; 4d207e8c failed a harness material selector and sealed-option drift. All retained as failures. No wildlife suppression, founder replacement, created supplies or weakened load-commission check. The accepted run recorded no civic combat interruption; the prior combat death does not establish an AI cause. Vanilla carried donor had no assigned ID; exact object/part and inventory owner references prove transfer identity.",
+      "note": "Native source 4c97470d, validator b11e26fb. Earlier a4d2bc20 complete scenario failed at water0/needed2; 76baa664 lost founder 516 to a giant dragonfly before recruitment; 4d207e8c failed a harness material selector and sealed-option drift. All retained as failures. No wildlife suppression, founder replacement, created supplies or weakened load-commission check. The accepted run recorded no civic combat interruption; the prior combat death does not establish an AI cause. Vanilla carried donor had no assigned ID; exact object/part and inventory owner references prove transfer identity. Native9cc75930 repeats the genuine Quickstart chain with reputation recruitment: actual guest768 Yywur, human culture/species, frozen blueprint/name/origin, living roll and bound map agree before and after cold load. Four founders occupy two real rooms/sixbeds; no synthetic residents or homes. Repeated startup applies its controlled founding-reputation change once. The prior duplicate-initialization failure is archived.",
       "evidence": [
         {
           "commit": "4c97470d66e845b9841d4abd74d20d6787fc0e6c",
@@ -981,6 +1025,17 @@
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
         }
       ]
     },
@@ -1085,6 +1140,42 @@
           "scope": "Synthetic paid camp rung1-to-2 and next-day recovery, exact saved heart/book/store/fire/material witness, separate cold load, another real paid fire commission and 3600 ordinary turns to independent completed output. One disclosed timber supplied before save, none after load. No ordinary Quickstart, higher rung or all-feature acceptance. Both complete 3369-source profiles, runtime/Harness XML binding, strict final logs and owned stopped records verified. Exact identities, city work row, paid tent receipt, 21 original brush and world clock match before and after activation. Full developer C# digest computed from the exact archived source commit; all 3369 current C# inputs are byte-identical.",
           "historicalScope": true,
           "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "behaviour": "Reputation-weighted recruit selection and unavailable-pool recovery",
+      "prerequisites": "synthetic founded empty camp, dedicated water, actual native six-faction catalogue and controlled personal/civic reputation",
+      "transitions": "all-hostile pool -> ordinary waiting debt with downstream processing -> peaceful relations recover original head -> renewed hostility preserves frozen guest",
+      "effects": "no citizen or water spend while waiting; original ordinal/deadline retained; Charter explains recruitment and housing; native name/body/origin coherence and ambient RNG references preserved",
+      "save_cold_load": "COVERAGE_GAP; main-only cadence codec regression is not native reload",
+      "negative": "NEGATIVE_PASS for all-hostile refusal, frozen-identity retention and scoped extension story-policy agreement; malformed or arbitrary third-party catalogues remain separately scoped.",
+      "driver": "Harness/KingdomRecruitmentNativeChecks.cs; Harness/KingdomRecruitmentNativeChecks.Waiting.cs; first-guest-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Twelve unplaced native samples exercise both routes for six factions, not physical admission of all profiles. Native807a89fc also verifies report availability for a normal extension with stories disabled, using scoped synthetic option-read/catalogue controls. Empty-camp road checkpoint proves continued processing only. Row28 separately proves one real human guest and its starter home through admission and cold load at9cc75930; all-culture admission, multi-map behavior and balance remain under #231/#230. Failed attempts remain in STATUS.",
+      "evidence": [
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "807a89fcb23f8aef7a677dd162569d9d6115425b",
+          "artifactPath": "recruitment/807a89fc/native-4-pass/result.json",
+          "artifactSha256": "4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4",
+          "artifactBytes": 4070,
+          "verdict": "PASS - twelve native samples; hostile wait and recovery; frozen identity; story-policy report agrees with both selection routes",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation, unplaced bodies and scoped catalogue/option-read override. Road checkpoint proves downstream processing only; no physical admission or cold load. Later harness-only startup observer change means this retains its original full input inventory.",
+          "historicalScope": true,
+          "inventoryDigest": "992daf57a6423f86f1955bb58cec9b6ed6bac916b0b7ffc88fc30f17f2e16dfe",
           "currentDevCoverage": false
         }
       ]
@@ -1243,7 +1334,7 @@
       "coupling": "The same settlement houses its founding crew and new citizen, consumes finite shared water, refuses unpaid construction, receives real carried supplies, then reloads guest and construction authority together.",
       "prerequisites": "Actual four-founder Quickstart with six completed beds and a physically welcomed fifth citizen; exhausted civic water and an existing founder-carried pure-water vessel.",
       "invariants": "One unchanged guest enrollment; conserved eight-dram donor/store transfer after actual movement; refusal leaves materials, registry, guest authority and clocks unchanged; cold load preserves all original founders and exact guest receipts; stale choices cannot duplicate enrollment or debit; next job pays one timber and two drams.",
-      "seed_turn_matrix": "Native 4c97470d, marsh/advisor-on seed #43101; 8400 then 8401 observed advance turns plus handoffs, 16803 saved turns; real save and separate sealed cold load. No seed sweep.",
+      "seed_turn_matrix": "Native 4c97470d, marsh/advisor-on seed #43101; 8400 then 8401 observed advance turns plus handoffs, 16803 saved turns; real save and separate sealed cold load. No seed sweep. Native9cc75930 repeats seed#43101 with 8401+8400 guarded ordinary turns,16803 saved turns; strengthened native body/roll/map identity assertions and repeated-startup reputation witness pass.",
       "expected_failure_rows": "Missing founder/guest/home, unfunded commission succeeding or consuming stores, unowned/non-pure/nonconserved water, remote transfer, changed receipt or clocks, missing preactivation witness, stale double enrollment/debit, unpaid or reused next job, log errors and changed profile seals.",
       "reusable_seams": "Exact guest-save persona; physical donor/cask references; original Quickstart housing and paid-job witnesses; guest preactivation comparison; unchanged lifecycle-next funding verifier.",
       "status": "NATIVE_PASS",
@@ -1258,6 +1349,17 @@
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
         }
       ]
     },

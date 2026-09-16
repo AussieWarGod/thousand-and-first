@@ -144,7 +144,9 @@ namespace ThousandAndFirst
 				// Player creation/mutators precede this seam; later embark handlers and the
 				// engine's InitialSeeds reset still follow, so old RNG output is not promised.
 				failure = "The completed camp zone could not be resolved.";
-				Zone zone = attempt.Manager.GetZone(attempt.Profile.ZoneId);
+				Zone zone;
+				using (KingdomQuickstartEncounterScope.Begin(Game, attempt.Profile))
+					zone = attempt.Manager.GetZone(attempt.Profile.ZoneId);
 				failure = "The completed camp ground lost its exact owner.";
 				if (!ExactUnplaced(attempt) || !ExactZone(attempt, zone))
 					throw new InvalidOperationException(failure);

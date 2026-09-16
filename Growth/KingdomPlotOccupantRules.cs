@@ -17,6 +17,13 @@ namespace ThousandAndFirst
 			return Passability == ArchitecturePassability.Blocked;
 		}
 
+		internal static bool NewBlockingUpgradeCell(bool InsideBefore, bool BeforeKnown,
+			ArchitecturePassability Before, ArchitecturePassability After)
+		{
+			return After == ArchitecturePassability.Blocked && (!InsideBefore || BeforeKnown
+				&& (Before == ArchitecturePassability.Walkable || Before == ArchitecturePassability.Adjacent));
+		}
+
 		/// <summary>Why one body on a blocking slot is or is not the settlement's to stand off.
 		/// Named in the log so an operator never sees "a living occupant" with no identity.</summary>
 		public enum OccupantReason

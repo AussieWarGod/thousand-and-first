@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+  "inventorySha256": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T12:47:50Z",
+  "completedUtc": "2026-09-15T00:44:39Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   }
 }

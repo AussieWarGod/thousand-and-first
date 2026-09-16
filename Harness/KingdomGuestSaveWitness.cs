@@ -114,8 +114,9 @@ namespace ThousandAndFirst.Harness
 				"saved guest lost physical identity or citizenship");
 			var citizenship = body.GetPart<r_KingdomCitizenship>();
 			Require(citizenship != null && citizenship.Phase == KingdomCitizenshipPhase.Applied
-				&& citizenship.EnrollmentReason == (int)KingdomCitizenshipEnrollmentReason.Arrival
-				&& KingdomResidents.TryResident(system.City, KingdomResidents.IdOf(body), out var resident)
+				&& citizenship.EnrollmentReason == (int)KingdomCitizenshipEnrollmentReason.Arrival,
+				"guest arrival citizenship receipt differs");
+			Require(KingdomResidents.TryResident(system.City, KingdomResidents.IdOf(body), out var resident)
 				&& KingdomResidentRules.OnTheRoll(resident), "guest arrival receipt or living roll differs");
 			Require(terminal.ResidentId == KingdomResidents.IdOf(body)
 				&& terminal.SettlementId == system.CurrentSettlementId
@@ -124,12 +125,18 @@ namespace ThousandAndFirst.Harness
 				Require(body.GetStringProperty(property) == terminal.ArrivalOperationId, "guest domain receipt differs: " + property);
 			Require(KingdomLodging.HomeDesignKeyOf(zone, body) == KingdomQuickstartRules.ShelterBuildKey,
 				"guest does not occupy real starter housing");
+			KingdomRecruitmentBodyWitness.Verify(body, terminal.Blueprint, terminal.PersonOrigin, Require);
+			Require(body.GetStringProperty("KingdomName") == terminal.PersonName
+				&& body.GetStringProperty("KingdomOrigin") == terminal.PersonOrigin
+				&& resident.Name == terminal.PersonName && resident.Origin == terminal.PersonOrigin
+				&& resident.BoundZoneId == zone.ZoneID, "saved recruit body, roll and native identity disagree");
 			var opportunity = terminal.Opportunity;
 			string wire = Encode("taf-guest-save-v1", game.GameID, game.TimeTicks, system.RealmId,
 				system.CurrentSettlementId, zone.ZoneID, system.Population, includeStoredWater ? KingdomGrowth.CountStoredWater(zone) : 0,
 				system.Ledger.Arrivals, system.Ledger.ArrivalCost,
 				game.GetStringGameState(KingdomQuickstartRules.ReceiptState), body.IDIfAssigned,
 				KingdomResidents.IdOf(body), body.DisplayName, body.GetStringProperty("KingdomName"),
+				body.Blueprint, body.GetCulture(), body.GetSpecies(), body.GetStringProperty("KingdomOrigin"),
 				body.GetStringProperty(KingdomCreed.CreedProperty), KingdomLodging.HomeDesignKeyOf(zone, body),
 				body.GetStringProperty(KingdomLodging.HomePlotIdProperty),
 				body.GetStringProperty("r_TAF_GrowthArrivalEnrollment"), body.GetStringProperty("r_TAF_GrowthArrivalRoster"),
