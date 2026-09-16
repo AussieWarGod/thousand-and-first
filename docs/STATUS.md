@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Absent-owner loss fix — source validation, native replay pending
+## Absent-owner loss fix — native damage replay passes
 
 New `sr3` claims freeze map-qualified home ownership alongside the existing work/plot and
 resident/body identity. Exact city residence and binding checks admit an absent owner without
@@ -11,8 +11,24 @@ The condemnation callback also records canonical absent owners before home recon
 
 Full licensed suites pass: 15,068 main and 5,954 portable cases, zero skips. Coverage includes
 mixed old/new claims, interrupted publication, moved homes, replaced residence carriers,
-unchanged chronology and old save grammar. All four engine compile modes and 66 persona checks pass. Native damage replay remains
-pending. This does not supersede the retained native failure below or establish Beta acceptance.
+unchanged chronology and old save grammar. All four engine compile modes and 66 persona checks pass.
+
+Native replay at `74b9abb7fdf319d0d2065ea6548c9b1bb4edbfaf` repeats the retained `e5bac3f6` case
+after 8,400 ordinary Quickstart turns with one original citizen away on the adjacent claim.
+Production rung-roof capture now includes all three homeowners (one absent-owner match), the
+condemnation callback records three, and the absent owner's home is cleared with the original
+loss tick `192327` and roof brink retained. Restoring the controlled wear fault lets ordinary
+lodging rehouse the exact returning citizen; all four founders remain housed. Closed archive:
+`home-map-damage/74b9abb7/native-2-revalidated-pass/result.json`; SHA-256
+`9d12fa804618c62bd24a44c39ed8245974e0bfccd656c43c173d9a0641e80d95`; 5,708 bytes. The full
+3,480-input/3,439 C# sealed recipe, strict log and exact owned stop verify. The first closure of
+the same sealed run (`native-2-fail`) failed only in the persona validator, which placed the
+detailed observation row in a scripted position; validator-only commit `bccd8c4e` treats it as a
+paired non-positional witness and the same run revalidates as PASS with identical runtime and
+Harness bytes. Wear damage/restoration and map transfers remain controlled setup; full ordinary
+subsidence, paid repair, frozen-application recovery and damaged-home cold load remain unproved.
+The retained native failure below is superseded for this case only; #230 stays open and this
+does not establish Beta acceptance.
 
 Current census: 3121 staged C# files; 441,657 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3155 files.

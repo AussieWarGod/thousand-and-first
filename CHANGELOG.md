@@ -12,7 +12,9 @@ records current acceptance.
 
 - Roof-loss claims now include map-qualified home ownership, so absent owners can retain the
   original damage tick. Exact residence guards protect publication; old frozen claims retain
-  local-body requirements. Source suites and all four engine compile modes pass; native replay is pending.
+  local-body requirements. Source suites and all four engine compile modes pass; the native damage
+  replay passes on the same sealed Quickstart case with controlled damage/restoration. Paid repair,
+  frozen-application recovery and damaged-home cold load remain open.
 
 - Added native save/load coverage while a founder remains on another claimed map: exact home
   authority and capacity survive before remote lookup, then the citizen returns and the city
