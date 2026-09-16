@@ -384,6 +384,53 @@ class DerivedInputTest(unittest.TestCase):
             },
         )
 
+    PAUSE_SCRIPT = ("stagedigest realize advance 1200 beta-local-pause advance 1200 "
+                    "beta-master-pause advance 1 beta-stress beta-present advance 1200 "
+                    "beta-return advance 39 yield-frames 1 beta-check status")
+
+    def engine_bag(self, extra_keys):
+        """The engine's NameValueBag flush: one "key":"value" per line, no trailing newline."""
+        template = json.loads((ROOT / "Tools" / "smoke" / "PlayerOptions.json").read_text(encoding="utf-8"))
+        template["OptionEnableSeed"] = "Yes"
+        for key in extra_keys:
+            template[key] = "Yes"
+        return ("{\n" + ",\n".join(json.dumps(k) + ":" + json.dumps(v) for k, v in template.items())
+                + "\n}").encode()
+
+    def test_pause_recipe_authors_both_pause_options_in_engine_format(self):
+        local = self.tmp / "Local"
+        local.mkdir()
+        destination = local / "PlayerOptions.json"
+        with mock.patch.dict(os.environ, {"TAF_SCENARIO_SCRIPT": self.PAUSE_SCRIPT}):
+            profile.write_options(str(ROOT / "Tools" / "smoke" / "PlayerOptions.json"), str(destination))
+        expected = self.engine_bag(("r_TAF_OptionGrowth", "r_TAF_OptionMaster"))
+        self.assertEqual(expected, destination.read_bytes())
+        self.assertEqual(["r_TAF_OptionGrowth", "r_TAF_OptionMaster"],
+                         list(json.loads(destination.read_text(encoding="utf-8")))[-2:])
+        seal = self.tmp / "pause.sha256"
+        profile.seal(str(local), str(seal))
+        # PauseController restores both to "Yes"; the engine's flush then rewrites identical bytes.
+        destination.write_bytes(expected)
+        profile.verify(str(local), str(seal))
+        for drift in (expected.replace(b'"r_TAF_OptionMaster":"Yes"', b'"r_TAF_OptionMaster":"No"'),
+                      expected.replace(b'"r_TAF_OptionGrowth":"Yes"', b'"r_TAF_OptionGrowth":"No"'),
+                      expected + b"\n"):
+            with self.subTest(drift=drift[-40:]):
+                destination.write_bytes(drift)
+                with self.assertRaises(SystemExit):
+                    profile.verify(str(local), str(seal))
+
+    def test_non_pause_recipe_options_are_unchanged(self):
+        destination = self.tmp / "PlayerOptions.json"
+        script = "stagedigest realize stagedigest resourcedigest status"
+        with mock.patch.dict(os.environ, {"TAF_SCENARIO_SCRIPT": script}):
+            profile.write_options(str(ROOT / "Tools" / "smoke" / "PlayerOptions.json"), str(destination))
+        template = json.loads((ROOT / "Tools" / "smoke" / "PlayerOptions.json").read_text(encoding="utf-8"))
+        template["OptionEnableSeed"] = "Yes"
+        self.assertEqual((json.dumps(template, indent=2) + "\n").encode(), destination.read_bytes())
+        self.assertNotIn(b"r_TAF_OptionGrowth", destination.read_bytes())
+        self.assertNotIn(b"r_TAF_OptionMaster", destination.read_bytes())
+
     def test_request_requires_a_valid_frozen_seed(self):
         embark = self.tmp / "EmbarkModules.xml"
         embark.write_text(

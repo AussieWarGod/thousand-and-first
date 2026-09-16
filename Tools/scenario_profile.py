@@ -473,6 +473,12 @@ def write_script(destination: str, verbs: list[str]) -> None:
     print("sealed scenario script: " + ", ".join(chosen))
 
 
+# Verbs whose harness provider writes real options (PauseController.Set), and the exact keys
+# it materialises, in the order the engine appends them (Growth is written first).
+PAUSE_OPTION_VERBS = ("beta-local-pause", "beta-master-pause")
+PAUSE_OPTION_KEYS = ("r_TAF_OptionGrowth", "r_TAF_OptionMaster")
+
+
 def write_options(source: str, destination: str) -> None:
     advisor = None
     script = os.environ.get("TAF_SCENARIO_SCRIPT", "")
@@ -501,8 +507,18 @@ def write_options(source: str, destination: str) -> None:
     native_look_defaults = any(verb in tokens for verb in ("guest-save-supply", "heart-sight-inspect"))
     if native_look_defaults:
         options["OptionLookLocked"] = "No"
+    # Harness/KingdomScenarioPauseController.cs (beta-local-pause, then beta-master-pause) drives
+    # the engine's Options.SetOption on these two keys, which materialises both at their
+    # Options.xml defaults and flushes the whole bag in NameValueBag format. Author them here in
+    # the engine's append order so the post-run file is byte-identical and the stop seal holds.
+    # A value other than the default surviving to stop still refuses; nothing is excluded.
+    pause_option_defaults = any(verb in tokens for verb in PAUSE_OPTION_VERBS)
+    if pause_option_defaults:
+        for key in PAUSE_OPTION_KEYS:
+            options[key] = "Yes"
+    native_format = native_look_defaults or pause_option_defaults
     with open(destination, "w", encoding="utf-8") as handle:
-        if native_look_defaults:
+        if native_format:
             handle.write("{\n" + ",\n".join(json.dumps(key) + ":" + json.dumps(value)
                                           for key, value in options.items()) + "\n}")
         else:

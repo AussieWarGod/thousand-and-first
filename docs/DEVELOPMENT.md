@@ -162,6 +162,13 @@ Check the sealed options file early during a long native run. If it changes, ret
 and stop before further expensive setup: that run cannot establish acceptance. Input can reach the
 game from a connected controller even while the script spends the founder's turns. A newly written
 look option is not proof of harmless initialization; trace its writer before changing sealed defaults.
+The pause travel recipe (`beta-local-pause`, `beta-master-pause`) is such a traced case: the harness
+writer `Harness/KingdomScenarioPauseController.cs` (`Set` at the two pause verbs and both restores) drives
+`Options.SetOption` on `r_TAF_OptionGrowth` and `r_TAF_OptionMaster`, so the engine materialises both
+keys at their `Options.xml` default `Yes` and rewrites `Local/PlayerOptions.json` in `NameValueBag`
+format. `Tools/scenario_profile.py` authors those two keys in that format before sealing only when the
+script contains a pause verb; a non-default value surviving to stop still refuses, used profiles are never
+resealed, and no options file is excluded from the seal.
 The paid-chain persona isolates `GameManager.UpdateInput` for its exact dedicated game through owned
 shutdown. It verifies the actual patched call before its first setup step. This is disclosed test
 isolation, not coverage of keyboard/controller interaction; ordinary games and other personas retain
