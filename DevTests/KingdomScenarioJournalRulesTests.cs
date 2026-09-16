@@ -100,8 +100,12 @@ namespace ThousandAndFirst.Tests
 			row.Append("\nphase3 job=").Append(new string('j', 64)).Append("; phase=Complete; physical=EffectsSettled")
 				.Append("; committed water debit=").Append(Nine).Append("; committed material debit=").Append(text)
 				.Append("; failure=").Append(text);
-			row.Append("\nphase3 rung-marker property=r_TAF_ConstructionHeartEffect; waterstone=").Append(new string('w', 64))
-				.Append(" reads 2; moot yard=").Append(new string('y', 64)).Append(" reads 2; distinct bodies=true");
+			row.Append("\npredecessor=retired id=").Append(new string('w', 64)).Append(" successor=").Append(new string('y', 64))
+				.Append("; job=").Append(new string('j', 64)).Append("; subject-named=True; output-named=True; phase=Complete")
+				.Append("; built=True; receipt=True; removal-proof=True; chained-successor=True; live-lookup=Absent");
+			row.Append("\nphase3 rung-marker property=r_TAF_ConstructionHeartEffect; moot yard=").Append(new string('y', 64))
+				.Append(" reads 2; waterstone=").Append(new string('w', 64))
+				.Append(" marker=unreadable (retired by the climb; read 2 at phase 2); distinct bodies=true");
 			row.Append("\nphase3 founding heart recovered after second climb=True");
 			row.Append("\nphase3 tick=").Append(Nine).Append("; standing=").Append(new string('s', 64))
 				.Append("; key=heartmoot; stage=Town; population=").Append(Nine).Append("; craft=Workshop")

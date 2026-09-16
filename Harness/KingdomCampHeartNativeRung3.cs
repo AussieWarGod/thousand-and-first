@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Harness
 {
@@ -95,10 +96,15 @@ namespace ThousandAndFirst.Harness
 			/// once per climb behind an at-most-once 0/1/2 marker set on the SUCCESSOR of that
 			/// climb (<c>Growth/KingdomPlotHeartRules.Settle.cs</c>, the property declared at
 			/// <c>Growth/KingdomPlot2.03.RegistryAndDeclarations.cs</c>): 0 nothing owed, 1 the
-			/// ceremony is in flight, 2 settled. A second consecutive improvement-route rung must
-			/// therefore leave TWO distinct bodies each carrying exactly 2 -- the waterstone this
-			/// run climbed to, and the moot yard it climbed to next -- and a marker still at 1 is
-			/// an interrupted ceremony, honestly lost, not a settle.
+			/// ceremony is in flight, 2 settled. The moot yard must carry exactly 2, and a marker
+			/// still at 1 is an interrupted ceremony, honestly lost, not a settle. The first climb's
+			/// own marker was read while the waterstone stood (phase 2: zone rung 2 on that body);
+			/// it cannot be read again here, because production RETIRES the predecessor when the
+			/// successor stands (<c>Growth/KingdomUpgrade.25.HandoverRemoval</c>). That the SECOND
+			/// consecutive climb happened on a distinct body is therefore proved by the receipt
+			/// chain that retired the waterstone, <see cref="RequireRetiredPredecessorChain"/>,
+			/// not by finding it. Native run 50 (13eb76d3) climbed lawfully and was refused by the
+			/// old read that wanted the waterstone still standing; that read was the defect.
 			/// <para>The name is a string here because production declares it private. The
 			/// DevTests pin holds the two spellings together, so a rename fails there rather than
 			/// making this read a property nothing writes.</para>
@@ -109,20 +115,77 @@ namespace ThousandAndFirst.Harness
 				Require(settled == 2, "taf-camp-rung3-ceremony-unsettled: the moot yard's "
 					+ "at-most-once rung marker reads " + settled
 					+ ", not the settled 2 (0 owed, 1 in flight, 2 settled)");
-				Require(GameObject.Validate(SecondStanding),
-					"taf-camp-rung3-predecessor-lost: the waterstone this run climbed to is gone, "
-						+ "so the second consecutive climb cannot be told from the first");
-				Require(!ReferenceEquals(SecondStanding, Standing)
-					&& SecondStanding.IDIfAssigned != Standing.IDIfAssigned,
+				Require(!string.IsNullOrEmpty(SecondHeartId)
+					&& SecondHeartId != Standing.IDIfAssigned,
 					"taf-camp-rung3-same-body: the moot yard is the very body rung two settled on, "
 						+ "so only one climb happened");
-				int first = SecondStanding.GetIntProperty(HeartEffectProperty);
-				Require(first == 2, "taf-camp-rung3-first-climb-unsettled: the waterstone's own "
-					+ "rung marker reads " + first + ", not the settled 2");
+				RequireRetiredPredecessorChain(Standing);
 				Evidence.Append("\nphase3 rung-marker property=").Append(HeartEffectProperty)
-					.Append("; waterstone=").Append(SecondHeartId).Append(" reads ").Append(first)
 					.Append("; moot yard=").Append(Standing.IDIfAssigned).Append(" reads ")
-					.Append(settled).Append("; distinct bodies=true");
+					.Append(settled).Append("; waterstone=").Append(SecondHeartId)
+					.Append(" marker=unreadable (retired by the climb; read 2 at phase 2)")
+					.Append("; distinct bodies=true");
+			}
+
+			/// <summary>
+			/// THE PREDECESSOR IS RETIRED, NOT STANDING. Production removes the waterstone when the
+			/// moot yard stands, so a live waterstone here would be the defect, never the proof.
+			/// What proves the second climb is the receipt chain production itself binds ground by
+			/// (<c>Growth/KingdomFoundingHeartChainRules.BindsGround</c>, read through
+			/// <c>KingdomPlots.TryChainedWorkSuccessor</c> exactly as the spatial seal reads a
+			/// climbed root, <c>Core/KingdomInheritanceSpatial.Evidence.cs</c> TryClimbedRoot):
+			/// the completed moot-yard job names the waterstone as its subject and the standing
+			/// body as its output; the standing body is built (<c>KingdomBuilt</c> 1), carries
+			/// that job's construction receipt and the scaffold removal proof naming the
+			/// waterstone; production's chain reader returns THIS body for the waterstone's work
+			/// row; and only then, consulted LAST, the waterstone reads globally absent. A
+			/// waterstone that is merely gone -- no completed job naming it, no removal proof on
+			/// the successor -- still refuses: absence can refuse a chain and can never be its
+			/// proof. Every read is journaled before the first Require.
+			/// </summary>
+			private void RequireRetiredPredecessorChain(GameObject Standing)
+			{
+				KingdomConstructionJob job = FindRung3Job();
+				Require(job != null, "taf-camp-rung3-predecessor-unproved: no improvement job "
+					+ "targets the moot yard, so nothing names the waterstone as retired");
+				bool subjectNamed = job.SubjectId == SecondHeartId;
+				bool outputNamed = job.OutputId == Standing.IDIfAssigned;
+				bool complete = job.Phase == KingdomConstructionPhase.Complete;
+				bool built = Standing.GetIntProperty("KingdomBuilt") == 1;
+				bool receipt = KingdomConstruction.HasReceipt(Standing, job);
+				bool removal = r_KingdomScaffold.HasRemovalProof(Standing, job.SubjectId);
+				GameObject proved;
+				bool chained = KingdomPlots.TryChainedWorkSuccessor(Zone,
+						Simulation.City.KingdomCityRules.StableId(SecondHeartId), out proved)
+					&& ReferenceEquals(proved, Standing);
+				GameObject live;
+				KingdomPhysicalLookupState lookup = KingdomConstruction.FindGlobalLiveId(SecondHeartId,
+					out live);
+				bool retired = !GameObject.Validate(SecondStanding)
+					&& lookup == KingdomPhysicalLookupState.Absent;
+				Evidence.Append("\npredecessor=").Append(retired ? "retired" : "live")
+					.Append(" id=").Append(SecondHeartId)
+					.Append(" successor=").Append(Standing.IDIfAssigned)
+					.Append("; job=").Append(job.Id)
+					.Append("; subject-named=").Append(subjectNamed)
+					.Append("; output-named=").Append(outputNamed)
+					.Append("; phase=").Append(job.Phase)
+					.Append("; built=").Append(built)
+					.Append("; receipt=").Append(receipt)
+					.Append("; removal-proof=").Append(removal)
+					.Append("; chained-successor=").Append(chained)
+					.Append("; live-lookup=").Append(lookup);
+				Require(subjectNamed && outputNamed && complete,
+					"taf-camp-rung3-predecessor-unproved: the moot-yard job does not retire the "
+						+ "waterstone this run climbed to: subject=" + job.SubjectId + "; output="
+						+ job.OutputId + "; phase=" + job.Phase);
+				Require(built && receipt && removal,
+					"taf-camp-rung3-predecessor-unproved: the moot yard does not carry the chain: "
+						+ "built=" + built + "; receipt=" + receipt + "; removal-proof=" + removal);
+				Require(chained, "taf-camp-rung3-predecessor-unproved: production's chain reader "
+					+ "does not return the moot yard for the waterstone's work row");
+				Require(retired, "taf-camp-rung3-predecessor-unretired: the waterstone still reads "
+					+ "live after the climb that retired it; lookup=" + lookup);
 			}
 
 			/// <summary>Issue #162, asked again after the SECOND climb: production's own founding

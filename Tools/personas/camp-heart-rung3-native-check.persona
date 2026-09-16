@@ -55,6 +55,14 @@
 # want of ground is diagnosable. That census asserts nothing and moves nothing.
 # Not ordinary play, not a rendered Charter, no save/load, no general camp acceptance. Rung 3 -> 4
 # and 4 -> 5 remain owed, as do PR #107 cases 1, 3, 4 and 5.
+# THE WATERSTONE IS RETIRED, NOT FOUND (native run 50 @ 13eb76d3). Production removes the predecessor
+# when the successor stands, so the final check does not look for the waterstone; it proves the
+# receipt chain production binds ground by (KingdomFoundingHeartChainRules.BindsGround, read through
+# KingdomPlots.TryChainedWorkSuccessor as the spatial seal reads a climbed root): the completed
+# moot-yard job names the waterstone as subject and the standing moot yard as output, the moot yard
+# is KingdomBuilt=1 with that job's receipt and the scaffold removal proof naming the waterstone, and
+# only then the waterstone reads globally absent. Journaled as `predecessor=retired id=<waterstone>
+# successor=<moot yard>`. A waterstone merely gone, with no chain, still refuses.
 # The #162 halt lines are FORBIDDEN here too (PR #164): a heart that cannot be recovered after its
 # first climb never begins the second, and the rung-3 check also asks production's own recovery
 # predicate once the moot yard stands.

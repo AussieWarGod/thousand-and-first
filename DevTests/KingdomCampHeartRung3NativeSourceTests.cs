@@ -248,8 +248,33 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureStamper.UpgradeFaultProperty",
 				"RequireSettledOnceEachClimb(standing);",
 				"int settled = Standing.GetIntProperty(HeartEffectProperty);",
-				"int first = SecondStanding.GetIntProperty(HeartEffectProperty);" })
+				"RequireRetiredPredecessorChain(Standing);",
+				"Standing.GetIntProperty(\"KingdomBuilt\") == 1",
+				"KingdomConstruction.HasReceipt(Standing, job)",
+				"r_KingdomScaffold.HasRemovalProof(Standing, job.SubjectId)",
+				"KingdomPlots.TryChainedWorkSuccessor(Zone,",
+				"KingdomConstruction.FindGlobalLiveId(SecondHeartId,",
+				"Evidence.Append(\"\\npredecessor=\").Append(retired ? \"retired\" : \"live\")",
+				"taf-camp-rung3-predecessor-unproved", "taf-camp-rung3-predecessor-unretired" })
 				Assert.That(rung3, Does.Contain(read));
+			// Native run 50 (13eb76d3): production retires the waterstone when the moot yard
+			// stands, so the old "still standing" read refused a lawful climb. The predecessor is
+			// now proved RETIRED through the receipt chain; the live-absence read is consulted
+			// LAST, after the chain, so a waterstone that is merely gone still refuses.
+			foreach (string stale in new[] { "taf-camp-rung3-predecessor-lost",
+				"Require(GameObject.Validate(SecondStanding),",
+				"SecondStanding.GetIntProperty(HeartEffectProperty)" })
+				Assert.That(rung3, Does.Not.Contain(stale), stale);
+			int chainRead = rung3.IndexOf("bool chained = KingdomPlots.TryChainedWorkSuccessor(Zone,",
+				StringComparison.Ordinal);
+			int retiredRequire = rung3.IndexOf("Require(retired, \"taf-camp-rung3-predecessor-unretired",
+				StringComparison.Ordinal);
+			int chainRequire = rung3.IndexOf("Require(chained, \"taf-camp-rung3-predecessor-unproved",
+				StringComparison.Ordinal);
+			Assert.That(chainRead, Is.GreaterThan(-1));
+			Assert.That(chainRequire, Is.GreaterThan(chainRead));
+			Assert.That(retiredRequire, Is.GreaterThan(chainRequire),
+				"absence is consulted last: it can refuse a chain, never prove one");
 			Assert.That(rung3, Does.Contain("TrySettleImprovementHeartRung"));
 			Assert.That(rung3, Does.Contain("settlement helper TWICE"));
 			Assert.That(rung3, Does.Contain("SECOND consecutive climb"));
