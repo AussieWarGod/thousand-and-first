@@ -95,9 +95,9 @@ items for its exact scope. Broader recruitment, multi-map life and balance remai
 The original Beta goal and building issues #229/#251 stay open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
-Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
+Current census: 3112 staged C# files; 441,115 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
-Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Inventory SHA-256: `ff1b108a5f7727b2ada2daf24813fb2c111d3bdfcae375a33c0d0d79fbf6045f`.
 Automated structural review binds this census in STRUCTURE_REVIEW.json and
 STRUCTURE_REVIEW_RECRUITMENT.md. Prior evidence retains its original inputs. Public 0.3.7 is unchanged.
 

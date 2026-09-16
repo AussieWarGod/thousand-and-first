@@ -2,8 +2,8 @@
 
 ## Unreleased recruitment census
 
-3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
-zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+3112 staged production C# files; 441,115 physical lines; 1454 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `ff1b108a5f7727b2ada2daf24813fb2c111d3bdfcae375a33c0d0d79fbf6045f`.
 Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
 builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
 XML. The automated [delta review](STRUCTURE_REVIEW_RECRUITMENT.md) and STRUCTURE_REVIEW.json

@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3112-file census is line-cap green: 441,029 physical lines; direct `XRL`
-imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Current 3112-file census is line-cap green: 441,115 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `ff1b108a5f7727b2ada2daf24813fb2c111d3bdfcae375a33c0d0d79fbf6045f`.
 The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -9,6 +9,12 @@ All notable changes to The Thousand and First. Historical entries retain their o
 records current acceptance.
 
 **Unreleased development**
+
+- A refused scaffold-removal proof now names the first failed identity predicate (recorded
+  cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
+  gatehouse projection, live output, same output) instead of the bare shared sentence, and every
+  refusal of that proof is logged once with job, phase, scaffold and successor identities. The
+  eleven names and their order are a pure rule pinned by tests; admission is unchanged (#212).
 
 - Recruitment availability respects the civic-story setting, including ordinary extension
   profiles outside the first-guest allowlist. Native admission/load checks now compare actual
