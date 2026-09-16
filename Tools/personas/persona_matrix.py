@@ -53,6 +53,10 @@ BOOKKEEPING = frozenset(
         "yield-frames-complete",
         "travel-out-complete",
         "travel-return-complete",
+        # The away walker's egress plan off the surveyed heart ground (Harness/KingdomScenarioTravel.cs
+        # PlanEgress): the rite ground is a camp open only to the south, so the founder steps
+        # south before the westward row and north again on return. Wiring, never a scripted verb.
+        "travel-egress",
         # Written once per quickstart-lifecycle boot, right after QUICKSTART-BOOT-BEGIN
         # (Harness/KingdomQuickstartLifecycleRunnerPatch.cs), never for quickstart-boot/-save/
         # -build. It describes the runner's OWN wiring for this run, not a verb the script asked

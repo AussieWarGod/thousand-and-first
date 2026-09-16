@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3121-file census is line-cap green: 441,704 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `61daf5480333008c47b5025adfcd323b80ccac21b409242b41a03a7ce8fa383c`.
+Current 3121-file census is line-cap green: 441,804 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `49f38a49aebb5eabf902e31b2456cbd2ef17ec01f275ccd72dc62ee96c603aa8`.
 The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -9,6 +9,12 @@ All notable changes to The Thousand and First. Historical entries retain their o
 records current acceptance.
 
 **Unreleased development**
+
+- A refused scaffold-removal proof now names the first failed identity predicate (recorded
+  cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
+  gatehouse projection, live output, same output) instead of the bare shared sentence, and every
+  refusal of that proof is logged once with job, phase, scaffold and successor identities. The
+  eleven names and their order are a pure rule pinned by tests; admission is unchanged (#212).
 
 - Roof-loss claims now include map-qualified home ownership, so absent owners can retain the
   original damage tick. Exact residence guards protect publication; old frozen claims retain

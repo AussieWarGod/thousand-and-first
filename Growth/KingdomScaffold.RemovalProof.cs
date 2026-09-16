@@ -66,33 +66,25 @@ namespace XRL.World.Parts
 			bool improvement = Job != null && Job.Route == KingdomConstructionRoute.Improvement
 				&& Job.SubjectId != ScaffoldId
 				&& IsExactPendingImprovementSuccessor(Successor);
-			if (cell == null || string.IsNullOrEmpty(Blueprint)
-				|| (!scaffoldRoute && !improvement)
-				|| !KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(Job.Phase,
-					Job.PhysicalPhase, improvement, HasRemovalProof(Successor, ScaffoldId))
-				|| !KingdomConstruction.Owns(System, Z, Job)
-				|| !KingdomConstruction.IsCurrent(Job)
-				|| !HasExactScaffoldRemovalIntent(Successor, ScaffoldId)
-				|| !IsExactSuccessor(Successor, Z, cell, Job, Blueprint)
-				|| KingdomGatehouseRules.IsGatehouse(Job.TargetKey)
-					&& !KingdomGatehouse.ProjectionComplete(Successor, Z)
-				|| KingdomConstruction.FindExactId(Z, Job.OutputId, out GameObject exactSuccessor)
-					!= KingdomPhysicalLookupState.Exact
-				|| !ReferenceEquals(exactSuccessor, Successor))
-				return Fail("Scaffold-removal intent or successor identity changed.", out Failure);
+			string refused = IdentityRefusal(System, Z, cell, Successor, Blueprint, ScaffoldId,
+				Job, scaffoldRoute, improvement);
+			if (refused != null)
+				return Refuse(Job, ScaffoldId, Successor,
+					KingdomConstructionRules.ScaffoldRemovalIdentityRefusal(refused), out Failure);
 			KingdomPhysicalLookupState state = KingdomConstruction.FindGlobalLiveId(
 				ScaffoldId, out _);
 			if (state != KingdomPhysicalLookupState.Absent
 				|| GameObject.Validate(ExpectedPredecessor))
-				return Fail("Scaffold absence is not globally exact.", out Failure);
+				return Refuse(Job, ScaffoldId, Successor,
+					"Scaffold absence is not globally exact.", out Failure);
 			if (!ExactScaffoldReceiptClosure(Job, Successor, improvement, Z, cell))
-				return Fail("A renamed, moved, or duplicate scaffold still carries the receipt.",
-					out Failure);
+				return Refuse(Job, ScaffoldId, Successor,
+					"A renamed, moved, or duplicate scaffold still carries the receipt.", out Failure);
 			string proof = Successor.GetStringProperty(RemovalProofProperty);
 			if (Successor.HasIntProperty(RemovalProofProperty)
 				|| Successor.HasStringProperty(RemovalProofProperty) && proof != ScaffoldId)
-				return Fail("Scaffold-removal proof carries foreign or opposite-typed evidence.",
-					out Failure);
+				return Refuse(Job, ScaffoldId, Successor,
+					"Scaffold-removal proof carries foreign or opposite-typed evidence.", out Failure);
 			if (!Successor.HasStringProperty(RemovalProofProperty))
 				Successor.SetStringProperty(RemovalProofProperty, ScaffoldId);
 			KingdomConstructionJob refreshed;
@@ -106,9 +98,61 @@ namespace XRL.World.Parts
 				|| !ExactScaffoldReceiptClosure(refreshed, Successor, improvement, Z, cell)
 				|| !IsExactSuccessor(Successor, Z, cell, refreshed, Blueprint)
 				|| !HasExactScaffoldRemovalIntent(Successor, ScaffoldId))
-				return Fail("Scaffold-removal proof changed during registry reproof.", out Failure);
+				return Refuse(Job, ScaffoldId, Successor,
+					"Scaffold-removal proof changed during registry reproof.", out Failure);
 			Job = refreshed;
 			return true;
+		}
+
+		/// <summary>Walks the identity predicates in their original short-circuit order and
+		/// names the first that fails; null when all hold. Read-only: nothing is stamped.</summary>
+		private static string IdentityRefusal(KingdomSystem System, Zone Z, Cell Cell,
+			GameObject Successor, string Blueprint, string ScaffoldId, KingdomConstructionJob Job,
+			bool ScaffoldRoute, bool Improvement)
+		{
+			if (Cell == null) return KingdomConstructionRules.ScaffoldRemovalCellPredicate;
+			if (string.IsNullOrEmpty(Blueprint))
+				return KingdomConstructionRules.ScaffoldRemovalBlueprintPredicate;
+			if (!ScaffoldRoute && !Improvement)
+				return KingdomConstructionRules.ScaffoldRemovalRoutePredicate;
+			if (!KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(Job.Phase,
+				Job.PhysicalPhase, Improvement, HasRemovalProof(Successor, ScaffoldId)))
+				return KingdomConstructionRules.ScaffoldRemovalPhasePredicate;
+			if (!KingdomConstruction.Owns(System, Z, Job))
+				return KingdomConstructionRules.ScaffoldRemovalOwnerPredicate;
+			if (!KingdomConstruction.IsCurrent(Job))
+				return KingdomConstructionRules.ScaffoldRemovalCurrentPredicate;
+			if (!HasExactScaffoldRemovalIntent(Successor, ScaffoldId))
+				return KingdomConstructionRules.ScaffoldRemovalIntentPredicate;
+			if (!IsExactSuccessor(Successor, Z, Cell, Job, Blueprint))
+				return KingdomConstructionRules.ScaffoldRemovalSuccessorPredicate;
+			if (KingdomGatehouseRules.IsGatehouse(Job.TargetKey)
+				&& !KingdomGatehouse.ProjectionComplete(Successor, Z))
+				return KingdomConstructionRules.ScaffoldRemovalGatehousePredicate;
+			GameObject exactSuccessor;
+			if (KingdomConstruction.FindExactId(Z, Job.OutputId, out exactSuccessor)
+				!= KingdomPhysicalLookupState.Exact)
+				return KingdomConstructionRules.ScaffoldRemovalOutputPredicate;
+			if (!ReferenceEquals(exactSuccessor, Successor))
+				return KingdomConstructionRules.ScaffoldRemovalSameOutputPredicate;
+			return null;
+		}
+
+		/// <summary>Every refusal of this proof quarantines its job exactly once, so naming it
+		/// in Player.log here is once per quarantine: which job, phase, scaffold and successor.</summary>
+		private static bool Refuse(KingdomConstructionJob Job, string ScaffoldId,
+			GameObject Successor, string Message, out string Failure)
+		{
+			KingdomLog.Log("construction: scaffold-removal proof refused: " + Message
+				+ " job=" + (Job == null ? "none" : Job.Id)
+				+ " phase=" + (Job == null ? "none" : Job.Phase.ToString())
+				+ " physical=" + (Job == null ? "none" : Job.PhysicalPhase.ToString())
+				+ " route=" + (Job == null ? "none" : Job.Route.ToString())
+				+ " subject=" + (Job == null ? "none" : Job.SubjectId)
+				+ " output=" + (Job == null ? "none" : Job.OutputId)
+				+ " scaffold=" + (ScaffoldId ?? "none")
+				+ " successor=" + (GameObject.Validate(Successor) ? Successor.IDIfAssigned : "invalid"));
+			return Fail(Message, out Failure);
 		}
 
 		private static bool ExactScaffoldReceiptClosure(KingdomConstructionJob Job,
