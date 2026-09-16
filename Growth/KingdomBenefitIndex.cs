@@ -22,6 +22,8 @@ namespace ThousandAndFirst
 			internal bool ShellValid;
 			internal bool AccessRead;
 			internal HashSet<long> Reachable;
+			internal readonly List<KingdomLodgingRoomRules.SleepingPlace> SleepingPlaces =
+				new List<KingdomLodgingRoomRules.SleepingPlace>();
 			internal readonly List<ProviderEvaluation> Pending =
 				new List<ProviderEvaluation>();
 		}

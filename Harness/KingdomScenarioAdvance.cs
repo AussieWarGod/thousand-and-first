@@ -42,7 +42,7 @@ namespace ThousandAndFirst.Harness
 	/// its prose so an expectation can bind to the code and never to the wording.
 	/// </para>
 	/// </summary>
-	internal static class KingdomScenarioAdvance
+	internal static partial class KingdomScenarioAdvance
 	{
 		/// <summary>The verb word. The argument is a plain decimal turn count.</summary>
 		internal const string Verb = "advance";
@@ -116,6 +116,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Cancel()
 		{
+			KingdomScenarioFounderGuard.Release(The.Player); // silent backstop; rows land in EndGuard
 			Requested = 0;
 			Remaining = 0;
 			Elapsed = 0;
@@ -164,9 +165,14 @@ namespace ThousandAndFirst.Harness
 			NextProgress = ProgressTurns;
 			IdlePumps = 0;
 			LastTurn = game.Turns;
+			// Lifecycle road only; the row lands only when the guard armed (KingdomScenarioFounderGuard.cs),
+			// so every other road's journal is byte-identical to before the guard existed.
+			string guard = KingdomScenarioFounderGuard.Arm(player);
+			if (KingdomScenarioFounderGuard.Armed)
+				KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true, "start; " + guard);
 			// This opportunity is the wait's first turn. Spending it here is what keeps the engine
 			// out of its input wait; see the class remarks.
-			Spend(player);
+			GuardedSpend(player);
 			Ok = true;
 			return "Advancing " + turns + " game turn(s) with no player input. A "
 				+ ProgressRow + " row lands every " + ProgressTurns + " turns and the script resumes "
@@ -174,7 +180,8 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>
-		/// One action opportunity of a pending wait.
+		/// One action opportunity of a pending wait (body; the guarded entry is
+		/// <see cref="Pump" /> in KingdomScenarioAdvance.Guard.cs).
 		/// <para>
 		/// Returns true while the wait still owes turns, in which case the caller must return
 		/// immediately: this call has already spent the opportunity. Returns false when the wait is
@@ -184,7 +191,7 @@ namespace ThousandAndFirst.Harness
 		/// it.
 		/// </para>
 		/// </summary>
-		internal static bool Pump(out bool Faulted)
+		private static bool PumpCore(out bool Faulted)
 		{
 			Faulted = false;
 			if (!Pending) return false;
@@ -226,6 +233,7 @@ namespace ThousandAndFirst.Harness
 			}
 			if (Remaining <= 0)
 			{
+				EndGuard(player);
 				KingdomScenarioJournal.Append(CompleteRow, true, Elapsed + " turn(s) elapsed of "
 					+ Requested + " requested");
 				Cancel();
@@ -272,6 +280,7 @@ namespace ThousandAndFirst.Harness
 		/// <summary>Abandons a pending wait and records why, under the same codes the verb uses.</summary>
 		private static void Stop(string Code, string Detail)
 		{
+			EndGuard(The.Player);
 			KingdomScenarioJournal.Append(Verb, false, Refuse(Code, Detail));
 			Cancel();
 		}

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d",
+  "inventorySha256": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4",
   "exceptions": [],
-  "reviewedBy": "Codex with independent Claude reviews, under author authorization",
-  "completedUtc": "2026-09-10T22:05:02Z",
+  "reviewedBy": "Codex root automated structural review",
+  "completedUtc": "2026-09-15T00:44:39Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md. Enumerated canonical 3069-file inventory and compared every source blob with shipped d02608a: 3063 unchanged inherit that commit's explicit review chain and limitations; five modified and one added were risk-weighted deep-read. Scope helper owns local pass lifetime; stock readers own tally; two commissioning entries retain their existing transaction responsibilities; fresh-grant creator owns the one new identity allocation; release-info changes only a literal. Independent Claude reviews of ad0dd90 and 3500035 found no blocking production finding. Test-summary attribution corrected in ebbb919. No line-cap exception, saved field or serialization format change. This is structural review, not native or release acceptance."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md and retained d02608a review chain for unchanged bytes. TryBindLocalOperation requires exact active ground, refuses foreign bound authority before capture, rechecks after capture, and reuses existing disposable PassScope. Stock's short read scope does not cross UI input; both final commission entries keep the complete reserve/fund/project transaction bound. Existing lease, exact-container, quote, custody and commit-time authority checks remain. Fresh material identity is allocated only on privately created stacks before insertion and re-proved non-allocating afterward; rollback remains the unchanged grant owner, observers remain read-only. No blanket old-save identity repair or replacement goods. Independent scope and identity reviews accepted; combined native debit/projection, save/load and delivery are separate unsatisfied gates, not inferred here."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   }
 }

@@ -1,7 +1,8 @@
 # Release and Steam Workshop Procedure
 
-**Current public Alpha: 0.3.3, published and finalized.** Release run `34577908711` verified
-one subscribed installation. [Exact public receipts and limits](STATUS.md#public-033--published-and-finalized).
+**Current public Alpha: 0.3.7, published and finalized.** Release run `34896457046` passed
+all applicable hosted, licensed, submission, subscribed verification and finalization jobs.
+[Exact public receipts and one-client limits](STATUS.md#public-037--published-and-finalized).
 Earlier release narratives below remain historical evidence, not current acceptance claims.
 
 ## Standing author ruling — 2026-09-11
@@ -285,6 +286,11 @@ git rev-parse HEAD
 
 That full receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so the
 staged candidate remains byte-identical to the subscribed package.
+
+Freeze `TESTING.md` before this binding commit. Public packaging compares its exact bytes with
+the bound candidate and refuses later edits, even though the file is outside the Workshop payload.
+Keep changing publication status in `docs/STATUS.md` and the package README; the test protocol
+links to that ledger so promotion does not require rewriting the verified protocol.
 
 ## 5A. First public v0.3 Alpha — completed `v0.3.0`
 
@@ -818,6 +824,15 @@ Gates 2 and 5 are open by record. Closing them is an author decision, and the fi
 pipeline run is the natural place to gather the evidence.
 
 ### Steam host runner runbook
+
+The optional repository Actions variable `TAF_HEARTHPYRE_223_ROOT` is forwarded unchanged
+through WSL to the existing compile gate. When the installed Workshop package differs from
+the pinned compiler reference, configure this variable to an authentic local source checkout
+as described in DEVELOPMENT.md. The gate still verifies its version and every pinned hash;
+an absent variable preserves the ordinary installed-source lookup. This is a compile fixture,
+not runtime compatibility evidence or an installed dependency downgrade. Compatibility work
+remains deferred until Beta. Verify the checkout before starting the release window.
+
 
 Preconditions on the gaming PC, all already proved by the 0.3.1 releases: a Windows desktop session
 for the account that owns items `3794797472` and `3796495680`; the Steam client running and signed

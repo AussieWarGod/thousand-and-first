@@ -153,7 +153,7 @@ namespace ThousandAndFirst.Tests
 
 		// --- Stage gating: the city builds bigger as it grows ------------------------------
 
-		[TestCase(GrowthStage.Camp, Size.Small)]
+		[TestCase(GrowthStage.Camp, Size.Medium)]
 		[TestCase(GrowthStage.Steading, Size.Medium)]
 		[TestCase(GrowthStage.Village, Size.Medium)]
 		[TestCase(GrowthStage.Town, Size.Large)]
@@ -164,7 +164,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(GrowthStage.Camp, Size.Small, true)]
-		[TestCase(GrowthStage.Camp, Size.Medium, false)]
+		[TestCase(GrowthStage.Camp, Size.Medium, true)]
 		[TestCase(GrowthStage.Camp, Size.Large, false)]
 		[TestCase(GrowthStage.Camp, Size.Huge, false)]
 		[TestCase(GrowthStage.Steading, Size.Medium, true)]
@@ -190,7 +190,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(Size.Small, GrowthStage.Camp)]
-		[TestCase(Size.Medium, GrowthStage.Steading)]
+		[TestCase(Size.Medium, GrowthStage.Camp)]
 		[TestCase(Size.Large, GrowthStage.Town)]
 		[TestCase(Size.Huge, GrowthStage.City)]
 		public void EveryTierNamesTheStageThatLiftsIt(Size Size, GrowthStage Expected)
@@ -1300,6 +1300,23 @@ namespace ThousandAndFirst.Tests
 			bool Expected)
 		{
 			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SlotBlocksOccupant(Passability));
+		}
+
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Blocked, true)]
+		[TestCase(true, true, ArchitecturePassability.Adjacent, ArchitecturePassability.Blocked, true)]
+		[TestCase(true, true, ArchitecturePassability.Blocked, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, false, ArchitecturePassability.Walkable, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, true, (ArchitecturePassability)99, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Walkable, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Adjacent, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, (ArchitecturePassability)99, false)]
+		[TestCase(false, false, ArchitecturePassability.Blocked, ArchitecturePassability.Blocked, true)]
+		[TestCase(false, false, ArchitecturePassability.Blocked, ArchitecturePassability.Walkable, false)]
+		public void NewBlockingUpgradeCellRequiresNewWallAuthority(bool Inside, bool Known,
+			ArchitecturePassability Before, ArchitecturePassability After, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected,
+				KingdomPlotRules.NewBlockingUpgradeCell(Inside, Known, Before, After));
 		}
 
 		/// <summary>

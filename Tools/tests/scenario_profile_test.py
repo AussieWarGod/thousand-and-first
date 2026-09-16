@@ -7,12 +7,16 @@ source contract in DevTests/KingdomScenarioLauncherSourceTests.cs.
 
 from __future__ import annotations
 
+import builtins
+import contextlib
+import hashlib
 import importlib.util
 import json
 import os
 import pathlib
 import shutil
 import tempfile
+import threading
 import unittest
 from unittest import mock
 
@@ -202,6 +206,96 @@ class ProfileSealTest(unittest.TestCase):
         empty.mkdir()
         with self.assertRaises(SystemExit):
             profile.inventory(str(empty))
+
+
+class ParallelInventoryTest(unittest.TestCase):
+    WAIT_SECONDS = 15
+
+    def test_bounded_overlapping_reads_preserve_every_digest(self):
+        with tempfile.TemporaryDirectory(prefix="taf-inventory-workers.") as temporary:
+            root = pathlib.Path(temporary)
+            expected = {}
+            for index in range(18):
+                name = "Input%d.XML" % index
+                data = ("file %d\n" % index).encode() * (10000 if index == 0 else 11)
+                (root / name).write_bytes(data)
+                expected[name.casefold()] = hashlib.sha256(data).hexdigest()
+            lock, barrier = threading.Lock(), threading.Barrier(4, timeout=self.WAIT_SECONDS)
+            active = peak = started = completed = 0
+
+            @contextlib.contextmanager
+            def observed_open(*args, **kwargs):
+                nonlocal active, peak, started, completed
+                with lock:
+                    active += 1
+                    started += 1
+                    ordinal = started
+                    peak = max(peak, active)
+                try:
+                    if ordinal <= 4:
+                        barrier.wait()
+                    with builtins.open(*args, **kwargs) as handle:
+                        yield handle
+                    with lock:
+                        completed += 1
+                finally:
+                    with lock:
+                        active -= 1
+
+            with mock.patch.object(profile, "open", observed_open, create=True):
+                self.assertEqual(expected, profile.inventory(str(root)))
+            self.assertEqual((4, 18, 18, 0), (peak, started, completed, active))
+
+    def test_read_failure_joins_siblings_and_preserves_previous_seal(self):
+        with tempfile.TemporaryDirectory(prefix="taf-inventory-failure.") as temporary:
+            root = pathlib.Path(temporary) / "Local"
+            root.mkdir()
+            for index in range(4):
+                (root / ("Input%d.xml" % index)).write_bytes(b"sealed bytes")
+            seal = pathlib.Path(temporary) / "profile.sha256"
+            profile.seal(str(root), str(seal))
+            previous = seal.read_bytes()
+            barrier = threading.Barrier(4, timeout=self.WAIT_SECONDS)
+            failed, release, finished = threading.Event(), threading.Event(), threading.Event()
+            completed, errors = [], []
+
+            @contextlib.contextmanager
+            def observed_open(path, *args, **kwargs):
+                barrier.wait()
+                if pathlib.Path(path).name == "Input0.xml":
+                    failed.set()
+                    raise OSError("synthetic hashing failure")
+                if not release.wait(self.WAIT_SECONDS * 2):
+                    raise TimeoutError("sibling reader was not released")
+                with builtins.open(path, *args, **kwargs) as handle:
+                    yield handle
+                completed.append(path)
+
+            def run_seal():
+                try:
+                    profile.seal(str(root), str(seal))
+                except BaseException as error:
+                    errors.append(error)
+                finally:
+                    finished.set()
+
+            ordered_files = ["Input%d.xml" % index for index in range(4)]
+            with mock.patch.object(profile, "open", observed_open, create=True), \
+                 mock.patch.object(profile.os, "walk", return_value=[(str(root), [], ordered_files)]):
+                caller = threading.Thread(target=run_seal)
+                caller.start()
+                try:
+                    self.assertTrue(failed.wait(self.WAIT_SECONDS), "four readers must overlap")
+                    self.assertFalse(finished.wait(0.2), "failure escaped before sibling reads ended")
+                finally:
+                    release.set()
+                    caller.join(self.WAIT_SECONDS)
+                self.assertFalse(caller.is_alive())
+            self.assertEqual(3, len(completed))
+            self.assertEqual(1, len(errors))
+            self.assertIsInstance(errors[0], OSError)
+            self.assertEqual("synthetic hashing failure", str(errors[0]))
+            self.assertEqual(previous, seal.read_bytes())
 
 
 class LauncherTrustSourceTest(unittest.TestCase):
@@ -453,6 +547,50 @@ class QuickstartBootPreparationTest(unittest.TestCase):
                          self.script.read_text(encoding="utf-8"))
         self.assertEqual(["status", "advance 12", "status"],
                          profile.parse_script(["status", "advance", "0012", "status"]))
+
+    def test_physical_guest_walk_authors_engine_options_before_sealing(self):
+        self.source.write_text('{"OptionShowQuickstart":"Yes"}', encoding="utf-8")
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " guest-save-supply"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "guest-save-supply"
+        self.write_options()
+        engine_wire = ('{\n"OptionShowQuickstart":"Yes",\n"OptionEnableSeed":"Yes",\n'
+                       '"r_TAF_OptionQuickstartAdvisor":"Yes",\n"OptionLookLocked":"No"\n}')
+        self.assertEqual(engine_wire.encode(), self.options.read_bytes())
+        seal = self.tmp / "walking.sha256"
+        profile.seal(str(self.local), str(seal))
+        # An engine write retaining the initial option remains byte-identical.
+        self.options.write_text(engine_wire, encoding="utf-8")
+        profile.verify(str(self.local), str(seal))
+        self.options.write_text(engine_wire.replace('"OptionLookLocked":"No"',
+                                                    '"OptionLookLocked":"Yes"'), encoding="utf-8")
+        with self.assertRaises(SystemExit): profile.verify(str(self.local), str(seal))
+
+    def test_physical_guest_walk_invalid_script_does_not_rewrite_options(self):
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " guest-save-supply advance 0"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "guest-save-supply"
+        self.assert_options_refuse_unchanged()
+
+    def test_completed_heart_render_authors_look_default_before_sealing(self):
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " heart-sight-inspect yield-frames 3"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "heart-sight-inspect"
+        self.write_options()
+        original = self.options.read_text(encoding="utf-8")
+        self.assertEqual("No", json.loads(original)["OptionLookLocked"])
+        self.assertTrue(original.startswith('{\n"') and original.endswith('\n}'))
+        seal = self.tmp / "heart-render.sha256"
+        profile.seal(str(self.local), str(seal))
+        profile.verify(str(self.local), str(seal))
+        self.options.write_text(original + "\n", encoding="utf-8")
+        with self.assertRaises(SystemExit): profile.verify(str(self.local), str(seal))
+
+    def test_completed_heart_render_invalid_tail_preserves_options(self):
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " heart-sight-inspect yield-frames 0"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "heart-sight-inspect"
+        self.assert_options_refuse_unchanged()
 
     def test_ordinary_options_do_not_invent_advisor_key(self):
         self.source.write_text('{"OtherOption":"retained"}', encoding="utf-8")

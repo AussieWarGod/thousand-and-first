@@ -70,9 +70,9 @@ namespace ThousandAndFirst
 		/// published by an interrupted retry are the sole non-ground objects admitted in the added
 		/// envelope.
 		/// </summary>
-		/// <param name="TolerateMovableOccupants">True only on the non-mutating preflight: a body
+		/// <param name="TolerateMovableOccupants">True on preflight or before paid clearance: a body
 		/// the crew may lawfully stand aside is not ground the improvement lacks, because the
-		/// mutating path clears it before it proves this again. The mutating path passes false, so
+		/// mutating path clears it before it proves this again. Final application passes false, so
 		/// anything still standing there refuses.</param>
 		internal static bool TryProveEnvelopeGrowth(KingdomSystem System, Zone Z,
 			GameObject Owner, GameObject SuccessorOwner, KingdomArchitectureIntent Successor,
@@ -159,8 +159,8 @@ namespace ThousandAndFirst
 			// road-frontage network. Its standing door errands end inside the successor's road
 			// margin, so demanding worn ground beyond that margin deadlocks the first accretion.
 			// Only the complete heart authority above admits this distinction. Physical ingress
-			// remains mandatory before debit AND on paid retry; protected road ground below is
-			// never donated by this proof, even when it lies inside the surveyed heart envelope.
+			// remains mandatory before debit AND on paid retry. Unpaid tracks do not acquire land
+			// already surveyed for the heart; paving and foreign road objects remain protected.
 			if (heartAccretion && !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
 				Z, Successor.Rect, after, out Failure)) return false;
 			bool requireExistingRoadEvidence = !heartAccretion;
@@ -186,7 +186,7 @@ namespace ThousandAndFirst
 				out Dictionary<int, ArchitecturePassability> successorSlots, out Failure))
 				return false;
 			HashSet<int> connections = ConnectionCells(Z);
-			HashSet<int> wornRoads = ReadWornRoadCells(Z);
+			HashSet<int> wornRoads = ReadWornRoadCells(Z, heartAccretion);
 			for (int y = Successor.Rect.Y1; y <= Successor.Rect.Y2; y++)
 				for (int x = Successor.Rect.X1; x <= Successor.Rect.X2; x++)
 				{
@@ -206,7 +206,10 @@ namespace ThousandAndFirst
 							+ Coordinate(x, y), out Failure);
 					GameObject road;
 					KingdomPhysicalLookupState roadState = KingdomRoads.FindOurFloor(cell, out road);
-					if (roadState != KingdomPhysicalLookupState.Absent || wornRoads.Contains(packed))
+					bool unpaidHeartTrack = heartAccretion && roadState == KingdomPhysicalLookupState.Exact
+						&& !KingdomRoadRules.WearReservesGrowthGround(true, road.GetIntProperty(KingdomRoads.PathStateProperty))
+						&& KingdomRoads.IsExactUnpaidTrack(cell, road);
+					if (roadState != KingdomPhysicalLookupState.Absent && !unpaidHeartTrack || wornRoads.Contains(packed))
 						return Fail("plot-envelope growth would absorb public road ground at "
 							+ Coordinate(x, y), out Failure);
 					List<GameObject> objects = cell.GetObjects();
@@ -226,6 +229,8 @@ namespace ThousandAndFirst
 							return Fail("a living occupant stands on plot-envelope growth ground at "
 								+ Coordinate(x, y), out Failure);
 						}
+						if (heartAccretion && item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
+							&& KingdomPlots.IsExactFoundingHeartSurveyStake(System, Z, item)) continue;
 						if (item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
 							|| item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)
 							return Fail("founding-heart ground occupies plot-envelope growth at "
@@ -240,7 +245,7 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static HashSet<int> ReadWornRoadCells(Zone Z)
+		private static HashSet<int> ReadWornRoadCells(Zone Z, bool HeartAccretion)
 		{
 			HashSet<int> roads = new HashSet<int>();
 			List<KingdomRoadRules.WornCell> tally = KingdomRoads.ReadTally(Z);
@@ -248,8 +253,8 @@ namespace ThousandAndFirst
 			{
 				KingdomRoadRules.WornCell worn = tally[i];
 				if (worn.X >= 0 && worn.X < Z.Width && worn.Y >= 0 && worn.Y < Z.Height
-					&& KingdomRoadRules.WearAt(worn.Traffic)
-						> KingdomRoadRules.WearState.Untouched)
+					&& KingdomRoadRules.WearReservesGrowthGround(HeartAccretion,
+						(int)KingdomRoadRules.WearAt(worn.Traffic)))
 					roads.Add(worn.Y * Z.Width + worn.X);
 			}
 			return roads;

@@ -24,16 +24,50 @@
     },
     {
       "id": 2,
-      "behaviour": "NPC join (first guest)",
+      "behaviour": "First-guest correspondence opening",
       "prerequisites": "founded, no roof",
-      "transitions": "correspondence opens -> resolved",
-      "effects": "message emission, ledger note",
+      "transitions": "first due pass opens correspondence -> later due pass leaves same unanswered opportunity",
+      "effects": "exactly one opening message; no guest ledger note; ordinary housing need remains visible",
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
-      "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18-19 (first-guest-setup/check)",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Same basis as row 1 (single script, two verbs); root-harness105-native.JNJnVO could not be located.",
-      "evidence": null
+      "driver": "Harness/KingdomFirstGuestNativeProvider.cs (first-guest-setup/check)",
+      "status": "NATIVE_PASS",
+      "note": "Native 10d4c2a5 adds an all-hostile wait and original-head recovery, then proves one correspondence emission across two later checks while preserving the guest through renewed hostility. Synthetic camp/store/reputation and unplaced samples are disclosed. Earlier proof retains its exact scope. Physical admission/citizenship and cold load are separate obligations. Native807a89fc additionally proves the configured-story report edge with scoped extension/option-read controls; exact original input binding retained.",
+      "evidence": [
+        {
+          "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
+          "artifactPath": "alpha-034-native/first-guest-native-check/result.json",
+          "artifactSha256": "bf7ac93d5482183309f1c013d1a39818ec2ce179a6c13ab01c02f0f6d599be15",
+          "artifactBytes": 1373,
+          "verdict": "PASS - exactly one opening message across two due passes; unanswered opportunity retained",
+          "scope": "synthetic founded roofless camp and water; 12000 real turns; actual message observer and next-need read; strict log and owned stop; no physical admission/citizenship, rendered UI or save/load",
+          "historicalScope": true,
+          "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "807a89fcb23f8aef7a677dd162569d9d6115425b",
+          "artifactPath": "recruitment/807a89fc/native-4-pass/result.json",
+          "artifactSha256": "4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4",
+          "artifactBytes": 4070,
+          "verdict": "PASS - twelve native samples; hostile wait and recovery; frozen identity; story-policy report agrees with both selection routes",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation, unplaced bodies and scoped catalogue/option-read override. Road checkpoint proves downstream processing only; no physical admission or cold load. Later harness-only startup observer change means this retains its original full input inventory.",
+          "historicalScope": true,
+          "inventoryDigest": "992daf57a6423f86f1955bb58cec9b6ed6bac916b0b7ffc88fc30f17f2e16dfe",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 3,
@@ -41,12 +75,46 @@
       "prerequisites": "Quickstart",
       "transitions": "founders enrolled",
       "effects": "roster count",
-      "save_cold_load": "owned lane",
-      "negative": "owned lane",
-      "driver": "camp-builder-owned (Harness/KingdomQuickstartBootstrap.Founders*.cs)",
-      "status": "NONE",
-      "note": "out of this review's edit scope; owned lane, not independently assessed",
-      "evidence": null
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "no partial or synthetic enrollment in the native shortage observer",
+      "driver": "Harness/KingdomQuickstartSettlementChecks.cs; Harness/KingdomQuickstartHousingRecovery.cs",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee starts with four unique founding citizens; after two genuine roof departures the original receipt still names the same cohort. Cold load preserves two housed survivors and keeps both departed bodies absent. Other join/recruitment paths remain outside this scenario. Source-bound creator/cohort and grant rollback checks also pass in the 17-case native fixture at 660ba354.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
+          "artifactPath": "alpha-034-native/quickstart-native-checks/result.json",
+          "artifactSha256": "1778d5e060c56960a87974e0f58eda75a4fa98b9d7c2f8f6998beaaaf9e1459e",
+          "artifactBytes": 1373,
+          "verdict": "PASS - 17 native creator/callback/rollback cases including the real four-founder cohort",
+          "scope": "synthetic native fixture; exact current production source and all 3344 C# inputs bound to the stopped closed profile; factory/cohort checks only, not ordinary embark or save/load; later teardown harness changes are outside this source binding",
+          "historicalScope": true,
+          "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 4,
@@ -54,12 +122,35 @@
       "prerequisites": "founded, enrolled resident",
       "transitions": "KingdomResidentDepartureRuntime.TryBegin (Growth/KingdomResidentDepartureRuntime.Begin.cs:10)",
       "effects": "population/roster drop, capacity archive",
-      "save_cold_load": "COVERAGE_GAP",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "COVERAGE_GAP",
-      "driver": "NONE found among the 30 [KingdomScenarioVerbProvider] classes on dev",
-      "status": "NONE",
-      "note": "COVERAGE GAP, not a proven-unreachable defect: no failed transition or production proof of unreachability was found, only an absent driver",
-      "evidence": null
+      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee proves two ordinary roof departures, repeated retention of the same two citizens, construction recovery, and cold-load preservation without reminting departed founders. Pending-departure interruption and multi-city combinations remain gaps.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 5,
@@ -92,11 +183,11 @@
       "prerequisites": "founded, water+material stock",
       "transitions": "quote/CanPay/Commission -> Working/PlotWorks",
       "effects": "job phase, works receipt, ground",
-      "save_cold_load": "COVERAGE_GAP (camp lifecycle driver absent)",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "COVERAGE_GAP",
-      "driver": "camp-builder-owned Quickstart build harness for the Quickstart leg; this pass's teardown-setup independently exercises the same KingdomCommission.Commission for a non-Quickstart camp (Harness/KingdomTeardownNativeProvider.cs:19)",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; Harness/KingdomQuickstartHousingRecoveryProvider.cs; Harness/KingdomTeardownNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "note": "3cf2825 is a direct ancestor of current dev (git-verified), but that is commit ancestry, NOT whole-inventory identity: docs/STATUS.md's 3cf2825 section cites no inventory SHA-256 at all (checked), so inventoryDigest is recorded null and currentDevCoverage is false, not assumed true from ancestry alone. Real artefacts checksummed and confirmed present. Completion-to-built and save/cold-load of the FINISHED building remain a separate gap. Completion-to-built and save/cold-load legs, plus the full lifecycle chain (quote through next-action-after-load), are now IMPLEMENTED_UNEXECUTED on test/longform-reachability -- see rows 20-23, not this row's own driver.",
+      "note": "Historical quote/commission evidence is retained below. Native 60f11aee additionally keeps the paid job Working through both two-citizen observations, completes its functional output after removing owned physical obstructions, saves and cold-loads it, then pays for another commission. This is a supplied housing stress scenario, not whole-inventory or ordinary-start acceptance.",
       "evidence": [
         {
           "commit": "3cf2825",
@@ -119,6 +210,28 @@
           "historicalScope": true,
           "inventoryDigest": null,
           "currentDevCoverage": false
+        },
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
         }
       ]
     },
@@ -129,11 +242,34 @@
       "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage; two SEQUENCED cases, one gang at a time (bba51c4): fire (1 timber cost, RuntimeData/KingdomBuildings.xml:544-546, zero-salvage boundary) raised and struck first, then larder (3 timber cost, RuntimeData/KingdomBuildings.xml:399-400, positive-salvage) commissioned only once fire reaches Phase 2",
       "effects": "works object gone, exact material raw-count delta per KingdomMaterialRules.StrikeSalvage (Growth/KingdomMaterialRules.Clearance.cs:211-219): fire expects +0 timber (boundary), larder expects +1 timber (positive), both computed live from KingdomMaterials.CostFor + StrikeSalvagePercent, never hardcoded",
       "save_cold_load": "COVERAGE_GAP (not wired this pass)",
-      "negative": "IMPLEMENTED_UNEXECUTED",
-      "driver": "Harness/KingdomTeardownNativeProvider.cs:18-19 (teardown-setup/teardown-check)",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule. Salvage is attributed by STRIKE-RECEIPT (KingdomConstruction.ReceiptProperty captured AFTER OrderStrike from the strike-route row it mints, never the pre-strike construction receipt, matched via StrikeSalvageReceiptProperty across every zone stockpile), never by own-chest before/after delta -- OrderStrike returns salvage to the first eligible stockpile zone-wide (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126), not the original payer, which an own-chest delta with two parallel cases would get wrong. Removal is confirmed by reference (a same-ID replacement object refuses, never counts as gone) and by a same-cell finished-building sweep, not by ID-string absence alone. BLOCKER FOUND AND FIXED (Codex root, source review, pre-native): the receipt must be captured AFTER a successful OrderStrike, never before -- OrderStrike mints a NEW strike-route registry row and rebinds the works to it in the same call (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob, Growth/KingdomMaterials.09.StrikeStampAndCancellation.cs:35 Bind), superseding the paid-construction receipt salvage is tagged against (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:113). Fixed: capture moved after OrderStrike, plus a Require that the new receipt differs from the pre-strike one. Negative regression is an ORDER PIN only (DevTests test ReceiptIsCapturedAfterTheStrikeNeverBeforeAndMustDifferFromThePreStrikeOne), disclosed as not runtime behaviour proof -- no pure predicate exists to value-test this without the game. FURTHER FIX (Codex root): the handoff to the new strike-route registry row is now RESOLVED BY REFERENCE, not merely id-captured -- after a successful OrderStrike, KingdomConstruction.TryFind(StrikeReceiptId, out row) then KingdomTeardownStrikeRowClaims.IsExpectedStrikeRow (Harness/KingdomTeardownStrikeRowClaims.cs, engine-free pure predicate, mirrors the KingdomQuickstartBuildClaims pattern) Requires row.Route==Strike, row.SubjectId/SourceId==the struck works IDIfAssigned, row.OwnerKey==the settlement owner key, row.ZoneId==the struck zone, row.Phase==Working AND row.PhysicalPhase==StrikeWorking (CORRECTED: OrderStrikeDurable does not return true until ResumeStrikeStamp succeeds, Growth/KingdomMaterials.08.StrikeOrdering.cs:274, which stamps PhysicalPhase.StrikeWorking then transitions Phase to Working via FinishProjection, Growth/KingdomMaterials.09.StrikeStampAndCancellation.cs:51,55-56 -- Phase is never left at NewJob's initial Published once OrderStrike has actually returned true), refusing any mismatch by name. Value-tested positive+8 negatives in DevTests/KingdomTeardownStrikeRowClaimsTests.cs (wrong route incl. the exact old-construction-route failure mode, wrong subject, wrong source, wrong owner, wrong zone, pre-stamp Published phase, missing StrikeWorking physical phase, wrong terminal phase) -- this is real behavioural proof of the predicate, not a source pin, though the harness call-site itself is still only source-pinned. DevTests source pin for KingdomBuilt corrected to forbid only the WRITE form (SetIntProperty), never the read the removal-census sweep legitimately performs. CREW ROOFLESS-DEPARTURE GAP (Codex root, disclosed, not fixed): the enrolled synthetic crew has no home plot, so KingdomLodging.Assignments.cs:135-140 records a roof brink for each of them at the first attended lodging pass that finds them unhoused (Growth/KingdomLodging.BrinkAndObservation.cs:31 KingdomBrink.Record); departure fires KingdomLodgingRules.GraceDays (:32) = KingdomBrinkRules.RoofBrinkWindowDays (Core/KingdomBrinkRules.cs:124) = RoofBrinkWindowPasses(2) * CohabitationDaysPerAttendedPass(3) = 6 days = 7200 ticks after that warned tick (Core/KingdomRules.Economy.cs:12 TicksPerDay=1200). With the first lodging pass plausibly landing near tick 1200-2400, estimated departure falls near tick 8400-9600 -- inside this fixtures 13200-tick budget (sealed cadence 2400/6000/9600/13200): it lands at or before the third check (9600) and a full interval before the final check (13200), so the widened cadence keeps the departure inside the window and the conclusion is unchanged -- a departure that fires is met by a later teardown-check and surfaces as the named crew-departed refusal below, never escaping the budget unobserved. No roof/tent step was added (none exists as a lawful reusable in-tree harness API at 4c7768f) and departure is NOT frozen or synthesized away: Frame.Check() re-Requires the real production crew count (KingdomResidents.OnRollCount) before touching either case and, if the crew has fallen below its required size, refuses by a named outcome, \"case=<fire|larder> outcome=crew-departed onRoll=<n> wanted=<CrewSize> tick=<t>\", inside the same Fail() envelope every other named refusal in this scenario uses -- a named REFUSED verb, never a silently stalled incomplete case and never a false pass (fixed at 3272cff; the departure itself remains open, only its surfacing changed). This is a REMAINING FIXTURE GAP, disclosed rather than closed; resolving it natively is root/Codexs call. MATERIAL-FUNDING BLOCKER, TRUE CAUSE UNPROVEN (native run 12 on 3272cff): teardown-setup REFUSED with InvalidOperationException \"The exact realm sources cannot cover this construction input (InsufficientMaterial)\" before any advance/check. review-fb02900-coverage-findings.md finding 2: the single-object-Count hypothesis first pinned here is CONTRADICTED by source -- the reservation path honours Count end to end (Growth/KingdomConstruction.InputObservationRegistry.cs:141 -> InputPlannerScan.cs:173 -> KingdomMaterialDebitRules.Planning.cs:57) -- so the real cause of run 12's refusal remains UNPROVEN from the available evidence (was a stockpile dedicated before the mint; did the mint land inside it; neither is confirmed). What changed regardless, on its own merits: each design's authored bill (RuntimeData/KingdomBuildings.xml Materials=\"...\", read live via KingdomMaterials.CostFor, never hardcoded) is minted as N separate single-unit objects per material -- KingdomCampHeartNativeFixture.Mint's own proven shape -- kept because it is that fixture's exact shape, not because it is known to fix run 12; bounded by the dedicated store's own declared capacity (KingdomSurvey.StockCapacityOf) before anything is minted; disclosed per design as \"synthetic-bill design=<key> <material>=<n>\"; and a pre-flight CanPayBill check (KingdomMaterialRules.Covers/Missing over the freshly minted store) refuses by name with the exact missing tally if it still cannot cover the bill. Source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no pure predicate exists to value-test minting itself without the game. Whether this resolves run 12 is unproven; only a fresh native run decides it. PRODUCTION DEFECT FOUND, NOT FIXED HERE (native run 20, review-teardown-run20-stuckworking.md): fire's labour clock paid all 600 ticks on the FIRST settlement pass, but its physical Cleared stage was refused on EVERY later pass because a living occupant stood on one authored layout slot (KingdomArchitectureStamper.Verification.cs CanInsert refuses IsCreature||IsPlayer on the ground layer, silently, forever -- Finish() is never reached and the registry row stays Working). The occupant is almost certainly one of this fixture's own synthetic crew bodies, placed before either raising's rect existed. This is a real production defect (an ordinary player commission on the same authored path would brick the same way) and is being filed and fixed separately, NOT in this harness. Filed as issue #163. Harness-only change made here: each raising's rect is resolved the moment it exists (KingdomPlots.TryReadRect, re-tried every Check until known) and the fixture's own crew bodies are kept off it (KeepCrewOutsideRaisings), relocated to a free cell outside every known rect -- never a production resident or the player. review-15f9de2-teardown-findings.md residual A: this is BEST-EFFORT, not a guarantee -- the crew are live NPC-brained bodies posted to construction work by production, so they act on every tick between the four scripted checks, and a body can walk (or be posted) back onto the footprint mid-window; relocation only fires at check boundaries. Correct wording: the fixture's own crew is kept off the footprint AT EACH SCRIPTED CHECK; between checks, production defect #163 can still fire, and occupants= records it when it does. Telemetry gained stage-applied=/stage-target=/built=/completed-tick=/apply-failure=(disclosed unread -- the real refusal is KingdomLog.Log only, dev-gated, never stored on any object) and occupants= (creature/player ids on the raising's own footprint), so any future stall of this kind is nameable without another blind native run. review-teardown-run25-staked.md (native run 25): the check-boundary relocation did not hold -- crew are live-Brain NPCs that walk back onto the footprint before the next settlement pass, so #163 fired 42 times across the run. Fixed here, harness-only: a relocated crew body is now pinned stationary with the exact production idiom for anchoring an NPC (Brain.Wanders=false, Brain.WandersRandomly=false, Brain.Stay(cell), Simulation/City/KingdomStations.Claims.cs:137-139) instead of only being moved once per check. Fixture crew do not wander; a real settlement's wandering residents can still trigger #163. occupants= (Case.Telemetry) now uses the authored placement cells decoded from the commissioned job's own payload (KingdomPlots.TryDecodePlotPayload -> KingdomArchitectureRuntime.TryDecode, the same decode chain Preflight/ResolveArchitecture use); the crew-relocation sweep (Frame.KeepCrewOutsideRaisings/FindCellOutside) still avoids only the bounding rect of every known raising, never the placement cells directly -- REVIEW CORRECTION (review-5093b00-teardown-findings.md REQUIRED 1): the earlier claim that \"the relocation sweep\" also uses the placement cells was FALSE, now withdrawn. The rect is a true superset of its own placements (TryToWorld poses from the rect's own origin), so parking still lands outside every placement of a raising once that raising's rect is known -- but not before, and larder's placements are unexcluded until Larder.Start reads its rect. Every KeepCrewOutsideRaisings call journals each crew body's parked cell and its walkability (empty/passable), whether or not it moved that pass. FURTHER FINDING (review-5093b00-teardown-findings.md item 2), DISCLOSED, NOT FIXED: Brain.Stay only stops the body's own WANDERING; it does not stop LABOUR (posting/hands are read off KingdomConstructionPresence, never off Brain) and it does not hold against PRODUCTION itself -- KingdomStations.Claim (Simulation/City/KingdomStations.Claims.cs:137-139,150,182-197) re-issues Brain.Stay(target) plus a MoveTo(target) goal for a posted body, where target is the works cell or an adjacent one, i.e. production's own posting walks a construction-posted crew body back onto the footprint. This fixture cannot keep a raising's site clear by construction; run 25's 42 firings of #163 may well recur. The GREEN teardown run this scenario is owed to the #163 production fix (settler displacement at apply, fix/034-apply-occupant-announce), not to this harness mitigation.",
-      "evidence": null
+      "negative": "NEGATIVE_PASS",
+      "driver": "Harness/KingdomTeardownNativeProvider.cs (teardown-setup/check)",
+      "status": "NATIVE_PASS",
+      "note": "Native abf41251 passes both sequenced cases after 16800 ordinary turns, including each real closure window, repeated public-action refusal without registry/building mutation, restored borrowed-receipt counterexample, eventual Complete/Settled strike receipts, removed roots/work rows, exact salvage and repeated-strike refusal. Synthetic founding, two stationary workers and material bills are disclosed. Earlier failures and b27a26c2 evidence remain historical. No save/cold-load teardown or catalogue-wide claim.",
+      "evidence": [
+        {
+          "commit": "b27a26c2ecc094c03bd50432fb3f66ed9d7a5b6d",
+          "artifactPath": "teardown/b27a26c2/result.json",
+          "artifactSha256": "e07ecbb562baf57051b41f20bdacc9f22669c06859832ec1f92929d1f31648d3",
+          "artifactBytes": 1384,
+          "verdict": "PASS - both real builds/strikes, exact salvage, completed receipts, current work projection, repeated-strike refusals and strict log",
+          "scope": "seed #43101, synthetic two-person crew and material bills; 16800 ordinary turns; fire zero salvage and larder positive salvage; exact closed profile, 3344 C# inputs, owned stop; save/load untested",
+          "historicalScope": true,
+          "inventoryDigest": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "abf41251f3a7c063c7710df4179b0bdb0e283e8b",
+          "artifactPath": "strike-closure/abf41251/native-1-pass/result.json",
+          "artifactSha256": "bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538",
+          "artifactBytes": 3447,
+          "verdict": "PASS - real closure refusals, unchanged durable work, restored foreign receipt, eventual removal and exact salvage",
+          "scope": "Seed #43101; synthetic founding, two stationary crew and material bills; reversible borrowed-receipt probe; 16800 ordinary turns; fire zero salvage and larder positive salvage; 3454 full pinned profile inputs including 3414 C#; strict final log and owned stop; no save/cold load or ordinary-play acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 8,
@@ -152,26 +288,26 @@
       "id": 9,
       "behaviour": "Heart expansion (rungs 1-4)",
       "prerequisites": "founded heart",
-      "transitions": "envelope-authority transition (issue #141)",
-      "effects": "rung/plot rect",
+      "transitions": "paid adjacent heart upgrades 1->2->3->4 with authored envelope authority",
+      "effects": "new standing heart and settled rung/plot rectangle after each paid upgrade",
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
-      "driver": "fix lives on fix/issue-141-heart-authority (b1efe18), not merged to dev",
-      "status": "NONE",
-      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md",
+      "driver": "Tools/personas/camp-heart-chain.persona and Harness/KingdomCampHeartChainProvider.cs request 31200 ordinary turns through paid 1->2->3->4 with disclosed synthetic city support. No full-chain native PASS. Row 30 retains narrower accepted paid 1->2 and cold-load coverage.",
+      "status": "COVERAGE_GAP",
+      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Full-chain attempts remain incomplete or refused; latest bbd430f4 attempt was stopped after sealed input-option drift (docs/STATUS.md). Native paid progression through every rung, higher-rung save/cold load and present/away settlement remain unverified. Row 30 tracks the narrower accepted 1->2 driver without claiming the full chain.",
       "evidence": null
     },
     {
       "id": 10,
       "behaviour": "Heart expansion (rung 4->5, arcology)",
       "prerequisites": "rung 4 heart",
-      "transitions": "TryAuthorizedTransition heart branch (Growth/KingdomArchitectureStamper.Transitions.cs:48-71)",
-      "effects": "n/a (refused before any transition)",
-      "save_cold_load": "n/a",
-      "negative": "n/a",
+      "transitions": "paid rung 4->5 renovation through TryAuthorizedTransition, retaining the shared Huge footprint",
+      "effects": "standing arcology, settled rung 5 and unchanged held footprint with exact basin/storage custody",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
       "driver": "NONE",
-      "status": "DEFECT",
-      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation",
+      "status": "COVERAGE_GAP",
+      "note": "The historical #144 integer/rung comparison is fixed in current source, audited at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46. Growth/KingdomArchitectureStamper.Transitions.cs calls HeartRungEndpointsAdmit with both actual lot tiers; Growth/KingdomPlotHeartRules.cs maps rungs 4 and 5 to PlotSize.Huge and admits adjacent endpoints on that shared tier. This source proof removes the obsolete unreachability claim only. No native driver or typed receipt proves paid arcology renovation, settled rung, custody, save/cold load or its later settlement passes.",
       "evidence": null
     },
     {
@@ -255,7 +391,7 @@
       "negative": "NATIVE_PASS (overflow path)",
       "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, IMPLEMENTED_UNEXECUTED.",
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, with exact abf41251 native evidence; that does not revalidate this separate overflow path.",
       "evidence": [
         {
           "commit": "6ba1969",
@@ -368,9 +504,9 @@
       "effects": "exact physical timber/water debit, a job/receipt identity linking the commission to its output, IsFunctionallyBuilt-equivalent state (KingdomBuilt==1 + design key match on the job's own cell), a real save file with a hashed receipt",
       "save_cold_load": "see row 22 (separate row: cold-load is a second session)",
       "negative": "CanPay refusal at lifecycle-build (economy has not yet paid for the design); budget-expiry refusal at lifecycle-grown (turn budget expired before the building stood, job phase named in the refusal)",
-      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs:35-38 (verbs); Harness/KingdomQuickstartLifecycleSteps.cs (Open/Build), KingdomQuickstartLifecycleFinish.cs (Grown/Save); persona Tools/personas/lifecycle-stockpile-native-check.persona; checker Tools/check-quickstart-lifecycle.py",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; KingdomQuickstartLifecycleSteps.cs (Open/Build); KingdomQuickstartLifecycleFinish.cs (Grown/Save); Tools/personas/lifecycle-founding-road-refusal.persona is the bounded negative path; no positive ordinary-founding dedication driver is recorded",
       "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "On branch test/longform-reachability (not yet merged to dev), read only reviewed (review-fff8eba-lifecycle-findings.md). Source-pinned only (DevTests/KingdomQuickstartLifecycleContractTests.cs); no native run performed. Cannot be marked covered or PASS until a native evidence id exists.",
+      "note": "Source audited at 3e0334b7a901e8c9f711b0475d54813917153e57: these lifecycle components are merged. lifecycle-stockpile-native-check.persona now uses the Quickstart boot and belongs to row 21. Ordinary founding realize does not dedicate a stockpile; lifecycle-founding-road-refusal.persona waits 500 ordinary turns and expects refusal. Neither a configured negative path nor Quickstart evidence proves the positive ordinary-founding dedication, paid construction and save chain. No native receipt for that positive path is attached; implement the real founder interaction and execute the full chain.",
       "evidence": null
     },
     {
@@ -382,9 +518,109 @@
       "save_cold_load": "see row 22",
       "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
       "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Camp-builder-owned lane (Quickstart construction chain files) -- recorded from the read-only review of test/longform-reachability, not independently exercised or edited by this branch. Source-pinned only; no native run performed.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "All six canyon/marsh/dunes and advisor yes/no combinations pass the complete Quickstart chain at 86c0b5df. All four original citizens occupy completed starter homes and the paid fire finishes after 16800 ordinary turns. Later production differences are the release-version literal and guide text; these receipts retain their exact inventory. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 22,
@@ -395,9 +631,109 @@
       "save_cold_load": "this row IS the save/cold-load leg",
       "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed; this closes the cold-load gap 2d663d0 originally left as BLOCKER.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "All six source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in all twelve sessions. Evidence is bound to 86c0b5df, not every current feature. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 23,
@@ -408,9 +744,441 @@
       "save_cold_load": "runs strictly after row 22's cold-load; not itself a save/load leg",
       "negative": "job-id reuse refusal (Harness/KingdomQuickstartLifecycleLoad.cs::Act: \"the next action reported the completed job's own identity; a further action must mint its own job\")",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::Next/Act; checker Tools/check-quickstart-lifecycle.py NEXT_ROWS/next-action link",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "All six cold-load sessions commissioned a distinct new job and paid its live timber/water cost. The exact completed building remained functional. This proves commission admission and debit; completion of the second job is outside this chain.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "behaviour": "Housing shortage and workforce recovery",
+      "prerequisites": "genuine default Quickstart; four founders; two physically obstructed starter shelter plots; explicit extra provisions isolate roof pressure",
+      "transitions": "roof warnings -> two voluntary departures -> repeated two-citizen floor -> clear exact obstacles -> usable homes and completed paid work",
+      "effects": "physical citizen identities, living roll, removed departed bodies, bed census, home assignments and paid construction output",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "blocked shelters provide zero beds; missing/corrupt resident rows refuse; unrelated departure causes refuse",
+      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona; Harness/KingdomQuickstartHousingLoad.cs; Tools/personas/quickstart-housing-recovery-save.persona",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee passes the strengthened unfinished-work condition, two repeated zero-bed retention checks, usable homes/paid completion, real save and cold load with identical survivors and absent departed founders, then another paid commission. Logs and owned stops pass. Multi-city, interrupted-departure and condemned-home combinations remain gaps.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "behaviour": "Public 0.3.3 Quickstart fresh-save preservation under a 0.3.4 reader",
+      "prerequisites": "retained genuine public 0.3.3 fresh marsh/advisor-on save; exact stopped source, closed profile, code/content hashes and successful fresh-save journal",
+      "transitions": "old save copied unchanged -> fresh sealed current reader -> preactivation and post-load physical verification",
+      "effects": "same GameID, heart, stocks and object IDs; original 24-dram grant; terminal bootstrap is not replayed; no retroactive founders or refill",
+      "save_cold_load": "NATIVE_PASS for the exact retained fresh save; arbitrary historical saves and later construction progression remain untested",
+      "negative": "malformed/wrong source, game, snapshot, quantity and noncanonical marker inputs refuse in pure observer tests; native malformed-marker injection not performed",
+      "driver": "Tools/prepare-quickstart-033-upgrade.py; Harness/KingdomQuickstartHistoricalGrant.cs; Harness/KingdomQuickstartSaveState.cs; Harness/KingdomQuickstartLoadTest.cs",
+      "status": "NATIVE_PASS",
+      "note": "The old save remains unchanged. The first attempt exposed a current-grant assumption in the harness; the corrected source-bound observer preserves the old quantity without changing production grants. Strict source/reader logs and owned reader shutdown pass.",
+      "evidence": [
+        {
+          "commit": "5596328501ae8878cb88b4da58c69b881f2c7593",
+          "artifactPath": "quickstart-upgrade/55963285/result.json",
+          "artifactSha256": "3435132540077dc0986cdbedc24d2ad70482120d55ea0fe40776eb80a4bec889",
+          "artifactBytes": 525,
+          "verdict": "PASS - old public fresh-save identity, stock and heart preservation before activation and after load; no bootstrap replay",
+          "scope": "marsh/advisor-on seed #43101; public source e96b50e1c7ce698ed05749963d4fb885ab42d054; 0.3.4 reader; old-save construction progression untested",
+          "historicalScope": true,
+          "inventoryDigest": "73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "behaviour": "Physical first-guest admission and citizenship",
+      "prerequisites": "real unanswered first-guest opportunity and loaded held ground",
+      "transitions": "Charter admission -> exact hosted body -> body interaction -> explicit citizenship",
+      "effects": "guest is interactable but not a citizen before explicit welcome; completed welcome enrolls exact body once",
+      "save_cold_load": "NATIVE_PASS in row 28 for the exact enrolled guest; historical migration and interrupted enrollment remain COVERAGE_GAP",
+      "negative": "NEGATIVE_PASS",
+      "driver": "Harness/KingdomGuestActionsNativeProvider.cs; guest-actions-native-check and guest-actions-quickstart-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI or all-seed survival claim. Row28 records the separate exact guest save/cold-load scenario; the older action-only evidence is unchanged. Native9cc75930 repeats the genuine Quickstart chain with reputation recruitment: actual guest768 Yywur, human culture/species, frozen blueprint/name/origin, living roll and bound map agree before and after cold load. Four founders occupy two real rooms/sixbeds; no synthetic residents or homes. Repeated startup applies its controlled founding-reputation change once. The prior duplicate-initialization failure is archived.",
+      "evidence": [
+        {
+          "commit": "895e700e3f459d859bb3985b7427f36bfddfa571",
+          "artifactPath": "guest-actions/895e700e/guest-actions-native-check/result.json",
+          "artifactSha256": "8296bd2eecffe7f5b5df059ca1332c9ddd486e5713b2cd4da33bb51199450279",
+          "artifactBytes": 1408,
+          "verdict": "PASS - two no-bed welcomes preserve exact guest, interaction, water and population",
+          "scope": "6000 real turns; synthetic camp and 64 drams; exact production correspondence and body actions; no rendered UI or save/load",
+          "historicalScope": true,
+          "inventoryDigest": "d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "d9d0f4b4c3fd7918cf023d189bccb7ac7781bfa0",
+          "artifactPath": "guest-actions/d9d0f4b4/guest-actions-quickstart-native-check/result.json",
+          "artifactSha256": "83ee863b3885fc5abdfbf7ceb5e0a1b95b85209452cb8fb8249fe01fb2f75740",
+          "artifactBytes": 1834,
+          "verdict": "PASS - exact fifth citizen and next settlement day after genuine Quickstart housing",
+          "scope": "8400 then 1200 real turns; four original founders, six beds, uncreeded guest, duplicate interaction refused; scripted menu input; no guest save/load",
+          "historicalScope": true,
+          "inventoryDigest": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": true,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "behaviour": "Immediate claimed-ground lighting and drawn city sight",
+      "prerequisites": "newly founded active claimed zone; master, claimed light and city sight enabled",
+      "transitions": "claim publication -> stamped light; real draw -> whole-zone sight -> ordinary sight restored; zone reactivation -> same part",
+      "effects": "all 2000 cells drawn visible in Quickstart, including 810 naturally occluded cells; ordinary founding lights every cell and does not duplicate attachment",
+      "save_cold_load": "NATIVE_PASS in row 29 for the same completed Quickstart zone through separate cold load and real rendered frames; historical migration remains COVERAGE_GAP",
+      "negative": "NEGATIVE_PASS for unclaimed attachment control and gameplay visibility restoration; option-toggle, claim-loss and second-city native scenarios remain COVERAGE_GAP",
+      "driver": "Harness/KingdomQuickstartSightNativeProvider.cs; Harness/KingdomQuickstartSightWitness.cs; Harness/KingdomClaimedLightNativeChecks.cs",
+      "status": "NATIVE_PASS",
+      "note": "Reproduced missing initial attachment against unchanged 0.3.4 production before fixing claim publication. A diagnostic capture run passed rendering but changed PlayerOptions and failed its stop seal; retained as failed evidence. Accepted fresh runs preserve complete seals and strict logs. Initial journal postprocessing omitted boot headers or selected the wrong persona; corrected complete expectations and success-only terminal check were run over unchanged retained journals. No fabricated light, reactivation in Quickstart, historical-save or all-option claim. Row 29 adds real loaded render-loop coverage after ordinary heart completion; the existing source-only evidence is unchanged. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
+      "evidence": [
+        {
+          "commit": "2a106bdf1bf96e4f7029f72f5bad9606048b8f5f",
+          "artifactPath": "claimed-sight/2a106bdf/quickstart-native/result.json",
+          "artifactSha256": "8e9631a17a6253792df4a41af9368de60bb97c21c8d7f39ccd2e4012f4d5d789",
+          "artifactBytes": 1797,
+          "verdict": "PASS - quickstart native",
+          "scope": "Genuine marsh/advisor-on Quickstart; immediate attachment without reactivation; four real frames; all 2000 cells visible and lit during draw; 810 naturally occluded cells; exact ordinary gameplay sight restored. Strict logs and sealed owned stop; no save/cold-load coverage. Journal expectations validated at c417b98046e8b10943852de53b20a29490681c47.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "2a106bdf1bf96e4f7029f72f5bad9606048b8f5f",
+          "artifactPath": "claimed-sight/2a106bdf/ordinary-native/result.json",
+          "artifactSha256": "2f44a0bde4aa8acd92812c613de043799ed1d0b0923466a1680b88f193b1ad2e",
+          "artifactBytes": 1794,
+          "verdict": "PASS - ordinary native",
+          "scope": "Disclosed synthetic founding through production transaction; unclaimed control has no part; immediate attachment before reactivation; same part after reactivation; four real frames light all 2000 cells; no foreign-zone light parts. Strict logs and sealed owned stop; no save/cold-load coverage. Journal expectations validated at c417b98046e8b10943852de53b20a29490681c47.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "52d67656b0ecafe5fd2f0ca15c77bb2120b7539c",
+          "artifactPath": "heart-sight/52d67656/completed-heart-cold-load-1/result.json",
+          "artifactSha256": "337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29",
+          "artifactBytes": 3343,
+          "verdict": "PASS - completed first-heart fabric and whole-zone native rendering survive real save and cold load",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "behaviour": "First-guest citizenship + water shortage recovery + real save/cold load",
+      "prerequisites": "Genuine Quickstart, original four founders, completed starter housing, enrolled first guest, exhausted finite civic water, existing carried pure water",
+      "transitions": "recruit exact guest -> fourteen days -> unfunded commission refuses -> founder walks to cask and pours -> real save -> separate cold load -> stale guest choices refuse -> another paid commission",
+      "effects": "same guest identity, citizenship/domain/terminal receipts, home, population and accounting before activation and after load; conserved physical water transfer; exact new job with one timber and two drams paid",
+      "save_cold_load": "NATIVE_PASS for the exact completed enrollment and original founders, housing, stores and paid building",
+      "negative": "NATIVE_PASS for unfunded commission and two stale guest retries; oracle mutations cover missing/repeated/reordered rows, changed identity/receipts, nonconserved or remote refill and profile drift; interrupted enrollment remains COVERAGE_GAP",
+      "driver": "Harness/KingdomGuestSaveNativeProvider.cs; Harness/KingdomGuestSaveSupply.cs; Harness/KingdomGuestSaveWitness.cs; Tools/personas/guest-save-lifecycle-native-check.persona; Tools/guest_save_check.py",
+      "status": "NATIVE_PASS",
+      "note": "Native source 4c97470d, validator b11e26fb. Earlier a4d2bc20 complete scenario failed at water0/needed2; 76baa664 lost founder 516 to a giant dragonfly before recruitment; 4d207e8c failed a harness material selector and sealed-option drift. All retained as failures. No wildlife suppression, founder replacement, created supplies or weakened load-commission check. The accepted run recorded no civic combat interruption; the prior combat death does not establish an AI cause. Vanilla carried donor had no assigned ID; exact object/part and inventory owner references prove transfer identity. Native9cc75930 repeats the genuine Quickstart chain with reputation recruitment: actual guest768 Yywur, human culture/species, frozen blueprint/name/origin, living roll and bound map agree before and after cold load. Four founders occupy two real rooms/sixbeds; no synthetic residents or homes. Repeated startup applies its controlled founding-reputation change once. The prior duplicate-initialization failure is archived.",
+      "evidence": [
+        {
+          "commit": "4c97470d66e845b9841d4abd74d20d6787fc0e6c",
+          "artifactPath": "guest-save/4c97470d/carried-water-recovery-1/result.json",
+          "artifactSha256": "4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000",
+          "artifactBytes": 3280,
+          "verdict": "PASS - guest citizenship survives real save/cold load and stale choices; unfunded construction refuses, actual carried water refills stores, then loaded construction pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 16803 observed turns, four original founders and guest 654, six beds, finite supplies, 16 real movement steps and eight carried pure-water drams (32->24, cask0->8). Scripted menu input and physical engine transfer; no rendered interaction, arbitrary migration, interrupted enrollment or all-seed survival claim. Both closed profiles, strict logs, owned stops and exact source binding pass.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": true,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "behaviour": "Completed first-heart physical fabric and city sight through cold load",
+      "prerequisites": "Genuine Quickstart with original founders, ordinary completed starter housing and paid fire, settled first-heart terminal, claimed-zone sight enabled",
+      "transitions": "observe initial heart -> 8400 ordinary turns -> capture seven completed walls and physical fabric -> real source frames -> save -> separate load -> preactivation and loaded comparison -> another paid job -> vanilla Continue -> real loaded frames",
+      "effects": "exact component custody, canvas coordinates, frozen layout and founding/terminal receipts preserved; all 2000 cells drawn visible and lit while native gameplay visibility is restored; saved autorunner does not replay",
+      "save_cold_load": "NATIVE_PASS for exact first-heart physical output and loaded render loop; historical migration and interrupted construction remain COVERAGE_GAP",
+      "negative": "NEGATIVE_PASS for naturally occluded cells becoming visible only during draw and saved-script replay prevention; pure continuation fault/cancellation and adversarial journal tests; no damaged-heart native mutation claim",
+      "driver": "Harness/KingdomHeartSightNativeProvider.cs; Harness/KingdomHeartSightGeometry.cs; Harness/KingdomHeartSightWitness.cs; Harness/KingdomHeartSightLoad.cs; Tools/personas/heart-sight-lifecycle-native-check.persona; Tools/heart_sight_check.py",
+      "status": "NATIVE_PASS",
+      "note": "The first heart is an authored open canvas horseshoe with a southern approach, not an enclosed tent or housing. Realized capture is read-only; no future deadline is forced. First source attempt completed construction/render/save but changed PlayerOptions and failed its stop seal; retained unchanged. Accepted fresh profiles author the observed look default and engine JSON format before sealing. Existing terminal load scenarios stay parked; only the exact new scenario opts into verified continuation. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
+      "evidence": [
+        {
+          "commit": "52d67656b0ecafe5fd2f0ca15c77bb2120b7539c",
+          "artifactPath": "heart-sight/52d67656/completed-heart-cold-load-1/result.json",
+          "artifactSha256": "337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29",
+          "artifactBytes": 3343,
+          "verdict": "PASS - completed first-heart fabric and whole-zone native rendering survive real save and cold load",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "behaviour": "Paid heart upgrade 1->2, next-day settlement and cold-loaded construction",
+      "prerequisites": "Fresh stamped founding-first-city profile with synthetic founding, rung-1 completion frontier, six enrolled residents, 400 dedicated drams and 48 minted material units; all fixture state disclosed; save variant supplies one disclosed timber after the paid tent consumes two brush",
+      "transitions": "camp-heart-setup -> 1200 real turns -> paid bill observation -> 3600 real turns -> standing waterstone observation -> 1200 real turns -> post-upgrade founding recovery observation -> real save/quit -> separate cold load with pre/post-activation witnesses -> next paid fire commission -> 3600 ordinary turns -> completed functional output",
+      "effects": "Exact 18-dram, 24-stone and 1-timber upgrade bill; distinct functional waterstone at settled rung 2/basin capacity 48; same anchored stockpile and 23 brush immediately after upgrade, then 21 original brush after the real three-dram/two-brush tent commission; camp fire re-laid; next-day founding recovery succeeds; saved identities, work row, tent receipt, custody and world clock survive cold load; another fire pays two drams and one timber and completes with a distinct functional output",
+      "save_cold_load": "NATIVE_PASS: exact owned real save/quit and fresh separate cold load; same snapshot before and after activation; next paid fire reaches Complete/EffectsSettled after 3600 ordinary turns",
+      "negative": "Fixture includes occupied expansion and malformed/stale/foreign predecessor probes; fresh source-bound native evidence is required",
+      "driver": "Tools/personas/camp-heart-native-checks.persona; Harness/KingdomCampHeartNativeProvider.cs; KingdomCampHeartNativeChecksPhases.cs; KingdomCampHeartNativeAfterRaise.cs; Tools/personas/camp-heart-save.persona; Harness/KingdomCampHeartSave.cs; KingdomCampHeartLoad.cs; KingdomCampHeartLoadChecks.cs; Tools/camp_heart_load_check.py",
+      "status": "NATIVE_PASS",
+      "note": "Native de828450 passes the exact synthetic paid 1->2/next-day/save/cold-load/next-paid-completion path. The source runs 6000 ordinary turns and the load 3600. The paid tent explains the surviving 21 brush; one timber is supplied before save, none after load. Earlier failures remain retained, including the corrected missing preactivation route and blocking gossip popup. This scope does not prove ordinary founding or Quickstart, founder retention, other seeds or higher rungs. Earlier row-30 receipts cover only their original upgrade and next-day scope.",
+      "evidence": [
+        {
+          "commit": "ea2bf92dee62b26e64fdae3f661aa81c1de58551",
+          "artifactPath": "beta-camp-heart/ea2bf92d/paid-rung2-ground-census-1/result.json",
+          "artifactSha256": "ffde56a6e38d4234c4ee26a8c1bfd30c49c2875d2397b5e3e976d88a16f29338",
+          "artifactBytes": 3132,
+          "verdict": "PASS - real paid rung1-to-2, stockpile conservation and next-day founding-heart recovery",
+          "scope": "Synthetic camp, six enrolled fixture residents, 400 dedicated drams and 48 minted material units; 6000 ordinary turns. Production debits 18 drams, 24 stone and 1 timber, completes a distinct functional waterstone and settled rung 2/basin capacity 48, preserves the same stockpile and 23 unspent brush, and recovers the heart one later day. Full 3359 C# inputs and runtime binding, complete Local seal, strict final log and owned stopped record verified. Vortex relocation and a melee death occurred; prior failed attempts remain retained. One passing path, not proof of hazard-free or repeatable setup, ordinary founding, save/load or higher rungs.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "42b252e7c324423b702248040184fe9072f7221d",
+          "artifactPath": "beta-camp-heart/42b252e7/border-creatures-cleared-1/result.json",
+          "artifactSha256": "3d3a7d3f0807a00bea11f2716a51f6340b4a0932c3d9162afbd1a0fe1c790673",
+          "artifactBytes": 3132,
+          "verdict": "PASS - border creature cleanup, real paid rung1-to-2, stockpile conservation and next-day recovery",
+          "scope": "Synthetic camp, six enrolled fixture residents, 400 dedicated drams and 48 minted material units; 6000 ordinary turns. The initial census records 17 border creatures, then none after cleanup with five border widgets retained. Production pays 18 drams, 24 stone and 1 timber, completes functional waterstone 811 at rung 2 with basin capacity 48, preserves stockpile 754 and 23 brush, and recovers the heart one day later. No vortex creation recorded; two residents later emigrate through ordinary subsidence. Full closed Local seal, 3360 C# inputs, runtime and Harness XML bindings, strict final log and owned stopped record verify. No save/load, higher-rung, other-seed or ordinary-founding claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "de82845056b1bfb8b747925f3aeb38fc72d0dfbd",
+          "artifactPath": "beta-camp-cold-load/de828450/preactivation-paid-complete-1/result.json",
+          "artifactSha256": "180e4014bf6c3752ff12f945834cd600ad3da2a7a6ce6716100e3bbde68e0852",
+          "artifactBytes": 4678,
+          "verdict": "PASS - paid rung2, next-day recovery, exact cold load and next paid completed fire",
+          "scope": "Synthetic paid camp rung1-to-2 and next-day recovery, exact saved heart/book/store/fire/material witness, separate cold load, another real paid fire commission and 3600 ordinary turns to independent completed output. One disclosed timber supplied before save, none after load. No ordinary Quickstart, higher rung or all-feature acceptance. Both complete 3369-source profiles, runtime/Harness XML binding, strict final logs and owned stopped records verified. Exact identities, city work row, paid tent receipt, 21 original brush and world clock match before and after activation. Full developer C# digest computed from the exact archived source commit; all 3369 current C# inputs are byte-identical.",
+          "historicalScope": true,
+          "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "behaviour": "Reputation-weighted recruit selection and unavailable-pool recovery",
+      "prerequisites": "synthetic founded empty camp, dedicated water, actual native six-faction catalogue and controlled personal/civic reputation",
+      "transitions": "all-hostile pool -> ordinary waiting debt with downstream processing -> peaceful relations recover original head -> renewed hostility preserves frozen guest",
+      "effects": "no citizen or water spend while waiting; original ordinal/deadline retained; Charter explains recruitment and housing; native name/body/origin coherence and ambient RNG references preserved",
+      "save_cold_load": "COVERAGE_GAP; main-only cadence codec regression is not native reload",
+      "negative": "NEGATIVE_PASS for all-hostile refusal, frozen-identity retention and scoped extension story-policy agreement; malformed or arbitrary third-party catalogues remain separately scoped.",
+      "driver": "Harness/KingdomRecruitmentNativeChecks.cs; Harness/KingdomRecruitmentNativeChecks.Waiting.cs; first-guest-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Twelve unplaced native samples exercise both routes for six factions, not physical admission of all profiles. Native807a89fc also verifies report availability for a normal extension with stories disabled, using scoped synthetic option-read/catalogue controls. Empty-camp road checkpoint proves continued processing only. Row28 separately proves one real human guest and its starter home through admission and cold load at9cc75930; all-culture admission, multi-map behavior and balance remain under #231/#230. Failed attempts remain in STATUS.",
+      "evidence": [
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": true,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "807a89fcb23f8aef7a677dd162569d9d6115425b",
+          "artifactPath": "recruitment/807a89fc/native-4-pass/result.json",
+          "artifactSha256": "4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4",
+          "artifactBytes": 4070,
+          "verdict": "PASS - twelve native samples; hostile wait and recovery; frozen identity; story-policy report agrees with both selection routes",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation, unplaced bodies and scoped catalogue/option-read override. Road checkpoint proves downstream processing only; no physical admission or cold load. Later harness-only startup observer change means this retains its original full input inventory.",
+          "historicalScope": true,
+          "inventoryDigest": "992daf57a6423f86f1955bb58cec9b6ed6bac916b0b7ffc88fc30f17f2e16dfe",
+          "currentDevCoverage": false
+        }
+      ]
     }
   ],
   "combinations": [
@@ -460,7 +1228,7 @@
       "invariants": "only one successor authority claim exists per subject at a time (a heart upgrade in flight and an ordinary strike on the same lot never both hold r_KingdomScaffold successor state); a struck ordinary building's removal never clears or corrupts the heart's own pending-successor marker",
       "seed_turn_matrix": "one fixed seed; single ordering case (heart upgrade staged, then teardown ordered on an adjacent plot before the heart upgrade completes) -- no sweep",
       "expected_failure_rows": "a heart upgrade that silently completes or stalls because an unrelated teardown cleared a shared scaffold marker; a teardown that refuses because it misreads the heart's own pending marker as its own",
-      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); NONE for the heart-upgrade half (rows 9/10 have no driver at all)",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); paid 1->2 driver (row 30) and in-progress paid 1->4 chain (row 9); no full-chain PASS and no 4->5 driver (row 10)",
       "status": "NONE",
       "evidence": null
     },
@@ -512,6 +1280,142 @@
       "reusable_seams": "Harness/KingdomNativeCampFounding.Found founds the ONE realm System's seat only; adding a second KingdomSettlement row to the same System's SettlementTopology has no existing harness seam -- NONE found that exercises this",
       "status": "NONE",
       "evidence": null
+    },
+    {
+      "id": "C7",
+      "name": "Quickstart founders + housing shortage + departures + construction recovery",
+      "rows": [
+        3,
+        4,
+        6,
+        24
+      ],
+      "coupling": "The same four original residents supply labour and need homes; housing refusal triggers departures while construction still needs a workforce.",
+      "prerequisites": "Genuine Quickstart, physical obstructions on both starter shelters and the paid plot, explicit provisions to isolate housing pressure.",
+      "invariants": "Two exact citizens remain through repeated roof-departure passes; those same identities have real homes after unblocking; paid work has a functional output with its original receipt. Cold load preserves survivor identities, homes and absent departed founders; another commission pays normally.",
+      "seed_turn_matrix": "Native 60f11aee, seed #43101, marsh/advisor-on, 10000 + 2400 + 4800 ordinary turns plus handoffs; real save, separate cold load and next paid action. Historical e1d26d9 source-only evidence retained.",
+      "expected_failure_rows": "housing-retained refuses below-floor or changed survivors, unrelated departure causes, unexpected beds or lost obstacles; housing-recovered refuses missing homes or incomplete paid work.",
+      "reusable_seams": "Tools/personas/quickstart-housing-recovery-save.persona; exact startup stockpile binding; unfinished paid work at repeated shortage observations; dedicated housing load witness.",
+      "status": "NATIVE_PASS",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": "C8",
+      "name": "First guest + finite water + refused construction + carried refill + cold load",
+      "rows": [
+        3,
+        4,
+        26,
+        28
+      ],
+      "coupling": "The same settlement houses its founding crew and new citizen, consumes finite shared water, refuses unpaid construction, receives real carried supplies, then reloads guest and construction authority together.",
+      "prerequisites": "Actual four-founder Quickstart with six completed beds and a physically welcomed fifth citizen; exhausted civic water and an existing founder-carried pure-water vessel.",
+      "invariants": "One unchanged guest enrollment; conserved eight-dram donor/store transfer after actual movement; refusal leaves materials, registry, guest authority and clocks unchanged; cold load preserves all original founders and exact guest receipts; stale choices cannot duplicate enrollment or debit; next job pays one timber and two drams.",
+      "seed_turn_matrix": "Native 4c97470d, marsh/advisor-on seed #43101; 8400 then 8401 observed advance turns plus handoffs, 16803 saved turns; real save and separate sealed cold load. No seed sweep. Native9cc75930 repeats seed#43101 with 8401+8400 guarded ordinary turns,16803 saved turns; strengthened native body/roll/map identity assertions and repeated-startup reputation witness pass.",
+      "expected_failure_rows": "Missing founder/guest/home, unfunded commission succeeding or consuming stores, unowned/non-pure/nonconserved water, remote transfer, changed receipt or clocks, missing preactivation witness, stale double enrollment/debit, unpaid or reused next job, log errors and changed profile seals.",
+      "reusable_seams": "Exact guest-save persona; physical donor/cask references; original Quickstart housing and paid-job witnesses; guest preactivation comparison; unchanged lifecycle-next funding verifier.",
+      "status": "NATIVE_PASS",
+      "evidence": [
+        {
+          "commit": "4c97470d66e845b9841d4abd74d20d6787fc0e6c",
+          "artifactPath": "guest-save/4c97470d/carried-water-recovery-1/result.json",
+          "artifactSha256": "4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000",
+          "artifactBytes": 3280,
+          "verdict": "PASS - guest citizenship survives real save/cold load and stale choices; unfunded construction refuses, actual carried water refills stores, then loaded construction pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 16803 observed turns, four original founders and guest 654, six beds, finite supplies, 16 real movement steps and eight carried pure-water drams (32->24, cask0->8). Scripted menu input and physical engine transfer; no rendered interaction, arbitrary migration, interrupted enrollment or all-seed survival claim. Both closed profiles, strict logs, owned stops and exact source binding pass.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "9cc75930ffae7b4201872a3085f67ea61b01c1d7",
+          "artifactPath": "recruitment-guest-save/9cc75930/native-2-pass/result.json",
+          "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
+          "artifactBytes": 7931,
+          "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
+        }
+      ]
+    },
+    {
+      "id": "C9",
+      "name": "Ordinary heart completion + physical custody + city sight + save/load + further construction",
+      "invariants": "Seven original canvas identities and every receipted physical component remain exact through preactivation, loaded comparison and real loaded rendering; native visibility restored after every frame; saved autorunner marker prevents replay; further commission pays exact materials and water for a distinct job.",
+      "seed_turn_matrix": "Native 52d67656, seed #43101; 8400 ordinary advance turns, 8403 saved turns, 4 source frames and 4 loaded frames. No seed sweep. Additional current-load-harness evidence at 61140abd: seed #43101, 8400 ordinary turns, four source/four loaded frames; exact closed records in the attached artifact. No seed sweep.",
+      "expected_failure_rows": "Partial or missing canvas, changed component custody or digest, unsettled terminal, wrong saved game, missing preactivation, unpaid/reused next job, source script replay, insufficient/hidden/dark frames, leaked gameplay sight, any refused journal row, strict log error or profile-seal drift.",
+      "reusable_seams": "Read-only realized architecture capture, founding terminal receipts, lifecycle save/load and paid-next verifier, real frame witness and opt-in successful Continue barrier.",
+      "status": "NATIVE_PASS",
+      "evidence": [
+        {
+          "commit": "52d67656b0ecafe5fd2f0ca15c77bb2120b7539c",
+          "artifactPath": "heart-sight/52d67656/completed-heart-cold-load-1/result.json",
+          "artifactSha256": "337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29",
+          "artifactBytes": 3343,
+          "verdict": "PASS - completed first-heart fabric and whole-zone native rendering survive real save and cold load",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ],
+      "rows": [
+        6,
+        21,
+        22,
+        23,
+        27,
+        29
+      ],
+      "prerequisites": "Genuine marsh Quickstart, advisor on, finite starter supplies, four original founders, two shelters and the original paid fire. No synthesized completion or fabricated visibility.",
+      "coupling": "Ordinary completed physical heart output must remain exact while a save/load and another paid job preserve claimed-zone draw visibility and ordinary gameplay sight; the loaded engine loop must run without replaying the source script."
     }
   ]
 }

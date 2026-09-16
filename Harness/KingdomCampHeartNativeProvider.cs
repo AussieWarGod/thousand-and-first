@@ -29,11 +29,6 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "camp-heart-setup";
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
-		/// <summary>The sealed rung 1 -> 2 script (issue #41 / PR #107 case 2). The last pair is
-		/// the acceptance gate for issue #162: one more ordinary day AFTER the rung was raised, and
-		/// then a check that the settlement pass still runs on this ground.</summary>
-		private static readonly string[] Rung2Script = { "stagedigest", SetupVerb, "advance 1200",
-			CheckVerb, "advance 3600", CheckVerb, "advance 1200", CheckVerb, "stagedigest" };
 
 		/// <summary>The sealed rung 1 -> 2 -> 3 script (issue #159). The rung-2 climb is run
 		/// FIRST, in this same persona, so the rung-3 start state is reached by the ordinary
@@ -83,14 +78,16 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>Which rung ladder this run is sealed for, read off the sealed script itself.
-		/// A script that is neither sealed form is refused exactly as before: no other script may
-		/// drive these verbs, and the target rung is never an argument a caller chooses.</summary>
+		/// Rung 2 is every form <see cref="KingdomCampHeartScript"/> seals (the plain 1 -> 2
+		/// script, its save variant and the paid chain's prefix); rung 3 is the one script below.
+		/// A script that is neither is refused exactly as before: no other script may drive
+		/// these verbs, and the target rung is never an argument a caller chooses.</summary>
 		private static int SealedTargetRung()
 		{
 			IList<string> script;
 			Require(KingdomScenarioScript.TryRead(out script, out _) && script != null,
 				"the exact sealed camp heart script is absent");
-			if (SameScript(script, Rung2Script)) return 2;
+			if (KingdomCampHeartScript.Matches(script)) return 2;
 			if (SameScript(script, Rung3Script)) return 3;
 			Require(false, "the sealed camp heart script differs");
 			return 0;

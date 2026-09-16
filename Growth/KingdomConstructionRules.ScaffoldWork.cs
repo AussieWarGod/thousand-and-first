@@ -2,6 +2,15 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomConstructionRules
 	{
+		internal static bool ScaffoldRemovalPhaseAdmitted(KingdomConstructionPhase Phase,
+			KingdomPhysicalPhase Physical, bool Improvement, bool RemovalProved)
+		{
+			return Phase == KingdomConstructionPhase.ProjectionPending
+				|| Phase == KingdomConstructionPhase.Working
+				|| Phase == KingdomConstructionPhase.Outstanding && Improvement && RemovalProved
+					&& Physical == KingdomPhysicalPhase.None;
+		}
+
 		/// <summary>Proves the immutable paid duration and route of one durable scaffold.</summary>
 		public static bool TryScaffoldWorkBill(KingdomConstructionJob Job,
 			out long RequiredTicks)

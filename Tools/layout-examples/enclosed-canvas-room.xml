@@ -1,0 +1,18 @@
+<!-- Workbench example, not shipped architecture. An 8x6 shared canvas shelter:
+     sleep along the rear wall, storage at the side, seats by the common floor,
+     and a real door. Its larger plot, materials and upgrade bill are not bound. -->
+<map Key="canvas-shared-room-draft" Width="8" Height="6" Footprint="0,0,8x6" DefaultCover="soft">
+  <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+  <glyph Char="d" Ground="$floor" Structure="r_KingdomFixtureDoorTimber" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+  <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+  <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+  <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+  <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+  <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="walk" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+  <row Cells="########" />
+  <row Cells="#bibib@#" />
+  <row Cells="#iiiiis#" />
+  <row Cells="#iiccii#" />
+  <row Cells="#iiiiii#" />
+  <row Cells="###d####" />
+</map>

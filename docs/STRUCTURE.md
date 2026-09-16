@@ -1,14 +1,69 @@
 # Structural release contract
 
-## Current combined heart candidate census
+## Unreleased recruitment census
 
-3097 staged production C# files; 440,006 physical lines; zero at or above 300 lines.
-1446 files with direct `XRL` imports; 3128 cold-install files. Exact inventory:
-`b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
-Combines #141/#144/#139/#137 over the dev hotfix backmerge. No combined gate or native proof
-is claimed yet. The inherited semantic review binds shipped main only and is stale here.
-The current draft adds the surveyed-heart physical-ingress distinction; retained predecessor
-compile/test and negative native results are recorded separately in `docs/STATUS.md`.
+3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
+builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
+XML. The automated [delta review](STRUCTURE_REVIEW_RECRUITMENT.md) and STRUCTURE_REVIEW.json
+bind this inventory; native acceptance remains separately scoped in STATUS.
+
+## Accepted strike closure census
+
+3108 staged production C# files; 440,888 physical lines; 1451 files with direct `XRL` imports;
+zero files at or above 300 lines. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The new engine adapter explains an existing refusal; pure rules validate exact completed-job
+identity. Strike permissions and saved fields are unchanged. The automated [delta review](STRUCTURE_REVIEW_STRIKE_CLOSURE.md) and STRUCTURE_REVIEW.json
+bind this inventory. Native fire/larder scope is recorded in STATUS.md. The earlier review
+below binds its original founding-reputation input.
+
+## Accepted founding reputation census
+
+3107 staged production C# files; 440,850 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`. One engine-free snapshot/publication helper replaces the
+embedded founding codec; the engine adapter captures eligible reputation and publishes validated roots.
+The automated [delta review](STRUCTURE_REVIEW_FOUNDING_REGARD.md) and STRUCTURE_REVIEW.json
+bind this exact production inventory. Native warm/cold scope is recorded in STATUS.md.
+Public 0.3.7 evidence below is historical to this change.
+
+
+## Refreshed Alpha 0.3.7 candidate census
+
+3106 staged production C# files / 440,880 physical lines; zero at or above 300 lines.
+1450 files with direct `XRL` imports; none exceed the cap. Cold-install inventory: 3139 files.
+Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The automated [delta review](STRUCTURE_REVIEW_0_3_7.md) and STRUCTURE_REVIEW.json bind this
+inventory. Native evidence retains its original source pins; candidate delivery remains pending.
+
+## Current Alpha 0.3.6 candidate census
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+
+The sole production delta from verified private 0.3.5 is Core/KingdomReleaseInfo.cs changing its
+receipt identity from 0.3.5 to 0.3.6. Automated review in docs/STRUCTURE_REVIEW.json binds the
+exact inventory. Current candidate delivery and native verification remain separate checks.
+
+## Retained Alpha 0.3.5 candidate census
+
+3098 staged production C# files; 440,137 physical lines; zero at or above 300 lines.
+1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
+`4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
+The sole production change after the accepted sight/heart native source is the runtime
+receipt version changing from 0.3.4 to 0.3.5. Automated review in
+`docs/STRUCTURE_REVIEW.json` binds this source. Private delivery and current candidate
+native verification remain separate, pending checks; older native evidence is unchanged.
+
+## Retained claimed-ground sight candidate census
+
+3098 staged production C# files; 440,137 physical lines; zero at or above 300 lines.
+1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
+`d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Adds immediate claim-presentation reconciliation to the published 0.3.4 source. Automated structural review binds
+this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
+build; current teardown passes exact receipt, salvage, work-row and strict-log checks.
+Current results and retained failures are recorded in `docs/STATUS.md`.
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public

@@ -1,16 +1,1557 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 heart integration candidate — unverified
+## Recruitment admission, housing and cold load — scoped native PASS
 
-3097 staged C# files; 440,006 physical lines; cold-install inventory contains 3128 files.
-Compile inventory: 3097 sources, baseline and compatibility symbols (3093 baseline).
-Direct `XRL` imports: 1446 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+Native `9cc75930ffae7b4201872a3085f67ea61b01c1d7` completes genuine marsh/advisor-on Quickstart
+(seed #43101): four original founders survive 16,803 saved turns and occupy two enclosed rooms
+with six beds and 34 clear floor cells. Real correspondence hosts guest 768, Yywur
+(`r_KingdomSettlerHand`, native human culture/species); explicit welcome enrolls that same body
+once as citizen five. Frozen blueprint/name/origin, citizenship, living resident roll, bound map
+and actual starter-home assignment agree. No synthetic residents, beds or completed homes.
+
+Empty civic water refuses construction without changing materials or authority. After 16 actual
+movement steps, eight drams transfer from the founder's existing carried vessel (32→24) to the
+cask (0→8). Real save and separate cold process retain exact guest authority before activation,
+then reject both stale welcome attempts without extra enrollment or water debit. The next job
+pays exactly one timber and two drams. Scripted menu input and one controlled founding-reputation
+change are disclosed; two startup observations verify the same retained standing witness.
+
+Both full profile recipes match the pinned source: 3,463 warm inputs, 3,465 cold inputs,
+3,422 C# per profile. Strict final logs, persona/lifecycle/guest validators, guarded 8,401 + 8,400
+ordinary turns, save receipt/snapshot and exact owned shutdown pass. Closed archive:
+`recruitment-guest-save/9cc75930/native-2-pass/result.json`, SHA-256
+`352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557`.
+The matching full developer inventory binding is retained beside it at
+`recruitment-guest-save/9cc75930/dev-inventory-binding-1/result.json`.
+
+Native `807a89fc` separately passed 18,000 requested / 18,001 actual turns: twelve unplaced
+native samples across six factions and both routes; all-hostile waiting retains debt/water;
+restored relations recover the original head; renewed hostility retains the same guest identity.
+Its final road-processing checkpoint matches due tick 292801. A scoped synthetic extension
+catalogue/option-read probe proves report availability agrees with configured civic-story policy
+without publishing an option epoch or arrival. Catalogue and reputation are restored.
+Full recipe, strict log, guarded waits, persona and owned shutdown pass. Archive:
+`recruitment/807a89fc/native-4-pass/result.json`, SHA-256
+`4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4`.
+Its empty-camp checkpoint proves continued processing, not productive construction. Its original
+full developer input binding remains historical after the startup-observer harness correction.
+
+The first admission attempt at `807a89fc` refused before admission because two composed startup
+checks initialized the one-time founding-reputation probe. The harness now applies its controlled
+change once and verifies the full retained witness on every observation; production is unchanged.
+Failed full-recipe archive: `recruitment-guest-save/807a89fc/native-1-fail/result.json`, SHA-256
+`c3d10b90eb1b500dfaaa398f35a7fe26fde9690b048d950c4ac483b47013c193`.
+
+This proves one human guest's real admission and persistence, not physical admission of every
+culture, ordinary multi-map life, balanced expansion, historical migration or interrupted enrollment.
+Issues #230/#231 and whole-building architecture/function #229/#251 remain open. Public 0.3.7
+is unchanged. Full licensed 15,019 main / 5,909 portable tests pass with zero skips; four engine
+compile modes and the latest documentation/coverage checks retain their recorded scope.
+
+## Earlier coherent recruitment proof — original scoped inputs
+
+New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
+origin agree, and names use Qud's faction/culture/species naming rules under a restored native
+RNG scope, with native property-before-tag precedence. Twelve authored profiles cover Farmers,
+Mechanimists, Snapjaws, Issachari, Hindren and Dromad. Specialist skills remain distinct from
+culture. First guests use the same selection restricted to their owned-body allowlist. Existing
+citizens and frozen plans keep identity; historical blueprint-only recovery retains its old path.
+
+Player and inbound city regard both affect bounded weights; native hostility excludes a faction.
+An empty eligible pool retains unspent arrival debt and continues downstream city work. Charter
+explains the reputation block alongside physical needs. This is not a population quota.
+
+Native `10d4c2a5703ff93d974be83db96c6a16b88b28fb` passed 18,000 requested / 18,001 actual turns:
+all six factions across both selection routes produced twelve coherent native body samples;
+fixed events repeated their names and preserved ambient RNG references. An ordinary hostile wait
+made no citizen, spent no water, retained first-epoch debt and advanced the final road-processing
+checkpoint to its due tick. Charter showed both recruitment and housing needs. Restoring relations
+opened the original arrival (Tiyuyurem, `r_KingdomSettlerHand`); renewed hostility kept that same
+candidate, name, origin, blueprint and plan hash. Correspondence emitted once across both checks.
+
+Synthetic founding/store, reversible reputation controls and unplaced samples are disclosed.
+This empty camp's road checkpoint proves continued processing, not productive staffing or construction.
+No physical admission, housing allocation, native cold load, ordinary multi-map or balance acceptance.
+All 3,461 profile inputs (3,420 C#) match the pinned recipe/seal; strict final log, guarded wait
+accounting, persona and exact owned shutdown pass. Closed archive:
+`recruitment/10d4c2a5/native-3-pass/result.json`, SHA-256
+`e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c`.
+The full developer C# binding is retained in `recruitment/10d4c2a5/dev-inventory-binding-1/result.json`;
+its digest is `c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7`.
+
+Earlier attempt 2 at `cf97c1e0` failed a fixture comparison between founding's initial estimate
+135927 and the actual first healthy cadence deadline 136801. The corrected fixture binds the real
+first-epoch head and records boundary values; production code did not change for this correction.
+Failed archive `recruitment/cf97c1e0/native-2-fail/result.json`, SHA-256
+`b551edccb17c9c479c3f3b39e877e4dfa681c8f972ec058ef077d33cedbef366`, remains retained.
+The earlier 12,000-turn proof at `7c386a81` retains its original scope in
+`recruitment/7c386a81/native-1-pass/result.json` (SHA-256
+`b150724a584b32ad65abf99771fbbbbbd01fa833628bd9fdd9056e37a3fe9d50`).
+
+Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
+A main-only codec regression preserves waiting debt and the original head through serialization.
+The later report-policy and single-guest admission/cold-load proof above supersedes those pending
+items for its exact scope. Broader recruitment, multi-map life and balance remain under #231/#230.
+The original Beta goal and building issues #229/#251 stay open.
+
+Development compile scope: 3112 sources, baseline and compatibility symbols.
+Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
+Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Automated structural review binds this census in STRUCTURE_REVIEW.json and
+STRUCTURE_REVIEW_RECRUITMENT.md. Prior evidence retains its original inputs. Public 0.3.7 is unchanged.
+
+## Strike closure feedback — accepted native scope (abf41251)
+
+Ordinary strike refusal now distinguishes the building's own completed work awaiting closure
+from another job. Only an exact healthy owner/zone/receipt/object match receives the wait
+message; original supersession and mutation boundaries remain unchanged.
+
+Fresh native `teardown-native-check` at `abf41251f3a7c063c7710df4179b0bdb0e283e8b`
+passed 16,800 ordinary turns. Both fire and larder observed their real closure window, refused
+two public strike calls without changing the registry or building, then completed actual strike
+and removal with exactly zero/one timber salvage. The larder also refused a borrowed real
+foreign receipt and restored its original receipt without changing durable work. Repeated strike
+after removal refused. Both workers remained on the roll.
+
+Synthetic founding, two workers, stationary crew placement, supplied material bills and the
+reversible borrowed-receipt probe are disclosed. This proves the exact teardown cases, not
+ordinary city balance, every historical #175 state, native cold load or the whole catalogue.
+All 3,454 profile inputs (3,414 C#) match the pinned recipe and closed seal. Strict final log,
+persona expectations and exact owned shutdown pass. Native evidence archive:
+`strike-closure/abf41251/native-1-pass/result.json`, SHA-256
+`bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538`.
+Behavioral matrix row 7 records this proof. Its full developer compile digest is
+`1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c`, independently
+reconstructed from all 3,414 sealed C# inputs in
+`strike-closure/abf41251/dev-inventory-binding-1/result.json`. This differs deliberately from
+the production-only census format below; neither implies catalogue-wide acceptance.
+
+Full licensed suites pass: 15,004 main / 5,895 portable cases, zero skips. Focused closure checks
+(16 main / 15 portable), 28 teardown source checks and documentation checks also pass.
+Development compile scope: 3108 sources, baseline and compatibility symbols, plus both
+corresponding developer harness modes. Current census: 3108 staged C# files; 440,888 physical
+lines; zero at or above 300 lines. Direct `XRL` imports: 1451 files, 0 over the line limit.
+Cold-install inventory: 3141 files. Inventory SHA-256:
+`10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The [structural delta review](STRUCTURE_REVIEW_STRIKE_CLOSURE.md) binds this inventory.
+This remains unreleased development; public 0.3.7 retains its original inputs.
+
+## Building-wide Beta coverage inventory — functional acceptance remains open
+
+The shared `Tools/coverage/check_coverage.py buildings` command now inventories staged XML
+roots and links exact configurations to the existing behavioral matrix. Initial census:
+144 buildings, four yard works, 1,390 configurations (including 72 retained-reader poses),
+and 9,730 architectural/functional obligations. All links initially remain unmapped; prior native
+evidence is not discarded, but must be attributed to its actual configuration and assertions.
+This is a coverage inventory, not 9,730 demonstrated bugs or new native acceptance.
+
+Missing works, unresolved architecture references, duplicate/unknown links and stale definition
+digests are covered by tool tests. `MAPPED` is explicitly separate from underlying row verdicts;
+even complete mappings cannot establish Beta readiness. No production or harness code, runtime
+XML, or native validator changed in this tooling slice. Fifteen focused inventory tests, 38 existing
+coverage tests and documentation checks pass. The full repository audit passed 1,182 tests
+with 11 skips; it is not native gameplay acceptance. [BUILDING-BEHAVIOUR.md](BUILDING-BEHAVIOUR.md) defines the shared
+workflow and remaining native requirements under #251, alongside architectural quality #229.
+
+## Unreleased founding reputation — native warm/cold accepted
+
+At `40477cb7d5b5664b89466cc0fb8c36cabc7adf69`, real Quickstart founding captures 143
+eligible faction reputations. The controlled native probe adds 73 civic regard with Farmers,
+then changes the founder's personal reputation by 40 through the native event path. Camp
+spillover composes them to city regard 93 and zero carry, with the expected projected feeling.
+Outgoing city policy remains unspecified. These reputation changes are disclosed synthetic
+inputs; no citizens, housing, labour, completion or visibility is fabricated.
+
+After 8,400 ordinary turns, the same 143-entry standing snapshot remains intact. All four
+original citizens occupy two enclosed homes with six beds, two rooms and 34 clear floor cells.
+A real save and separate cold process preserve the same snapshot and housed cohort; founding
+and its controlled changes do not replay. Next ordinary commission creates a new job and
+spends one timber/two drams. Whole-zone drawing/restoration passes on both sides of the save.
+
+Both owned processes stopped. Lifecycle, heart/sight, reputation witness, strict logs and exact
+3,452 warm/3,454 cold input recipes pass. Archive:
+`founding-regard/40477cb7/inherited-warm-cold-1/result.json`, SHA-256
+`fdd353d37a7bca7d3c51d736aa5b4934c32621d9c933a21e612d019274b64f54`.
+Standing snapshot SHA-256: `e601015f9854ec504c90aada059594709b7e3fddc455fba30aa93f51c9a59b97`.
+This is source-checkout evidence, not new public delivery. Public 0.3.7 remains unchanged.
+Full licensed integration passed 14,988 main and 5,880 portable cases with zero skips
+(`/tmp/taf-founding-regard-licensed-1.log`); all four engine compile modes passed.
+The automated structural delta review binds this production inventory and its release check passes.
+Historical interrupted founding has pure tests but no native acceptance; reputation-weighted
+culture/body/name selection and representative multi-map arrivals remain #231 follow-through.
+The two failed native attempts below retain their exact evidence and were not relabelled.
+
+## Retained founding reputation failures and correction
+
+New realms freeze personal reputation once into inbound civic regard. Outgoing policy remains
+separate; existing cities and version-one founding retries retain their history. Culture/body/name
+selection and reputation weighting under #231 remain pending. Public 0.3.7 is unchanged.
+
+First native startup at `c62cecfe` refused on Inanimate. Diagnostic `3cf2340f` proved the exact
+cause: the fresh polity options default was noncanonical, so capture skipped every faction and
+published an empty baseline. Both runs completed real founding and first paid commission, then
+stopped before ordinary construction turns; no cold load occurred. Exact owned shutdown,
+strict logs and full 3451/3452 input recipes passed. Failed archives remain:
+
+- `founding-regard/c62cecfe/baseline-refused-1/result.json`, SHA-256
+  `c0e833c6f126af6b409c2d7fc4a10c251addd9f4424959358cfdce1050c15675`.
+- `founding-regard/3cf2340f/empty-baseline-1/result.json`, SHA-256
+  `67b656ff53593f2a997a06ea823c1711f0be0880328767bcd83af6728a2a1fe8`.
+
+Fresh polity options now initialize their unobserved future-cause boundary to `long.MaxValue`,
+the existing canonical value. Historical zero defaults still normalize; conflicting options
+still quarantine. Capture refuses an invalid polity ledger before enumeration. Focused 370
+main polity cases passed. Earlier 364 main founding, 20 directional and 309 portable founding
+cases passed on their original pins; four engine modes passed before this default fix.
+The changed default passes all four engine compile modes, 370 main/338 portable polity cases
+and 20 directional cases. Three host-checker tests exercise missing/duplicate/reordered and
+corrupted native evidence. Native proof was pending at that checkpoint; the accepted run above
+supersedes that status.
+
+Development compile scope: 3107 sources, baseline and compatibility symbols. Census: 3107 staged C# files;
+440,850 physical lines; zero at or above 300 lines; cold-install inventory 3140 files.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
+Structural review was stale at that checkpoint; the current delta review is recorded above.
+No new release delivery is claimed.
+
+## Public 0.3.7 — published and finalized
+
+Public Alpha 0.3.7 is published, verified and finalized, superseding 0.3.6. Earlier candidate
+and pending-publication statements below retain their historical checkpoints; this section
+controls current delivery status. The broader Beta goal remains incomplete.
+
+[Run 34896457046](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34896457046)
+passed all applicable hosted, licensed, submission, subscribed-verification and finalization
+jobs at immutable `v0.3.7`, source `de8317dbab0357a4159e6228d31d9ccc8b789711`. Public metadata and the private
+receipt binding reached main through normal protected PR merges. The configured admin tag-creation
+path was used; no required check or branch protection was bypassed. No submission was retried
+and no tag moved. The exact owned runner stopped after finalization.
+
+All eleven licensed gates passed: 14,958 main and 5,850 portable cases, zero managed skips,
+four engine compile modes, 46 launcher cases and package/deployment/structural boundaries.
+Three foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. Public item
+`3794797472` reports `SubscribedInstallationVerified` and `attemptFinalized=true`; all 3,139
+package files match one subscribed installation. `freshTransferVerified=false` and
+`releaseReady=false` remain the delivery tool's one-client limits.
+
+- Public receipt SHA-256: `e528ed1e7a95652a4afd30d28b3d8a0f230a7a5276be4d493b52a57eeadc15ff`.
+- Plan SHA-256: `8b55923f71006cba87c93a9cb7be509c8df2f9a87676d2992f2ccb73fd7f87e7`.
+- Installed inventory SHA-256: `14c3e169a0d8a48e10454e94f6c1433a70c7efe0e85aecce07664529bb661628`.
+- Finalization SHA-256: `e79c0981b5167bb15d014affe62dea6d59ee7e6f5fad4d0a6b3e476a8fefeec4`.
+- Delivery archive: `releases/0.3.7/public/result.json`, SHA-256 `d5f2746a5d94da7dfc0e7943a9d77444b174bed0d842ff72672ede9646807156`.
+
+Production C#, XML, harness and TESTING.md remain byte-identical to accepted private candidate 2;
+only the permitted publication metadata differs in the package. The native evidence below remains
+that original private run, not a new public gameplay run. It covers the recorded founder/housing,
+construction, sight, save/cold-load and next-commission chain. Other seeds/terrain, historical
+citizens, general camp safety, all-building redesign and multi-map balance remain in the tracker.
+
+## Private 0.3.7 candidate 2 verified; public promotion pending
+
+[Release run 34891741613](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34891741613)
+passed hosted checks, all eleven licensed gates, submission, subscribed verification and
+finalization at immutable `staging-v0.3.7-2`, source `a3c4d068ef0de3c22ba3851ab68545c4b8e31bdb`. Full licensed
+suites passed 14,958 main/5,850 portable cases with zero managed skips; all four engine compile
+modes passed. Three explicit foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain.
+No required PR check or protection setting was bypassed; the configured admin tag-creation path
+was used. First private 0.3.7 and its failed native lifecycle remain unchanged.
+
+All 3,139 package files match one subscribed client and every staged runtime byte binds to this
+native candidate. `freshTransferVerified=false` and `releaseReady=false` remain tool-level limits.
+
+- Private receipt SHA-256: `3b9d26fd0dfe8920af4737197a6bd32407ff7d8216192d2e3fa8a01a778c6c80`.
+- Plan SHA-256: `0efe1a236e5b2b893e31a4d64e4ef10924c1aee01387f364e558f31b61c6098a`.
+- Installed inventory SHA-256: `1253d581fabf4cf75bc8d8dc65f13d937d8295853723a0f3f4de224f2831ba30`.
+- Finalization SHA-256: `03aee94e043cbc4209643f09edd51a9b92bca47472733cb6d4730023baf7d1f3`.
+- Delivery archive: `releases/0.3.7/private-2/result.json`, SHA-256 `6c89ead445e67844c596d9aeb648e7e502831678b72739df5a8a142486d32b05`.
+
+The fresh subscribed-candidate marsh/advisor test on seed `#43101` passes 8,400 ordinary turns:
+four original defensive founders housed in two enclosed homes, six beds, two rooms and 34 clear
+floor cells. The owned neutral NPC pair proves acquisition suppression and actual retaliation,
+then is removed; only its attacker has synthetic Snapjaws allegiance. No city population,
+housing, labour, completed jobs or visibility is fabricated. The first heart remains open civic
+ground; the separate shelters provide enclosure. The native first-heart and full-zone sight
+checks pass with 4 source and 5 loaded frames.
+
+A real save and separate cold process preserve the same housed cohort and defensive flags.
+The next ordinary commission creates a distinct job and debits one timber/two drams. Both owned
+processes are stopped. Strict logs, persona, lifecycle and exact 3,449 warm/3,451 cold recipes
+pass; all 3,409 C# inputs per session match the pin.
+Native archive: `alpha-037-heart-sight/a3c4d068/private-candidate2-cold-load-1/result.json`,
+SHA-256 `c2f2aaf660fca5dd938f49dd7769582f2abb06bf230ecbaaeaf8eefa2e8427d0`. General wilderness safety, other seeds/terrain, historical citizens,
+all-building redesign and multi-map balance remain unproved. Existing issue #244 polity
+reconciliation limits remain separate from housing and sight acceptance.
+
+The private receipt is copied exactly into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. This docs-only
+binding commit becomes the Alpha candidate; TESTING.md remains frozen through public promotion.
+Public listing still serves 0.3.6; public 0.3.7 delivery is pending.
+
+## Defensive founders: source warm/cold checks accepted; replacement private candidate next
+
+At `49af5f5e0b79bf3c7fe8e2a104315159cad1c25e`, Qud 2.0.211.51, marsh Quickstart with
+advisor and the previously failed seed `#43101`, all four original founders retain defensive
+engagement and survive 8,400 ordinary turns. They occupy two real enclosed homes with six beds,
+two rooms and 34 reachable clear floor cells. The isolated NPC probe verifies proactive target
+acquisition is suppressed while a neutral attack produces actual retaliation; both test objects
+are removed before ordinary turns. Only the owned attacker receives synthetic Snapjaws allegiance.
+
+A real save and separate-process load preserve the same four housed identities and defensive
+flags. The next ordinary commission creates a new job and debits one timber and two drams.
+Source and loaded whole-zone rendering/restoration checks pass. Both exact owned processes are
+stopped; all 3,449 warm and 3,451 cold inputs match their pinned recipes, with strict logs and
+lifecycle/persona checks passing. This is source-checkout evidence, not a subscribed package claim.
+
+Closed archive: `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`, SHA-256
+`85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+Focused 41 founder cases, four engine compile modes, structural/documentation gates and CI
+`34890102162` pass. Earlier paid-housing evidence below retains its own inputs and scope.
+
+Read-only combat logs show glowpads acquiring founder targets through bored hostility beginning
+at turn 3024. This does not identify the earlier dragonfly incident's initiator or prove general
+wilderness safety. No existing citizen factions, wildlife or damage were changed. Multiple seeds,
+other terrain profiles and historical citizens remain in #237. The immutable first private 0.3.7
+candidate below remains a failed native attempt. Replacement private delivery and subscribed
+acceptance are required before public promotion; public Alpha is still 0.3.6.
+
+## Alpha 0.3.7: private delivery passed; native cohort failed
+
+The private candidate now includes the accepted paid-heart, room, enclosed-housing, shared-hall
+and paid-conversion work. Private `staging-v0.3.7` at `34188ec5` passed delivery run
+`34884991564`; all 3,139 package/runtime/subscribed files match. Public remains 0.3.6.
+Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The subscribed candidate's marsh seed `#43101` lifecycle failed before save: original drifter
+515 was bitten to death at turn 884 by GiantDragonfly 502. Three other original founders remain
+alive; combat initiation is unknown. All 3,448 inputs and strict logs pass; cohort behavior fails.
+The owned process is stopped; no cold load occurred. Public promotion is paused.
+Closed archive: `alpha-037-heart-sight/34188ec5/founder-lost-before-save-1/result.json`, SHA-256
+`04ef1d9822aeb95a6baecf38262b148608e7d8248fd883071245fc1dd0ac8acc`.
+
+Fresh civilian founders now receive Qud's defensive engagement (`Brain.Passive`) inside their
+existing grant transaction. Recovery does not rewrite older citizens. Native checks require
+defensive engagement on the original cohort at startup, after construction and after load;
+an isolated unplaced NPC pair exercises proactive-acquisition suppression and actual retaliation.
+The accepted source pair above supersedes this pending check; it does not establish protection from wilderness attacks.
+Issue [#237](https://github.com/AussieWarGod/thousand-and-first/issues/237) retains the failure.
+
+The first defensive probe at `464c07e0` refused before ordinary turns: two default NPCs
+share faction affinity, so the expected single-assault retaliation was not a valid neutral
+counterexample. Closed failure: `defensive-founders/464c07e0/defensive-probe-refused-1/result.json`,
+SHA-256 `2639207ad067a578e0b7a9b25a8dd32d06f0565c90e7e43464b4eeccbe81dc2c`.
+The corrected fixture assigns only its owned attacker to Snapjaws, asserts native feeling zero,
+then calls `Brain.Attacked` and requires an actual target. Real citizens and wildlife are unchanged.
+
+## Paid housing and founder anchors: warm/cold behavioral checks accepted
+
+At `d5a0e96d800bfcac929a52b394e94371172018a0`, Qud 2.0.211.51, marsh Quickstart with
+advisor and seed `#1012026`, the complete paid-housing persona and separate cold process pass.
+All four original founders start with local non-wandering anchors and remain housed after
+24,000 ordinary turns: two enclosed homes, six usable sleeping places and 32 clear floor cells.
+Furniture remains occupied architectural space regardless of native walkability.
+
+The real Medium tentrow-to-hutyard conversion pays seven drams and its exact material claim.
+A controlled catalogue change to eight refuses the old receipt without registered history and
+accepts its exact retained declaration. Missing, moved and wrong-token basket probes refuse;
+exact restoration recovers without poisoning intact owner authority. Actual handover refuses
+while its basket is removed, enters Outstanding, then completes through ordinary retry with the
+same payment and original contents. The actual floor insertion guard accepts only its exact paid
+predecessor; a foreign chest, including one carrying a copied receipt, still refuses.
+
+A real save and separate-process load preserve the same paid job, frozen functional home,
+basket contents and all four housed identities. The next fire commission creates a new job
+and debits one timber and two drams. Its observed follow-up interval is 2.453 seconds, versus
+94.512 seconds before the operation scope was bound; stock also differs, so this is not an
+isolated performance benchmark. Both exact owned processes are stopped. All 3,448 warm and
+3,450 cold inputs match their pinned recipes; strict logs, persona, lifecycle, housing and
+ordinary-wait accounting pass.
+
+Closed archive: `paid-housing/d5a0e96d/anchored-warm-cold-1/result.json`, SHA-256
+`aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635`.
+CI `34882424586`, four engine compile modes and full licensed suites pass: 14,957 main and
+5,849 portable cases, zero skips (57 seconds). Focused tests include all compiled Medium
+variants/facings, retained prices, founder grants and fail-closed persona evidence.
+
+Limits: this is one map and seed. The fixture supplies missing materials for conversion and
+next fire, a brush contents sentinel and a removable foreign chest; it physically transfers
+32 existing carried drams. No residents, homes, water, labour or completed job phases are
+fabricated. Warm capture shows the converted room with clear entry, but clips the lower home;
+cold capture shows the returned menu. Neither establishes full-map framing or all-building visual
+quality. The completed-save test does not prove pending-job upgrades across versions, historical
+layout renovation, new housing at the changed price, multi-map population, or ordinary balance.
+Those remain in #239/#240 and the [architecture/population plan](HOUSING-AND-POPULATION.md).
+
+Cold load again logs the independent polity-topology reconciliation refusal in #244. Housing
+acceptance does not establish polity dispatch acceptance. Broader ecology and historical founder
+anchors remain #237; already-quarantined saves and city-wide damage remain #242. Public Alpha
+is still 0.3.6. Protected integration, 0.3.7 packaging and subscribed acceptance remain required.
+[Preserved failed runs and implementation history](PAID-HOUSING-EVIDENCE.md).
+
+## Shared-hall access: native scenario accepted
+
+At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
+Walkable furniture blocks architectural circulation through shared halls and doorways. Bedroom
+privacy requires a clear route through the designated building to an exterior approach; an internal
+door alone cannot supply access. Alternate exits, obstruction removal and unlocking restore access.
+Structural enclosure remains separate from furniture, and physical observations are cached once.
+
+The genuine four-founder dune Quickstart adopts a synthetic 8×6 room through the ordinary API.
+The first twenty cases exercise its benefit/privacy/arrival route, furniture, doors, loss/repair and
+an original citizen restored exactly. Nine additional observations use a synthetic whole-building
+designation over native cells for the shared hall, then restore the original room, bed positions,
+door flags and adopted benefit reading. The capture was inspected and shows the restored fixture.
+This is not a commissioned catalogue layout, city balance, multi-map or cold-load acceptance.
+Access covers the designation and immediately adjacent exterior approach, not the full street route.
+
+Twenty main room-rule cases, 65 persona/oracle cases and all four engine compile modes pass.
+CI `34860042305` passes at the accepted native source pin.
+The room fixture is main-only; the portable selector matched no tests and is not a portable PASS.
+The full native archive verifies all 3,441 pinned profile inputs, strict final logs, the closed seal
+and exact owned shutdown. Archive `physical-rooms/dc65f086/shared-hall-1/result.json`, SHA-256
+`6e41dfbf71438614031e6b544832b653b3a53ce99b2e0d13e7384c8f98d6ea93`; 21 hashed artifacts.
+The marsh construction/cold-load evidence below retains its earlier source pin and did not exercise
+this shared-hall change. PR #238 and issue #233 retain the remaining scope; no public release claimed.
+
+### Earlier shared-hall failures
+
+These failures are superseded only within the accepted scenario's scope above.
+
+The first shared-hall native run at `aa4f33bb` passed the original twenty observations and five
+hallway cases, then refused the lock case. Earlier doorway furniture can open a native door;
+locking it without closing it does not make its non-solid opening impassable. The fixture now
+requires the actual open state, observes open-and-locked access, then physically closes the door
+before expecting blocked access. This is a fixture correction, not a change to native door physics.
+Closed failed archive: `physical-rooms/aa4f33bb/shared-hall-1/result.json`, SHA-256
+`7ee064447c8ca9aa11ee24543b256d2d654df74ca1655018c870a3942eec295a`.
+All 3,441 pinned inputs and exact owned stop verified; no whole-scenario PASS from this failure.
+
+Run `f23e7b64` confirms open-and-locked access, but the next lock case still fails: native
+`Door.PerformClose` restores `Locked` from `WasLocked`. The revised fixture now calls `Lock`
+after physically closing, requires the actual lock and production Shell reading, and restores
+all original open/lock flags after its probes. Closed failed archive:
+`physical-rooms/f23e7b64/shared-hall-1/result.json`, SHA-256
+`203baf6cc2b9b0ecfe05abb530d4064da86ca5299e7fc758dc357ce4abfc304d`.
+Full 3,441 pinned inputs and exact owned stop verified. Production code remains unchanged.
+
+## Enclosed starter housing: marsh construction and cold load accepted
+
+At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original
+citizens alive through 16,800 ordinary turns. They occupy two completed M homes with six real
+sleeping places, two enclosed rooms and 34 clear floor cells. Furniture occupies its footprint;
+entrances and aisles remain clear. Wall/container entrance obstruction and cleanup checks pass.
+The paid fire completes, saves and survives a separate cold load; all original citizens and room
+measurements survive too, and a new paid construction order succeeds after loading.
+
+The earlier citizen deaths came from albino apes in a locally generated legendary faction party.
+Initial camp generation now reserves that ambient encounter slot through an exact disposable
+scope. Native checks witness the interception, prove the same map uses ordinary encounter logic
+outside the scope, and find no inherited scope after cold load. No actor removal, invulnerability
+or allegiance rewrite is involved. The old fixed entrance-test coordinate was replaced with a
+cell derived from the actual authored exterior route.
+
+CI `34855569975`, all four engine compile modes, strict final logs, whole lifecycle and mandatory
+housing checks pass. Full pinned recipe proof matches 3,440 warm and 3,442 cold inputs; both game
+processes are verified stopped. Archive `enclosed-canvas-homes/2c0600b5/warm-cold-1/result.json`,
+SHA-256 `f629b3ae4ae098890113312ec792d413a2821f3a031d1e3c3e45b771cc258b2b`.
+[Detailed evidence and failed-attempt history](ENCLOSED-STARTER-HOUSING-EVIDENCE.md) retain the
+scope, captures, diagnostics and earlier failures. This is not public release acceptance.
+
+Current authored canvas and timber/mud/block layouts cover M shared rooms, L sleeping chambers
+and common rooms, and XL cabins around four-cell courts. Compiled tests cover all 24 conversion
+routes/variants/facings; installed-blueprint reviews cover 192 hut poses and 1,376 architecture
+poses. Current basic homes require M ground, available at Camp; explicit S readers remain.
+Native saved paid S/larger legacy layouts, paid hut conversions, L/XL homes, other terrain/seed
+openings, activity/quality rewards, thermal safety and ordinary multi-map land/material balance
+remain unproved. Quickstart gives shelter stakes, so this does not prove paid shelter commissioning.
+Issues #229–#234 and #237 remain open for that work; Hearthpyre runtime compatibility is deferred.
+
+## Physical room and furniture clearance: native scenario accepted
+
+Lodging now measures actual sleeping rooms and clear floor using native structural observations.
+Every furniture footprint is occupied for architectural circulation, even native-walkable beds,
+chairs and containers. Each sleeping provider needs adjacent ingress-reachable clear floor;
+furniture cannot supply ingress or structural enclosure. Operable sleeping-provider coordinates
+are retained before enrollment caps, so spare bunks still limit privacy. Shared single rooms
+cannot exceed Close, and declarations can only lower measured privacy. Existing resident
+assignments, native collision and save formats are unchanged.
+
+The twenty-observation `lodging-room-native` scenario passed at
+`765e8e59d4819f3f3960df60cc660e6279097cbf`. Genuine dune Quickstart preceded a synthetic 8×6
+canvas room adopted through the ordinary API. Three real bedrolls share one roof credit. Native
+checks covered open/closed/locked doors, walkable furniture in a doorway, a trapped bed, solid and
+walkable furniture reducing clear floor, wall/bed loss, each restoration, and a temporarily
+borrowed original founder returned to the same cell. The actual benefit index, lodging privacy
+and repeated read-only arrival observations matched. The original four founders consume that
+single credit: arrivals correctly remain Full while it exists and NoRoofAtAll when it is lost.
+
+Full pinned runtime, harness, request, manifest, options and script matched all 3436 sealed inputs.
+Strict final logs, positional witnesses, capture and exact owned shutdown passed. Archive:
+`physical-rooms/765e8e59/furniture-circulation-1/result.json`, SHA-256
+`c24c08d7ea335d92bb1b6be9338968751d3f9953beaecefa49ef6b7cbbf08f3d`.
+The earlier `48dcc2da` attempt failed a wrong fixture arrival expectation; its closed failed
+archive is retained. Correcting the expectation preserved all founders and capped capacity.
+
+Focused validation passed: 195 lodging cases, 18 editor cases, 65 persona validators, six related
+source contracts, the Chromium authoring workflow and all four engine compile modes. The shared
+editor reserves authored object footprints and flags furniture on doorways even when another
+entrance is usable. Pure cases cover multiple sleeping rooms and partition changes; current native
+acceptance covers one synthetic room. Cross-room corridor connectivity, cold load, paid building
+redesign, activity/quality rewards, ordinary city balance and multi-map behavior remain owed.
+This slice is not released and does not establish Alpha/Beta acceptance.
+
+## Native30 accepted; housing and population follow-through required
+
+Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4
+chain and next-day recovery. The retained walkable-cell, full bound assessment, retained-floor
+renovation, protected occupant, no-destination refusal, same-body clearance, controlled paid
+retry and founding stake recovery witnesses passed. Full pinned profile recipe, strict final
+logs, exact wait accounting and owned shutdown passed. Source CI `34825767799` passed.
+
+Accepted archive: `beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/result.json`, SHA-256
+`e2eeb784ada3394244c3d5683098902a2aa937155385b1b629bd6e6249381063`. The run is closed;
+the older pending statements below describe earlier checkpoints and are superseded for this
+exact scenario. No higher-heart cold load, fifth rung or multi-map acceptance is claimed.
+
+The fixture supplies 50 resident bodies, 18 authored tentrows (54 literal beds), eight synthetic
+legacy water works and extra supplies. Its full-window image exposed the real open L-shaped
+starter housing geometry. It does not prove believable enclosure or ordinary city balance.
+Building architecture quality now applies to the entire catalogue; housing/furnishing defects
+are the first follow-through required before the next Alpha promotion. Correct citizen
+home maps and reputation-weighted population are also recorded as required work in
+[#229](https://github.com/AussieWarGod/thousand-and-first/issues/229),
+[#230](https://github.com/AussieWarGod/thousand-and-first/issues/230) and
+[#231](https://github.com/AussieWarGod/thousand-and-first/issues/231).
+See [HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md) for the audit, references and tests owed.
+No housing/population runtime repair is included in this documentation checkpoint. Public release
+remains 0.3.6; Hearthpyre runtime compatibility remains deferred until Beta.
+
+## Layout authoring and room audit
+
+The local [layout studio](LAYOUT-STUDIO.md) adds visual room drawing, glyph/XML editing,
+rotation, resize, undo/redo, source comparison and ordinary draft export. It uses the existing
+XML parser and installed blueprint/pose resolver. Its independent room reading distinguishes
+solid structural fabric and real Door parts from cover or doorway labels, measures clear
+interior floor separately from fixtures/yards and reports inaccessible uses and lot-size mismatch.
+Incomplete drafts remain editable with failures visible; the normal checker remains strict.
+
+The first installed-Qud census covers 344 configurations / 1,376 poses with no unresolved
+blueprint shapes. It flags 356 poses across 17 building families with sleep providers outside
+enclosed rooms. This is design triage, not 356 proved gameplay defects: intentional outdoor and
+cultural accommodation needs a function-aware review. Sample source inspection confirms the
+mud-hut doorway is only an anchor, alongside open house/finehouse variants. #229 tracks the
+whole catalogue. Room-quality gameplay effects and authoring work are #233 and #234.
+
+The non-runtime 8×6 shared-canvas example has one room, 24 interior cells, 17 clear-floor cells,
+three sleep fixtures, storage, seats and a real door, with no inaccessible fixture in the draft.
+The workbench correctly reports that it cannot fit the selected S binding and needs M or larger.
+It has no commissioned binding, revised bill or native use/upgrade/cold-load acceptance.
+
+Fifteen workbench tests and all 68 existing architecture-checker tests passed. The browser check
+passed source/draft comparison, wall loss, undo/redo, rotation, export, resize, room drawing,
+door/bed placement, malformed refusal and draft retention. An earlier browser check caught
+premature rejection of a room before its doors/main fixture existed; syntax and topology review
+are now separated only for drafts, while ordinary parsing still performs both. No gameplay
+runtime layout, citizen room-quality effect or recruitment rule is changed by this tooling slice.
+
+## Native29 closed; repair occupied interior renovation ground (#226)
+
+Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three
+completion and the controlled late-clearance/protected/no-destination/Outstanding retry cases.
+Court readiness then refused resident `756/NPC` at `44,12` on moot floor `3213/WoodFloor`,
+slot `g:09:04`. Authored geometry changes this retained walkable floor to a court inner wall.
+Existing clearance handled annexed cells only; the retained-floor repair intentionally did
+not admit bodies on target walls. No court payment or repaired stake probes were reached.
+
+Closed failed archive: `beta-heart-chain/55d873ec/court-retained-occupant-refused-1/result.json`,
+SHA-256 `97105af2a87d81703d389199f5c255f3057c341ac71ba0583563f9aea26348ad`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34823130018` passed.
+
+The pending repair uses declared prior and successor passability to include retained
+Walkable/Adjacent-to-Blocked cells in existing lawful clearance. Existing blocked or unmapped
+prior cells gain no authority. Protected-body proof runs before debit and paid clearance;
+strict proof runs after callbacks and before every physical application attempt. Native tests
+now require court interior resident/preflight/full-assessment, founder/stranger refusal and
+actual paid late-clearance with forced no-destination refusal and unchanged payment/custody.
+Same-envelope renovations share this runtime path but do not yet have their own native
+scenario. Ten new authority cases, fifteen envelope integration-contract cases, eighteen authored-heart
+cases, all 64 persona-validator tests, documentation checks and all four engine compile modes
+passed. The portable project excludes this occupant kernel and its fixture; a no-match selector
+was rejected and is not counted as coverage. One stale source-contract suffix was corrected
+for the additional strict reproof before its successful rerun. Native validation remains pending.
+Public stays 0.3.6;
+Hearthpyre compatibility remains parked until Beta, with Alpha delivery the immediate priority.
+
+## Native28 closed; bind Harness readiness to the production survey
+
+Native28 at `574c0ddb` passed retained-floor/blocked-cell probes, rung-three payment and
+completion, controlled late-resident clearance and paid retry. Before reaching the repaired
+stake probes, court supply assessment refused enrolled resident `3087/NPC` at annexed blocked
+cell `43,4`. Production telemetry explicitly said `reason=unwitnessed`: the Harness assessment
+used an unbound custody census, while movable-occupant authority requires the active survey.
+No court payment or stake-cleanup acceptance occurred in this run.
+
+Closed archive: `beta-heart-chain/574c0ddb/court-occupied-preflight-refused-1/result.json`,
+SHA-256 `95ee89940e491d0a7031dc9a25bf14299387865fd632571e97ef3f8b2140313e`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. CI `34821721978`
+passed. The earlier Native27 court payment remains its own bounded result.
+
+Harness readiness now binds one local operation, reads its active settlement survey and proves
+disposal. Its controlled blocked-resident probe also calls that complete readiness route,
+requiring Ready without moving the body or spending anything. The persona requires this
+additional witness. Production eligibility and movement rules are unchanged. All four engine
+compile modes, 64 persona-validator tests and documentation/metadata checks passed. Native
+progression and the #223 stake-cleanup repair still require fresh confirmation.
+
+## Native27 closed; stake-probe cleanup repair pending
+
+Native27 at `78e8d097` passed controlled retained-floor admission/refusal, exact rung-three
+payment/completion, late-resident and protected-occupant cases, forced no-destination refusal,
+Outstanding retry and original basin/store/21 brush/track retention with fifty supported
+residents. Court material and payload preflight passed, as did all four stake admission and
+foreign/unbound/duplicate refusal probes. The court then paid its exact 50-water/121-material
+bill, but the immediate founding-recovery assertion refused retirement authority. No court
+completion or full-chain PASS occurred.
+
+Closed failed archive: `beta-heart-chain/78e8d097/court-paid-founding-recovery-refused-1/result.json`,
+SHA-256 `1dd315fb61dc1bd07cdd48f064bd8eb38874648c022e9f5c3499dc445900cc5b`.
+Full pinned recipe, strict log check and exact owned stop passed. The scenario's stronger
+founding-recovery prohibition failed, so log hygiene does not override gameplay failure.
+CI `34820124279` passed; candidate `fbaaf549` passed CI `34820439091`.
+
+Source inspection identified a likely fixture contamination: the duplicate stake was destroyed
+while carrying a borrowed founding identity and owner. Native destruction retains tombstones;
+the founding custody proof deliberately refuses foreign stake tombstones. The probe now restores
+its own allocated ID and removes borrowed owner/slot fields before destruction. It additionally
+requires production founding recovery before and after the probes. A failure-only Harness
+observer names the exact retirement predicate and conflicting tombstones. Production admission
+and retirement rules are unchanged. All 64 persona-validator tests, documentation/metadata
+checks and all four engine compile modes passed. Fresh native confirmation remains required.
+
+## Native26 closed; occupied retained-floor repair pending (#222)
+
+Native26 at `84dc3f11` identified the intermittent `42,13` blocker: enrolled resident 1,
+object `755/NPC`, standing on predecessor `739/DirtPath` slot `g:05:03`. The authored
+upgrade impact scan refused creatures inside the old lot even where the successor remains
+walkable. No higher payment occurred. Closed failed archive:
+`beta-heart-chain/84dc3f11/retained-citizen-ground-refused-1/result.json`, SHA-256
+`6daec403076ff081ba92d32c0cb59b28b6ec5d95d2ac23f202d78a2aeb2a3c94`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34818949125` passed.
+
+The repair reads declared successor placement passability before rejecting a body on retained
+ground. Blocked or unknown retained ground and foreign objects still refuse. Annexed blocked
+slots retain their existing movement authority and strict paid-clearance checks. The native
+occupancy probe now requires resident, founder and stranger admission on the same impacted
+retained walkable cell, foreign-wall refusal there, exact restoration and no debit. Fourteen
+focused source cases, all 64 persona-validator tests, documentation/metadata checks and all
+four engine compile modes passed. The first developer compile caught a duplicate test-local
+name; corrected before the successful gate. Fresh native progression acceptance remains
+pending. Public release is still 0.3.6.
+
+## Native25 closed; retained-ground diagnostic on the release branch
+
+Native25 at `8ceed37e` passed the first higher upgrade's supply, occupancy and road preflights,
+but after 1200 ordinary turns no paid moot job existed. Reassessment refused protected
+successor ground at `42,13`, the same coordinate seen in the separate cold-load fixture.
+This is intermittent: Native24 completed that leg. The actual occupant has not been identified;
+do not attribute it to a citizen, road or fixture object without a physical witness.
+
+Closed archive: `beta-heart-chain/8ceed37e/retained-ground-payment-refused-1/result.json`,
+SHA-256 `08eea5c32fd9c3eacbbd8963a78819f7cb65d134381102f18e98ce9155dc20fe`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. No new higher
+payment, court completion or save/load acceptance occurred. The payload repair's source CI
+`34818068279` passed; that does not override this native refusal.
+
+The release branch now includes the observation-only refused-cell diagnostic already compiled
+in #219: exact object IDs/blueprints, ground classification, citizenship/resident identity,
+fixture membership and plot/component markers. It changes no production admission or movement.
+Keep #207 and #220 draft until the native blocker is understood and paid progression passes.
+
+## Native24 closed; court receipt bound repair — 2026-09-14
+
+Native24 at `1729bae6` completed paid rung three and all controlled late-resident clearance,
+protected-occupant, failed-destination and Outstanding-removal retry cases. Original basin,
+stockpile, twenty-one brush units, unpaid track and fifty housed residents remained intact.
+Court preflight then refused `The authored plot payload exceeds the construction receipt bound.`
+No court payment or cold load occurred. Issue #221 tracks this production blocker.
+
+Closed archive: `beta-heart-chain/1729bae6/court-payload-bound-refused-1/result.json`, SHA-256
+`bd481dbf7bcb48dfc799843e8608ababe4459de4ca93382fc62a2d87e6e7de6b`.
+Full pinned profile recipe, strict log and exact owned stop passed; scenario failed. The
+previous six-timber repair cleared material preflight, but this later refusal is not court
+completion or survey-stake acceptance. Eighteen synthetic homes remain a construction stress
+fixture, not ordinary city balance.
+
+Construction's 8192-character cap was smaller than the existing architecture codec's
+16456-character envelope. The repair raises the per-job cap to 32768, retaining the 4 MiB
+registry cap, canonical formats, hashes, and architecture's 12 KiB binary cap. Existing saved
+receipts remain readable. A regression failed for court and arcology in all four fallback
+facings, then all seventeen main CampHeart cases passed after repair. Twenty compiled heart
+snapshots now round-trip inside construction envelopes with maximal skin metadata; separate
+boundary tests cover old-size, larger, exact-bound and over-bound inputs. This is source
+codec evidence, not loaded-game acceptance. Fresh native court validation remains required.
+
+Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
+PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
+candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+
+## Accepted city-growth direction — planned
+
+[CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
+direction and [#208](https://github.com/AussieWarGod/thousand-and-first/issues/208) tracks it.
+Implementation tasks #209–#211 cover three-cell roads and public space, physical land-use
+balance and useful layout rewards, and genuine same-city multi-claimed-map behavioral tests.
+Roughly 20 residents per map is a design benchmark, not a hard cap. The full support economy
+must need land too. These are planned requirements; Beta and existing reliability work remain
+unfinished. Dense synthetic heart fixtures and travel to unclaimed maps do not establish this
+balance or multi-tile acceptance.
+
+## Latest heart-chain result and court-material repair
+
+Native run `3742ffeb6c9100b39484e1820c344e30c96ee80d` CLOSED FAILED at tier-four
+preflight. Tier three completed with all fifty supported fixture residents, original basin,
+store, 21 brush objects and retained unpaid track. The actual handover proved safe relocation
+of resident 755 with identity/citizenship retained, protected founder/stranger refusals and an
+explicitly synthetic no-destination refusal without movement or debit. A separate physical
+obstruction caused Outstanding, followed by committed-removal reproof and completion of the
+same paid job `92772944c40f4a3fa1b75ffa9c4c5c73`. These are bounded native witnesses for
+#215 and the controlled retry; they do not establish the original #212 failed predicate.
+
+Tier-four preflight then refused `NoGroundToGrow`: added slot `g:09:07` needs shaped timber
+absent from the exact paid improvement claim. No tier-four payment or survey-stake probe ran.
+Closed archive: `beta-heart-chain/3742ffeb/tier4-material-claim-refused-1/result.json`, SHA-256
+`7a0af3f0aae496dc9bd228bb4c86cedffde6d809288033dfd60cc6c822c8f1c9`.
+Full input seal, all 3388 C# bindings, strict mod log and exact owned shutdown passed. The
+roadless fixture's spatial capture was Pending, not a completed spatial seal. This synthetic
+support scenario remains unsuitable as ordinary city-balance or multi-claimed-map acceptance.
+
+[#216](https://github.com/AussieWarGod/thousand-and-first/issues/216) tracks the new blocker.
+The pending repair adds six shaped timber to the moot-to-court upgrade bill, matching its six
+new timber floors in every fallback facing. Native exact-payment expectation becomes 121
+material units; water remains 50 drams. Production paid-material protection remains intact.
+The regression failed before the bill change, then all 16 main CampHeart cases passed with
+zero skips. Current and historical-baseline deltas now check every added authored material,
+including fabric previously excluded by the storage-specific test. The portable selector
+returned no matches (exit 2): this fixture and its corpus helper are main-only. Coverage here
+does not include arbitrary extension-authored variants. All four engine compile modes passed
+with the repair (3096/3100 ordinary, 3384/3388 developer), as did nine documentation tests and
+the release-metadata preflight. Fresh native confirmation of the
+changed bill, full rungs 1–4, tier-five arcology and higher-heart cold load remain outstanding.
+Earlier results below retain their original inputs and acceptance limits.
+
+CI `34807093758` at `8df7b548` failed the older material catalogue test: it assumed every
+upgrade bill was only the positive difference between direct-build totals, expecting zero
+shaped timber for the court. That omits fabric rebuilt at different authored slots. The test
+now includes the court's six renovated floors, whose actual added placements are independently
+counted by the CampHeart regression. The prior focused and compile passes do not override
+this full-suite failure. All 270 focused main material-rule cases passed with zero skips after
+the correction. This fixture is also main-only; the attempted portable selector returned no
+matches (exit 2). Replacement CI remains pending; production and Harness inputs are unchanged
+from the passed four-mode compile at `8df7b548`.
+
+## Current source census for the pending heart repair
+
+Current cold-install inventory: 3139 files.
+Current source: 3106 sources, baseline and compatibility symbols use their
+respective exclusions (3097 baseline). All four engine compile modes passed.
+The cold-install inventory has 3132 files.
+3106 staged C# files / 440,880 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
+This is a source census, not native acceptance or an updated exact-inventory semantic review.
+
+## In-progress paid heart chain
+
+A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
+uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, eight
+standalone legacy air-well court objects, synthetic craft lessons and separately supplied material
+bills. The producer objects are synthetic prerequisites with their real LiquidProducer active; they
+do not establish authored waterworks-construction coverage. Only setup housing uses a future calendar
+argument; ordinary turns must pay and complete both heart improvements. Full native completion
+remains unverified. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+An earlier attempt at `bbd430f4779bba0367eec8913e6fd8c8984f7666` was stopped early after the sealed
+options file acquired `OptionLookLocked=No`. The engine's input path can write that option when
+controller look movement is detected; the exact input source has not been independently proved.
+This reproduced option drift without a window capture. All 3377 C# inputs and runtime/Harness XML
+matched, and the strict log and owned shutdown passed, but the complete input seal failed.
+Invalid diagnostic archive: `beta-heart-chain/bbd430f4/options-drift-invalid-1/result.json`, SHA-256
+`cc20b5c19d3dc6a54c85c9bac71eed99f6e67f9a3e208e95b75d7d5bea3a455a`.
+The exact paid-chain test game now bypasses `GameManager.UpdateInput` from its game-system setup
+through owned shutdown. Its lifetime is bound to that game and its exact sealed script; other games
+and scenarios retain input. A native preflight calls the real method and requires a postfix report
+that the original did not execute. This replaces the unverified command-specific guard.
+At `c0891e009d2901e3523b1bfbe538aa67ffd3d2b1`, the native input probe passed, the original
+6000-turn camp path passed, fifty residents were housed, the source paid tent finished, and rung-three
+supply passed real readiness. The following ordinary day still produced no heart upgrade receipt.
+The final live assessment was Ready with 50 free hands, no competing work, enabled automation and
+permitted zoning. Its last announced reason remained NotEnoughMaterial; that retained reason does
+not prove the current settlement-pass assessment. The log confirms another daily semantic pass ran.
+No production cause is established yet. The five completed waits total 8401 actual turns for 8400
+requested; the full script requests 31200, but did not complete.
+Closed failed-run archive: `beta-heart-chain/c0891e00/material-observation-refused-1/result.json`,
+SHA-256 `23f792da06dcc92a2c1afa002a5f0d6d88f28003530ce97ec11280aeb095b495`.
+All 3377 C# inputs, runtime/Harness XML, the complete input seal, strict log and owned shutdown
+verify. This establishes the narrow input probe and unchanged sealed inputs during this attempt,
+not full heart progression or keyboard/controller interaction coverage. No profile was resealed.
+At `44551df5700600e8bd55b3e0df9d33a21695b675`, the actual bound material assessment was Ready
+and rung-three payment passed with exactly 28 drams and 25 material units. Subsequent construction
+passes refused founding-heart recovery: the second improvement had replaced the standing root's
+receipt marker, while recovery still required the first completed improvement's marker. Construction
+returned before assigning or advancing labour. The final checkpoint refused with 40 resident bodies,
+3147 stored drams and 1728 food. Departure stacks identify subsidence's civic water-support rule;
+dedicated reserves alone did not provide that support. These are separate findings, not proof that
+fixing the receipt mismatch alone would prevent those departures.
+Closed failed archive: `beta-heart-chain/44551df5/receipt-chain-support-refused-1/result.json`, SHA-256
+`eb402cda7540a0a37fcc59967f1f9aafffe053ece4dbf9bba07241a59412c182`.
+The complete input seal, source bindings, strict mod log and owned shutdown verify. Four vanilla
+FrameworkScroller.DoPageUp exceptions occurred before game entry; this is not menu-input acceptance.
+The six completed waits requested 15600 turns; the game reached 15603 turns including setup movement.
+There is no full-chain PASS, and the earlier missing-start result at c0891e00 remains unexplained.
+
+At `6c47fdf1d8b6c45f60409a34f8f8c4fbfdda47b9`, all four engine compiles, focused tests and
+CI 34792879076 passed. The fresh native attempt preserved the full input seal and closed its owned
+process, but failed: the actual bound construction assessment was `NoGroundToGrow`, with all 25
+material units present, while the later checkpoint independently read `Ready`. The exact ground
+refusal text was not retained by the timing observer, so the blocking object or preflight clause is
+not established. This narrows this attempt's missing-start cause; it does not retrospectively explain
+c0891e00 or establish the receipt-chain repair.
+The five synthetic legacy air-well fields also caused a strict mod-log failure: their 12-by-9 legacy
+footprints were not reserved by single-cell supply placement, and daily spatial sealing refused
+`Footprint`. Civic support preflight alone did not prove valid spatial placement. The fixture must
+reserve complete work footprints and reprove its spatial seal before another long native attempt.
+Closed failed archive: `beta-heart-chain/6c47fdf1/material-ready-spatial-refused-1/result.json`, SHA-256
+`770d7c23f74f092803853b19d21c2e47293f063c4ac658399e5a69889a8e7618`.
+The seal observer measured 549 and 794 milliseconds, each with one unbound survey, but these were
+refused captures; they do not establish faster successful sealing. Five completed waits requested
+8400 turns; the final game clock was 8403. Full paid progression and relevant persistence remain open.
+
+The next fixture revision reserves eight complete 8-by-6 legacy air-well court footprints instead
+of five larger fields. A combined geometry test proves eighteen housing lots, both paid lots, all
+producer footprints and every producer root's approach clearance fit. The native producer setup
+checks the actual persisted legacy shape. A capture-only spatial preflight requires the ordinary
+city book to contain all fixture homes and producers before tier-three materials are supplied;
+only a complete capture or the specific roadless-public-entrance pending state may proceed. It
+proves the staged seal unchanged and journals the actual result. The bound assessment observer now
+retains its exact reason.
+
+At `043d05627d2d1ef833153ce8750bbc077b187e07`, the fresh attempt passed the original camp path,
+all eight legacy footprint checks, and the capture-only preflight with the exact roadless
+public-entrance Pending reason. The staged seal remained unchanged; this is not a completed
+spatial seal. The bound assessment then refused `NoGroundToGrow` with all 25 material units:
+`foreign or protected state occupies authored successor ground at 39,8`. A later checkpoint
+independently read Ready with 50 residents, but no tier-three receipt existed. The blocking
+object's identity was not captured. Source inspection suggests the final impacted-ground scan
+rechecks occupants already admitted by envelope preflight; that hypothesis still needs a
+controlled behavioral test and repair. Full paid progression and higher persistence remain open.
+The complete input seal, 3382 C# bindings, strict mod log and owned shutdown passed.
+Closed failed archive: `beta-heart-chain/043d0562/successor-ground-refused-1/result.json`, SHA-256
+`545dbcecdee5b10a26527085209c30a6531c7c1c281a93e57eb63ab6569394f3`.
+
+The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
+ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
+record. A valid next improvement can hold that output's current receipt marker. The scenario now
+checks recovery immediately after payment and verifies real City support before long waits.
+Upgrade preflight also preserves the earlier envelope decision for living bodies on newly annexed
+cells. It still checks objects on retained ground, and paid application still requires blocking
+occupants to be cleared. A new native chain probe places a fixture resident, the founder, a foreign
+NPC and a solid wall on exact annexed slots; it checks read-only admission/refusal, strict envelope
+refusal before clearance, restoration and no debit.
+
+At `f93450c5b2a0632a77c454ca54dc3ac75bc5e7ff`, all those controlled native probes passed:
+blocked resident preflight, strict refusal before clearance, blocked founder/stranger refusals,
+walkable founder/stranger admission, foreign-wall refusal, exact restoration and no debit.
+The actual bound settlement assessment was Ready, and the real tier-three improvement paid
+exactly 28 drams and 25 material units. Founding recovery then accepted the active next receipt;
+50 fixture residents remained supported. This is narrow live evidence for occupancy admission
+and pending paid-receipt recovery, not completed higher progression.
+After the following 7200 ordinary turns, the job was `InspectionRequired` with
+`Scaffold-removal intent or successor identity changed.` The common error does not identify
+the failed predicate or whether scaffold completion or later handover called it. Both higher
+completion and persistence remain unverified. The six completed waits requested 15600 turns.
+Closed failed archive: `beta-heart-chain/f93450c5/scaffold-removal-refused-1/result.json`, SHA-256
+`ec7a653f080c3433fed55aa300274679419c3f65088c081e14a34f45927c487b`.
+The full input seal, 3383 C# bindings, strict mod log and owned shutdown passed. Four engine
+compile modes, 13 focused main envelope source-contract cases with zero skips, documentation,
+registration and CI 34796480959 passed. The scenario itself failed and the PR remains draft.
+[#212](https://github.com/AussieWarGod/thousand-and-first/issues/212) tracks the exact handover
+failure, required diagnostics and recovery coverage.
+The next harness revision observes the removal-proof return boundary, recording each admission
+predicate, typed intent fields, exact identities, current job state and caller stack. An unexpected
+refusal journals immediately so the host stops without waiting for the later completion checkpoint.
+It does not change the production outcome or repair #212; fresh native evidence is required.
+At `454eb05516d8b342378b69ed1096fa63bdc4140e`, both tier-three removal-proof calls passed,
+from scaffold completion and later handover. The paid moot yard reached Complete/EffectsSettled,
+retained its basin, stockpile and 21 brush units, and kept 50 supported residents. The next supply
+step refused tier-four expansion: `founding-heart ground occupies plot-envelope growth at 31,4`.
+The earlier scaffold-removal failure did not recur; it is not repaired by adding an observer.
+Closed failed archive: `beta-heart-chain/454eb055/tier4-survey-stake-refused-1/result.json`, SHA-256
+`57c1ae67eba3889359835f295495a1cbb3a615527d5fe3e5e1a73fb778ef548b`.
+Full input seal, 3384 C# bindings, strict mod log, owned shutdown and CI 34797801627 passed.
+
+The next repair admits an Outstanding improvement to scaffold-removal reproof only when its
+scaffold-removal proof already exists and final physical removal has not started. A controlled
+native obstacle must force actual layout refusal, preserve the same paid job as Outstanding,
+then prove removal recheck and completion after obstacle cleanup. This tests the retry-phase
+inconsistency; the original failed attempt did not retain its exact failed predicate.
+Heart expansion also admits only survey stakes authenticated against the same completed founding
+receipt, seal, transaction, slot, cell and globally unique identity. Foreign markers remain refused.
+Native probes cover all four real markers, foreign ownership, unbound markers and duplicate IDs.
+These combined changes are awaiting their fresh engine run; higher completion/persistence remain open.
+[#213](https://github.com/AussieWarGod/thousand-and-first/issues/213) tracks the survey-stake refusal.
+Focused scaffold-removal cases passed in both projects (24 main, 23 portable), and 13 main
+envelope source-contract cases passed, all with zero skips. Four engine compile modes passed
+(3096/3100 ordinary and 3382/3386 developer sources); registration and documentation checks passed.
+These checks do not establish native recovery.
+The final documentation wording edit at `000bea4e` failed the exact STATUS source-count
+contract, and CI 34800211070 failed that audit; both full managed CI suites passed. A following
+successful shell command masked the local docs exit code. The compile archive's docs-PASS
+summary was incorrect; its copied `taf-heart-chain-docs-29.log` retains the actual exit 1.
+Append-only correction: `beta-heart-chain/000bea4e/compile-documentation-correction-1/result.json`,
+SHA-256 `cafceed5b5c83c504eb1acbbe19fc23cf7725af43c245d150638d936e273eba0`.
+The wording is restored here; runtime and native-test inputs are unchanged. Documentation
+checks must be judged by their own exit and output, not the last command in a shell batch.
+At `000bea4e9f70be44f6806bde7f8ae67cd8218657`, fresh native occupancy probes passed,
+but the next bound settlement assessment refused tier-three payment: `NoGroundToGrow`;
+`plot-envelope growth would absorb public road ground at 40,16`. All 25 material units were
+indexed in the exact supplemental store, and all 50 residents were free to work. A preceding
+road pass reached Worn. The exact per-cell floor identity/state versus tally branch remains
+unobserved; both can trigger this guard. No controlled Outstanding retry, survey-stake probe,
+higher payment or completion was reached. Earlier tier-three completion remains evidence only
+from the original `454eb055` run, not this changed input set.
+Closed failed archive: `beta-heart-chain/000bea4e/heart-road-ground-refused-1/result.json`,
+SHA-256 `767e736f1d2cc9db712d29d26266cdbe2ed28c9447cb7af23515608dd1885cdb`.
+Full input seal, 3386 C# bindings, strict mod log and owned shutdown passed; scenario FAILED.
+Documentation-only correction `476c4fa4` has green CI 34800681084, including both full managed
+suites and repository audit. It does not change this native result.
+[#214](https://github.com/AussieWarGod/thousand-and-first/issues/214) tracks ordinary road wear
+inside future heart growth, its exact boundary observation, fresh-city prevention and existing-save
+recovery. Road wear excludes current plots; growth refuses worn ground newly annexed from outside
+them. The shared reservation policy must preserve usable entrances and public streets, distinguish
+incidental wear from established/paid infrastructure, and avoid disabling roads merely to pass the
+fixture. #212/#213 and higher real cold load remain open.
+
+The pending #214 repair admits unpaid Worn, Trodden and Path ground only within an already
+proved founding-heart accretion. Exact blueprint, live unique identity, lack of ownership,
+construction receipt and layout/plot claims are required for a physical track. Paved, foreign,
+receipt-bearing and ambiguous road objects still refuse. Ordinary building expansion retains
+its road protection. Historical traffic tally alone cannot acquire the heart's surveyed land.
+Tracks and tally are preserved; no floor deletion, demotion or save-field migration is introduced.
+This addresses fresh and already-worn cities through the same read-only admission, rather than
+preventing street wear and potentially breaking the current entrance's connection.
+All 207 main RoadRules cases (including sixteen new policy cases) and thirteen envelope
+source-contract cases passed with zero skips. All four engine compile modes passed
+(3096/3100 ordinary and 3383/3387 developer sources). The RoadRules fixture is main-only; these are not portable-suite or native results.
+New native cases cover all three unpaid wear states, maximum historic traffic, paved and foreign
+floors, empty/string and wrong-table/int receipt presence, duplicate identity refusal and no debit.
+A settled path remains under the completed heart and must retain its exact ID, cell and wear state
+through both higher upgrades and next-day recovery. Unexpected road refusals now log exact lookup,
+traffic, floor identity/state/blueprint, ownership and receipt presence.
+
+At `710fa082624b07d13a493f0256a71a675f010735`, fresh native road probes passed all three unpaid
+states, maximum tally, paid/foreign/receipt/duplicate refusals, restoration and no debit. The
+original camp and occupancy probes passed, and tier three paid exactly 28 drams and 25 material
+units. The scenario then FAILED its completion checkpoint because the controlled obstruction
+and Outstanding retry witnesses were absent. At tick 418800, both handover attempts logged
+resident NPC 3092 on annexed blocked ground at 42,8. The strict baseline required by the fault
+injector therefore could not pass. Scaffold-removal reproof itself passed in ProjectionPending,
+Working and Outstanding for the same paid job; this is not proof of the controlled case or
+completed handover. When the resident entered that cell remains unobserved.
+[#215](https://github.com/AussieWarGod/thousand-and-first/issues/215) tracks lawful occupant
+clearance at handover/retry and its deterministic regression. Do not remove protected residents
+or weaken strict layout checks to make the fixture pass. Track retention through completed
+upgrades, tier-four stakes, full-chain completion and higher persistence remain unproved.
+Closed failed archive: `beta-heart-chain/710fa082/controlled-retry-unwitnessed-1/result.json`,
+SHA-256 `26bd06c2b1da6367b45aa3235da7676c1de3442d715d90f7543ec939fbdb4a06`.
+The full profile seal, all 3387 C# input bindings, strict log and exact owned shutdown passed.
+CI 34802183289 passed. Neither those checks nor the narrow road probes establish full native
+acceptance. The chain targets rungs 1 through 4; the fifth arcology rung and its cold load
+remain open under #160/#144. Existing rung-two cold-load evidence does not cover later hearts.
+
+The pending #215 repair repeats lawful annexed-ground clearance at paid handover, including
+settled-effect replay. It proves paid endpoints and expansion authority before moving eligible
+bodies, uses the existing plot displacement/destination/rollback rules, then reproves endpoints,
+content custody and strict ground. The stamper still refuses any remaining blocking occupant.
+One local survey covers clearance and is disposed on all returns; nested callers retain their
+existing survey. No payment, layout receipt or save schema is changed by clearance itself.
+The native fixture now arms a real enrolled resident after payment and puts it on an annexed
+wall slot at handover. It requires founder and foreign-creature protection, an explicitly
+synthetic no-destination refusal before movement, then actual safe relocation outside the new
+plot with identity, citizenship, custody, paid claims and caller survey retained. The separate
+controlled stranger-obstruction/Outstanding retry remains required. These cases must precede
+completed tier three in the persona; full-chain acceptance cannot silently omit either case.
+Four current engine compiles passed (3096/3100 ordinary, 3384/3388 developer) and all fourteen
+envelope source-contract cases plus 213 upgrade cases passed with zero skips. The later
+`3742ffeb` run proved the bounded tier-three cases described above; full-chain acceptance
+remains pending and earlier failed evidence is retained unchanged. Interrupted/reloaded resident
+clearance and higher-rung cold load remain open.
+Host persona validation now recognizes the required occupancy, road, stake and controlled
+handover witnesses. Successful repeated scaffold-removal diagnostics are non-positional;
+their refusals remain fatal, and they cannot substitute for the controlled retry witness.
+All 64 persona grammar/verdict tests passed, including missing, repeated and refused handover
+rows. This corrects a host preflight refusal before launching the new native attempt.
+
+Spatial seal capture and fixture housing observations use one local survey for their complete read.
+Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
+The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
+the exact cost of the separate seal handler was not measured. A native observer now records its time,
+unbound survey count and scope disposal. Performance gains and the production repair await native proof.
+The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
+progress, and binds chain clock observations. It does not replace native acceptance.
+
+The first attempt at `ec85c024226858ee65c815b979722615a4c13353` passed the original 6000-turn
+camp path but refused city support before any home was created: setup called an untyped layout
+lookup for a design requiring a typed lot. The correction reuses production plot-payload preflight.
+Failed archive: `beta-heart-chain/ec85c024/untyped-housing-refused-1/result.json`, SHA-256
+`ebebaf1801d608c59c82fc7fcf7583ff104a0692db4595e414e4b88b9ed7fce1`.
+The full closed profile, source bindings, strict log and owned stop verify; this is not a chain PASS.
+The next attempt at `cad5ee19fef2b7ed97a3b0a6b4dee555c5b48e84` created all eighteen authored homes,
+then its observer incorrectly read the custody-only survey's unpopulated civic list. The corrected
+observer resolves actual indexed bodies against citizenship and resident rows, and uses one physical
+benefit index to check every home assignment and capacity. It also walks the founder clear of the
+final heart envelope using ordinary movement. Failed archive:
+`beta-heart-chain/cad5ee19/resident-census-refused-1/result.json`, SHA-256
+`261d9087b80871d85ce7acc1b311a4b8bc3c4babd5cd76b4a8d4c3efa8f30089`.
+The `23cb0a347dfad7eceabecf0aa00b023f1b2fd6a8` attempt was stopped as incomplete after city
+support spent over twelve minutes without reaching its next checkpoint. Source inspection found
+that setup housing assignment ran outside the shared survey scope, allowing education/reach
+queries to rebuild physical-benefit observations for candidate homes. Setup now uses the existing
+local-operation scope, verifies its disposal, and retains every physical housing assertion.
+The incomplete attempt is not an assertion failure or a native PASS. Its complete sealed profile,
+strict log, owned shutdown and native window observations are retained in
+`beta-heart-chain/23cb0a34/unbound-housing-incomplete-1/result.json`, SHA-256
+`43ccc9b0bfb4f6678f3d9885b36ac2bb80c811992f4072ef3d3e1af9d5391bee`.
+With the scoped pass at `499357a8599f283af2f3bdc260a5fc5b91aac1a7`, city setup passed in
+213.8 seconds and proved fifty physically housed residents. The following ordinary day completed
+the source tent, whose automatic tent-row improvement then spent materials intended for the heart.
+The heart-payment assertion correctly refused `NotEnoughMaterial`. Failed archive:
+`beta-heart-chain/499357a8/material-payment-refused-1/result.json`, SHA-256
+`11cd887df3d997da7d8c88bbad56dab0d57ef766ffe9a2e0ba61b1ab1bf7c47d`.
+The scenario now waits an ordinary day without the next heart materials, requires that tent's
+paid completion and exact physical output, and holds its improvement before supplying the heart.
+The complete script now requests 31200 ordinary turns. This adds an actual construction boundary;
+it neither directly completes the tent nor supplies replacement materials after a failed payment.
+At `6c56420f214daa8abe67d0efd409e6749ed7e966`, the tent completion/hold and first supply passed,
+but heart payment refused `NoGroundToGrow`. The observer omitted the detailed production reason.
+Source and recorded geometry show the tent at `(29,7)..(34,10)` reserves a lane into the rung-three
+footprint. The chain fixture now walks the founder west before the ordinary commission and verifies
+that the resulting tent's reserved lane stays outside the final heart footprint. Other camp personas
+retain their existing commission position. Supply now checks real readiness before waiting, and
+refusals include the full production reason. Failed archive:
+`beta-heart-chain/6c56420f/expansion-ground-refused-1/result.json`, SHA-256
+`868071665a197651b5d41d5676e235063cb183e7b1d58f37197f0a6e786eebd6`.
+At `2e5ae6c169e2176fcd0018b629aabbd2c8be49b3`, the commission moved to `(24,7)..(29,10)` and
+passed the final-heart clearance check. The setup then placed a home at `(18,8)..(23,11)`, touching
+the tent's reserved lane. Execution was stopped early as an incomplete fixture-layout attempt.
+The home loop now applies production's `CrowdsExisting` and `GroundGrid.AnyRefusal` checks before
+typed preflight and staking. Archive: `beta-heart-chain/2e5ae6c1/fixture-lane-incomplete-1/result.json`,
+SHA-256 `a7fc044c6e1c4dc2575929cdedc3b2637b87c01e7efe080bfa0c6320b09ae9fe`.
+At `f4826b248944cb128ce9b6c14297313c9af42965`, correct lane guards left seventeen homes: the
+bottom candidates' authored entrance paths left the zone. A new engine-free capacity regression
+reproduces the old grid's seventeen usable lots around the actual paid tent and final heart.
+The fixture grid now offers four western and three eastern columns, with three rows clear of the southern edge;
+production crowding, ground, typed ingress and physical-completion checks still govern every home.
+Failed archive: `beta-heart-chain/f4826b24/housing-ingress-refused-1/result.json`, SHA-256
+`008e881a724d2600688e5e4701d60720900a11cd11e92c2b35439373facb7372`.
+At `cb3370e98532656cb5b538568d51a9b5cc8f45bd`, eighteen homes and fifty housed residents passed,
+but the paid tent could not finish: its authored entrance's lane endpoint extends beyond the
+reserved plot margin and was blocked by the home at `(23,2)..(28,5)`. The log records a `Done`
+stage with physical ingress refusal, so extending the wait would not resolve it. The fixture now
+preserves the full approaches of both paid plots, shifts eastern housing one cell, and verifies
+every physical entrance before enrollment and waiting. A focused geometry regression covers the
+previously accepted blocker. Ordinary gameplay and the 31200-turn script are unchanged.
+Failed archive: `beta-heart-chain/cb3370e9/tent-completion-refused-1/result.json`, SHA-256
+`56e4979993f0e3b02044d056368a23c0caca5c0c904470a1383ab7bcf1b1e569`.
+At `1b9d0755c76f97d83b7d236595fb9c1e0a26ec4b`, city support, all physical entrances, paid tent
+completion and rung-three material supply pass. The next ordinary day does not start the heart
+upgrade. The observer reports `Ready`, but supplied an assumed fifty free hands and no competing
+work. It now reads the same staffing and competing-work inputs used by automatic improvement,
+and reports the production announcement, zoning verdict and recent ledger notes on refusal.
+New synthetic stores also receive explicit engine IDs, as the original camp store already does;
+the previous run logged missing construction-input source identity. No root cause of the missing
+upgrade or full-chain PASS is claimed. Failed archive:
+`beta-heart-chain/1b9d0755/ready-not-started-1/result.json`, SHA-256
+`a3999fd28fe82f2fc00ffe8898c00a39f201e5d6a8b43a2b570cf4f460d4686e`.
+At `5f67495a669a3a094fc69ccfd0ee9d9eb5403c6c`, city support, paid tent completion and actual-input
+material readiness pass. The next wait stops progressing at 1100/1200. A full native window capture
+shows `Make Camp — Select a direction`; an earlier cropped capture could not exclude that prompt.
+The operator stopped the exact driver for owned shutdown. The closed profile also fails its full
+seal: `playeroptions.json` acquired `OptionLookLocked=No`. All 3376 C# inputs, runtime and Harness
+XML still match, and the strict final log passes, but this is **INVALID / INCOMPLETE**, not accepted
+chain evidence. Both complete inventories, option versions, captures and shutdown records are kept
+without resealing in `beta-heart-chain/5f67495a/camp-direction-invalid-1/result.json`, SHA-256
+`a9ecc18378ea3bb2d0db21f7cf76b42d0e6919c84962d8a00f7db6e4bf931766`.
+The initial command-specific guard had only pure and compile coverage. It was replaced by the
+dedicated-game input boundary above after option drift reproduced without a window capture.
+Command origin and the earlier missing-upgrade cause remain unproven.
+
+## Paid camp cold-load coverage
+
+Native developer scenario at `de82845056b1bfb8b747925f3aeb38fc72d0dfbd` passes 6000 source
+turns, real save/quit, a separate cold load and 3600 loaded turns completing another paid fire.
+The paid rung-1 to rung-2 upgrade consumes 18 drams, 24 stone and one timber, settles a functional
+waterstone and basin capacity 48, and survives next-day founding recovery. The ground-protection
+case also commissions a tent for three drams and two canvas (classified as brush), leaving 21
+original brush objects. The fixture supplies one disclosed extra timber before saving, none after load.
+
+The load witnesses bind the same heart, city work row, stockpile, camp fire, paid tent receipt,
+material custody and world clock before and after activation. The next fire pays two drams and
+one timber, then reaches Complete/EffectsSettled with a distinct functional output through vanilla
+Continue and ordinary turns; the saved new-game script is not replayed. Both complete 3369-source
+profiles, runtime/Harness XML bindings, strict final logs and exact owned stops verify.
+Archive: `beta-camp-cold-load/de828450/preactivation-paid-complete-1/result.json`, SHA-256
+`180e4014bf6c3752ff12f945834cd600ad3da2a7a6ce6716100e3bbde68e0852`.
+All four engine compile modes pass (3094/3098 ordinary, 3365/3369 developer sources).
+Focused camp checks pass: 87 main and 73 portable, zero skips; five journal-oracle cases pass.
+These focused counts do not describe the full source suites.
+
+Earlier failed evidence remains retained. The diagnostic save refusal established the paid tent's
+two-brush cost: `beta-camp-cold-load/da5a8234/paid-tent-custody-1/result.json`, SHA-256
+`1dbb7a3a52371c371ebc10abd5afeb1bf63c0844babadfda496903ef428a7173`.
+The first cold load exposed a missing preactivation route and a gossip popup blocking unattended
+turns: `beta-camp-cold-load/24986884/load-route-and-popup-1/result.json`, SHA-256
+`276d1e26c5d173411410835cf3536ab8f813e181d9867e4e66d8dd8210aee240`.
+The passing attempt adds the scoped route, requires its exact witness and retains popup suppression
+until the loaded wait finishes, then restores its original value. A routing regression failed before
+the fix. The version-2 snapshot explicitly binds the world clock.
+
+This closes the synthetic rung-2 persistence and subsequent paid-completion gap in coverage row 30.
+It does not prove ordinary Quickstart, other seeds, higher rungs, founder retention or all-feature
+Beta acceptance. Existing Quickstart evidence remains a separate scope.
+
+## Unreleased profile inventory optimization
+
+The shared scenario profile reader now hashes at most four files concurrently, preserving the
+existing complete inventory and per-file checks. Tests exercise overlapping reads, exact hashes,
+bounded active readers and failure propagation that waits for siblings and preserves the prior seal.
+The two concurrency tests failed against the serial reader; all 87 profile/load tests pass afterward.
+
+The preceding prototype measured serial inventory at 41.4 seconds and four-worker inventory at
+7.7–7.9 seconds in both execution orders on one stopped Windows-mounted profile. All 3398 paths
+and hashes matched its closed seal. Prototype archive:
+`tooling/profile-inventory-parallel/e2fab515/prototype-1/result.json`, SHA-256
+`6fe78ebbe9c387e6ad3df5336c1fb7894b8649c4acc26f1d275e64d788a96dd7`.
+Native validation at `948e77e5202c86c58dd73f59029513eb0bc56d3b` passes real marsh Quickstart, 8400 turns,
+four original citizens housed, two shelters and six beds, save/separate cold load, another paid
+commission, vanilla Continue and four source plus four loaded whole-zone frames. Complete Local
+seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and both owned stops verify.
+Native archive: `heart-sight/948e77e5/parallel-profile-cold-load-1/result.json`, SHA-256
+`5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721`.
+
+The measured load-preparation phases total 99.0 seconds, compared with 234.7 seconds in the earlier
+run on this host. Post-copy inventory and sealing each take about 7.8 seconds; copying remains
+about 32 seconds. These are summed phase measurements, not whole-command wall time. Timing and
+check evidence: `tooling/profile-inventory-parallel/948e77e5/native-1/result.json`, SHA-256
+`53cf4b52c8961a91c8878142fe1b21eed483333dcb32ab56d1d74b41c36bab3c`. Engine/compiler inputs match the accepted 42b252e7 four-mode
+receipt exactly, so those compiles were reused rather than rerun. Rung-2 cold load, other seeds
+and broader Beta coverage remain separate gaps.
+
+## Unreleased camp test-ground correction — PR204
+
+The camp fixture preserved a glowpad at border cell `(0,15)` with the Spacetime Vortex mutation.
+Native creation and placement tracing at `ef1f78a44d9ab2df4f9a13c9e223e31c785b2d37` identifies
+that same active actor targeting an NPC and creating the vortex during ordinary combat. The
+closed failed attempt is `beta-camp-heart/ef1f78a4/vortex-caster-1/result.json`, SHA-256
+`387713d0ef3d8ed1d155b56bb491e9b4f4153ad83a41d4424f986e3da741f06c`.
+Developer test-ground cleanup now removes border creatures while retaining non-creature border
+objects and travel connections. The after-strip census refuses surviving non-player creatures.
+Native validation at `42b252e7c324423b702248040184fe9072f7221d` passes all nine scripted steps
+across 6000 ordinary turns: cleanup removes 17 border creatures and retains five border widgets;
+production pays 18 drams, 24 stone and 1 timber, completes waterstone 811 at rung 2, preserves
+stockpile 754 and 23 unspent brush, and recovers the founding heart one day later. No vortex
+creation is recorded. Two fixture residents later emigrate through normal subsidence; this is
+not the separate housed Quickstart scenario. Full closed seal, 3360 C# inputs, runtime and Harness
+XML bindings, strict final log and owned stopped record verify. Archive:
+`beta-camp-heart/42b252e7/border-creatures-cleared-1/result.json`, SHA-256
+`3d3a7d3f0807a00bea11f2716a51f6340b4a0932c3d9162afbd1a0fe1c790673`.
+All four engine compile modes, four focused source and nine documentation checks pass.
+Earlier failures remain retained. Rung-2 cold load, other seeds and higher-rung coverage remain gaps;
+ordinary-world cleanup and public release are unchanged.
+
+## Unreleased Beta validation — PR194
+
+This work does not change the finalized public 0.3.6 release below. Broader Beta acceptance
+remains incomplete. The persona runner now prepares its mandatory run record and requires
+owned shutdown, StopRecord and strict final Player.log acceptance before publishing a screenshot
+or accepting the next persona. Developer load continuations no longer run inline under completion.
+The runner and blocking-consumer regressions failed before their fixes and pass afterward.
+
+Native source/save/separate-cold-load validation at `61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7`
+passes real marsh Quickstart, 8400 ordinary turns, four original citizens housed, two shelters
+and six beds, completed first-heart components, another paid commission after loading, and four
+source plus four loaded whole-zone frames with ordinary sight restored. Both complete Local seals,
+3358 C# inputs, runtime bytes, strict final logs and exact owned stopped records verify. Archive:
+`heart-sight/61140abd/current-harness-cold-load-1/result.json`, SHA-256
+`e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34`.
+The first heart remains a seven-wall open camp; no enclosed-building claim is made.
+
+Paid camp rung 1→2 and next-day recovery also pass at
+`ea2bf92dee62b26e64fdae3f661aa81c1de58551`: production pays 18 drams, 24 stone and 1 timber,
+raises a distinct functional waterstone, settles rung 2 and basin capacity 48, preserves the same
+stockpile and 23 unspent brush, and recovers the heart one ordinary day later. Setup deliberately
+supplies six enrolled fixture residents, 400 drams and 48 physical material units; this is synthetic
+setup, not ordinary founding. Full closed seal, 3359 C# inputs, runtime binding, strict final log and
+owned stopped record verify. Archive:
+`beta-camp-heart/ea2bf92d/paid-rung2-ground-census-1/result.json`, SHA-256
+`ffde56a6e38d4234c4ee26a8c1bfd30c49c2875d2397b5e3e976d88a16f29338`.
+
+This single PASS does not resolve test-ground reliability. Before/after cleanup observations
+recorded no vortices, but later ordinary turns teleported residents through vanilla space-time
+vortices and one resident died in melee. Prior stage/unfinished-rung failures at 14e012fc, 4a344a70
+and 61140abd remain retained; the latest closed failure is
+`beta-camp-heart/61140abd/movement-caller-1/result.json`, SHA-256
+`e1163ab7e264ce5f0a44ba68da8be4197f9c1327b1e70d063855a7434234ea07`.
+Movement traces now have separate bounded journal rows; failed census rows remain significant.
+The diagnostic validator regression failed before the change, then 63 Python and four ground
+source contracts passed. Four engine compile modes passed with 3094/3098 ordinary and 3355/3359
+developer inputs. These checks do not establish paid-rung-2 cold load, higher rungs, multiple
+settlements, arcology or complete feature coverage. The [coverage matrix](BEHAVIOUR_COVERAGE.md)
+retains those gaps.
+
+## Current 0.3.6 sight hotfix — published and finalized
+
+Public Alpha 0.3.6 is published, verified and finalized. It supersedes 0.3.4 on the public
+listing. Failed public 0.3.5 and its refusal evidence remain unchanged. Earlier version and
+pending-publication statements below describe their historical checkpoints; this section
+controls current delivery status. Broader Beta acceptance remains incomplete.
+
+### Public 0.3.6 — published and finalized
+
+[Run 34761004824](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34761004824)
+passed all applicable hosted, licensed, submit, verify and finalize jobs at immutable
+`v0.3.6`, source `2624c4fb2b7d8dffeaef6fca1a19aa0174e79de5`. PR200 prepared the private receipt binding and
+public metadata; PR201 used a normal checked dev-to-main merge commit. The shared actual Alpha
+metadata preflight passed again before tagging. The existing maintainer exception admitted tag
+creation; no protection setting changed, required merge check was bypassed, upload retried or
+tag moved. The owned runner stopped after terminal finalization.
+
+All eleven licensed release gates passed, including 14,794 main and 5,747 portable cases with
+zero managed skips, all four engine compile modes, 46 launcher cases and package boundaries.
+Three foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. Public item
+`3794797472` reports `SubscribedInstallationVerified`, `attemptFinalized=true`; all 3129 package
+files match the subscribed installation. This proves one client only:
+`freshTransferVerified=false`, `releaseReady=false`.
+
+- Public receipt SHA-256: `11bf0c16f57097a814f7348636afaf964485ce1bf4823a13682218b51512af37`.
+- Plan SHA-256: `1e7b411348b90b1fa2f17a98608d6b4c58eae4e11196b97ed8858fc3f79a3afe`.
+- Installed inventory SHA-256: `666ab40c347b565459d7ebf6b997beee5503886b43606b3deed5458787ea0076`.
+- Finalization SHA-256: `2c44a3da2172ffb93474af45dd4f8b1ed6a8c42f1b22ee0084936e754ad576e6`.
+- Delivery archive: `releases/0.3.6/public/result.json`, SHA-256 `ea3db79f7d63b98df9a48c6daa632efcc56dc167039d00eef9e2767bf14df202`.
+
+Production, harness and TESTING.md remain byte-identical to the accepted private 0.3.6 source.
+The native evidence below is the original private-candidate run on those identical inputs,
+not a new public gameplay run. It proves the recorded construction/sight/save/cold-load chain;
+later heart rungs, old-save migrations, other seeds and broader feature combinations remain gaps.
+
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+The only production C# change from private 0.3.5 is the synchronized release-version literal.
+PR197's shared Codex/Claude workflow and PR198's native Linux source-test route are merged.
+Both full suites, hosted Windows checks, all four engine compile modes and native gates remain.
+
+### Private 0.3.6 — verified and finalized
+
+[Run 34758593664](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34758593664)
+passed every applicable hosted, licensed, submit, verify and finalize job at
+`e8f595fb3152eeadc746a95f49a7968c5b93a54c`, the immutable `staging-v0.3.6` source from checked PR199.
+All eleven licensed gates passed: 14,794 main and 5,747 portable cases with zero managed
+skips, four engine compile modes, 46 launcher cases and package/structural boundaries.
+Three PACKAGE/COPY/BACKUP bind-alias fixtures retained explicit foreign-owned-environment
+skips; this is not a zero-total-skips claim.
+
+Private item `3796495680` reports `SubscribedInstallationVerified`, `attemptFinalized=true`.
+All 3129 package files match the subscribed installation and every runtime byte binds to the
+native source. This proves one subscribed client; `freshTransferVerified=false` and
+`releaseReady=false` remain explicit limits. No upload was retried or tag moved. The existing
+maintainer exception admitted tag creation; no protection setting or required merge check changed.
+
+- Private receipt SHA-256: `ad785c658f36799a942f2545982aaa5b29c11806b3e01df9678b58a060d223ce`.
+- Plan SHA-256: `4fc0c4b25984b2b2acf920be2cc5725468dbaacdc960105044fac559a832a278`.
+- Installed inventory SHA-256: `ab86b944f9d04a6be566fd1c7395e6f73a4c0e91357cb13674f3aef963107229`.
+- Finalization SHA-256: `38e37994cc53f131395bc7bd785f45175c1736d1724e58a38e639bfe4d05f0de`.
+- Delivery archive: `releases/0.3.6/private/result.json`, SHA-256 `7010b53496e58dc2216c2e97d0047003da1cd2511972e9c2376a060c8a0518a7`.
+
+After finalization and exact runner shutdown, a fresh marsh/advisor-on Quickstart on seed
+`#43101` passed 8400 ordinary advance turns: four original founders, six beds in two shelters,
+a completed paid fire and all seven physical canvas walls. The heart remains open rite ground;
+shelters provide housing. A real save at 8403 turns and a separate cold load preserved the
+heart before activation and afterward. A distinct loaded job paid exactly one timber and two
+drams. Four source and five loaded frames drew all 2000 cells visible and lit, then restored
+ordinary gameplay sight. The saved script did not replay. No synthetic completion, fabricated
+visibility or world repair was used.
+
+Both full profile seals, strict final logs, owned stops and run records pass. All 3357 staged
+C# inputs per session bind to the candidate; other runtime inputs match apart from the intentional
+developer manifest. Profiles `taf-scenario.5QDtwK` and `taf-scenario.bFoqqT`, save
+`f106fbfc-1ab2-4c22-bc0d-6b07126167c8`, and raw evidence remain local.
+Native archive: `alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json`,
+SHA-256 `03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1`. This bounded proof does not establish all-seed survival, old-save
+migrations, later heart rungs or all feature combinations. Earlier housing and guest evidence
+retains its original source and scope.
+
+The verified private receipt is copied byte-for-byte into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`.
+This receipt-and-ledger commit becomes the public Alpha candidate binding; TESTING.md remains
+unchanged throughout promotion.
+
+## Retained 0.3.5 sight hotfix — private verified; public upload refused
+
+The private Alpha 0.3.5 sight hotfix is verified and finalized. The public attempt failed before
+upload; the public listing still serves 0.3.4. Broader Beta acceptance remains pending.
+
+Public tag `v0.3.5` is retained at `4629c43cf106c90b49843677f9ae834309123571`.
+[Run 34756778947](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34756778947)
+refused README wording in the hosted Alpha-candidate validator: the pre-release qualification
+passed the documentation tests but violated the separate exact status-line contract. Both
+hosted source suites passed; publisher, installed verification and finalization were skipped.
+No public upload was attempted. The owned public runner was stopped afterward. PR195 and
+PR196 used normal checked merge commits; the existing maintainer exception admitted tag
+creation. No protection setting changed. The failed tag will not move or be retried; corrected
+publication requires a new version. The shared development preflight now calls the same Alpha
+metadata validator before a push, and its regression test reproduces this exact wording failure.
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
+The only production change since the earlier accepted sight/heart native source is the
+release-version literal in `Core/KingdomReleaseInfo.cs`; the structural review binds it.
+
+### Private 0.3.5 — verified and finalized
+
+[Release run 34752425895](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34752425895)
+completed every applicable hosted, licensed, submit, verify and finalize job successfully.
+PR193 merged at `bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46`; annotated `staging-v0.3.5` names that exact source.
+The existing maintainer exception admitted release-tag creation; no branch protection was
+changed and no required merge check was bypassed. No upload was retried or tag moved.
+
+All eleven licensed gates passed: 14,794 main and 5,747 portable cases with zero managed
+skips, all four compile modes, 46 launcher cases, package/deployment boundaries and structural
+validation. Three PACKAGE/COPY/BACKUP bind-mount alias fixtures retained their explicit
+foreign-owned-environment skips. This is not a zero-total-skips claim.
+
+Private item `3796495680` reported `SubscribedInstallationVerified` and `attemptFinalized=true`.
+Every one of the 3129 package files matches the subscribed installation and all runtime bytes
+match the native source. This proves one client installation; `freshTransferVerified=false`
+and `releaseReady=false` remain explicit limits.
+
+- Private receipt SHA-256: `2eb4899dddaa8780a6953d58a853315a01debd948edba3d2ba6f465a460ca1d6`.
+- Plan SHA-256: `64af94585907d95220cf98d6abfe90b572570b963d4f75f81887f35898caaa6d`.
+- Installed inventory SHA-256: `40fa1848f4bade161dc12783af98cc5ffd074d23d6a1a50671d23fd359bda313`.
+- Finalization SHA-256: `db6191c8816e585c418c2bfb91773a3ffee8ec0528dfb2afd9496bb46609ebda`.
+- Delivery archive: `releases/0.3.5/private/result.json`, SHA-256 `a065c4298c85e5051ed11f26df4166449dc30ef577297deb3e765f43d54cea12`.
+
+After finalization and the owned runner's shutdown, the exact candidate passed the automated
+marsh/advisor-on Quickstart chain on seed `#43101`: 8400 ordinary advance turns, four original
+founders, six beds in two shelters, a completed paid fire and all seven receipted canvas walls.
+The first heart remains open rite ground, not enclosed housing. A real save at 8403 turns and
+separate cold load preserved the physical heart before activation and afterward. A distinct
+next job paid exactly one timber and two drams. Four source and four loaded frames drew all
+2000 cells visible and lit and restored ordinary gameplay sight; the saved start script did
+not replay. No synthetic completion, fabricated visibility or world repair was used.
+
+Both complete profile seals, strict logs, owned stops and run records pass. All 3357 staged
+C# inputs per session bind to the candidate; all other runtime inputs match apart from the
+intentional developer manifest. Profiles `taf-scenario.jHE73L` and `taf-scenario.CtJ0Xw`, save
+`4bf940bd-df00-4ef5-9080-c9f25c725df5`, and raw evidence remain local.
+Native archive: `alpha-035-heart-sight/bccf8cb3/private-candidate-cold-load-1/result.json`,
+SHA-256 `cbb7748c4db4b175fe924d5e30fb6216f370426b571965972c45e70f35977abe`. This bounded native proof does not establish all-seed survival,
+historical migrations, later heart rungs or all feature combinations.
+
+The verified private package receipt is copied byte-for-byte into
+`docs/PRIVATE_PACKAGE_RECEIPT.sha256`; this binding commit is the public Alpha candidate.
+Earlier preparation refused an unsynchronized runtime version, stale inventory documentation,
+then two review notes without the required artifact prefix. The first local test process was
+stopped only after CI proved the version mismatch. Those failed candidates were never uploaded;
+the final tagged source passed the full gate. Earlier native evidence keeps its original source.
+
+## Completed first heart and cold-load city sight — native verified
+
+PR192 verifies ordinary first-heart construction and physical fabric through real save/load.
+Four original Quickstart founders remain housed in six beds; the paid fire completes; all
+seven canvas cells stand, including both flanks outside the central footprint. The first heart
+is authored open rite ground, not an enclosed tent. No future construction deadline is forced.
+
+The same physical heart compares before activation, after loading and after another paid
+commission. Vanilla Continue resumes only after the exact scenario's successful verification
+and cleanup; the saved autorunner marker prevents source replay. 4 source and 4 loaded
+frames draw all 2000 zone cells visible and lit and restore native gameplay sight afterward.
+
+Native source `52d67656b0ecafe5fd2f0ca15c77bb2120b7539c`, production inventory `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Both full profile seals, strict logs and owned stops pass; all 3357 C# inputs and runtime files
+bind to source. Evidence: `heart-sight/52d67656/completed-heart-cold-load-1/result.json`, SHA-256 `337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29`.
+All four engine compile modes, 14794 main and 5747 portable cases pass. CI also passes
+1088 tool tests with 28 environment-dependent skips. The 38 coverage tests pass; the new
+artifact references verify. Nine older evidence entries remain unresolved in the full audit.
+Coverage row 29 and combination C9 record only the measured scenario. The failed first
+source profile remains unchanged; fresh profiles author its observed look default before
+sealing, and later option changes still refuse. See `docs/HEART-SIGHT-NATIVE.md`.
+Public Alpha 0.3.4 remains the published build; the sight correction is on dev.
+
+## Guest citizenship, shortage recovery and cold load — native verified
+
+PR190 adds a genuine Quickstart chain covering first-guest recruitment, fourteen days of
+ordinary activity, an unfunded construction refusal, an eight-dram transfer from the founder's
+existing carried water, real save, separate cold load, stale guest retries and another paid job.
+All four original founders, six beds, guest 654 and the original completed fire survive loading.
+The refill conserves 32->24 carried and 0->8 stored drams after 16 ordinary movement steps;
+the next loaded commission pays exactly one timber and two drams for a distinct job.
+
+Native source: `4c97470d66e845b9841d4abd74d20d6787fc0e6c`. Journal validator: `b11e26fb`.
+Production remains inventory `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Both closed profiles, strict logs and owned stop records pass; all 3353 C# inputs and runtime
+content bind to source. Evidence: `guest-save/4c97470d/carried-water-recovery-1/result.json`, SHA-256 `4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000`.
+All four engine compile modes pass. The repository tool suite passed 1079 tests with 12 skips;
+the follow-up guest oracle passes 9 cases, including the observed native row format and an
+unassigned carried-vessel ID. Coverage row 28 and combination C8 record only this measured chain.
+
+Earlier water-exhaustion, dragonfly combat death, material-census and option-seal failures
+remain recorded in `docs/GUEST-SAVE-NATIVE.md`. The accepted run does not establish all-seed
+survival, a cause for the earlier combat death, rendered interaction, historical migration or
+interrupted enrollment. New physical-walk profiles author the initial look option and engine
+JSON format before sealing; used profiles are never repaired or resealed. The shared loaded
+construction verifier is unchanged. Public Alpha 0.3.4 remains the published release.
+
+## Claimed-ground sight correction — development candidate
+
+3098 staged C# files; 440,137 physical lines; 3129 cold-install files.
+Direct `XRL` imports: 1445 files; zero at or above 300 lines.
+Inventory SHA-256: `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+
+Founding and Charter claims now attach claimed-ground light and city sight when their
+claim publishes. A second founding attaches after its exact settlement seat is established.
+These operations claim a zone already active, so waiting for zone activation left the first
+visit obscured. The existing draw-only projection and gameplay sight restoration are unchanged.
+
+New genuine Quickstart regression reproduced missing attachment on 0.3.4 production before
+any reactivation (`56b19dd4`). The fix (`3a03ca5a`) observed all 2000 cells over four real
+frames, including 810 naturally occluded cells, and restored ordinary sight after every frame.
+That diagnostic run changed PlayerOptions.json (`OptionLookLocked=No`) before stopping;
+its seal rejection is retained. Fresh accepted runs at `2a106bdf` preserved their complete
+profile seals, strict Player.log checks and receipt-owned stop records.
+The changed field is known; the trigger is not established. No options were rewritten to
+make the failed receipt pass. The ordinary founding regression also passed attachment before
+reactivation, preservation of the same part afterward, four native light frames across all
+2000 cells, and no attached part on unclaimed or foreign ground.
+
+Accepted local evidence, checked against the exact source and full sealed profile:
+- `claimed-sight/2a106bdf/quickstart-native/result.json`, SHA-256 `8e9631a17a6253792df4a41af9368de60bb97c21c8d7f39ccd2e4012f4d5d789`.
+- `claimed-sight/2a106bdf/ordinary-native/result.json`, SHA-256 `2f44a0bde4aa8acd92812c613de043799ed1d0b0923466a1680b88f193b1ad2e`.
+
+The journal oracle at `c417b980` corrects the full boot-header expectations and rejects
+refused COMPLETE rows. It validates the unchanged retained journals; no scenario or source
+was replayed or resealed to turn a failure into a pass. The ordinary run's initial postprocessor
+selected the wrong persona; its corrected persona check passes. The 62 persona tests include
+missing/refused-row mutations and fixed success/failure outcomes for all terminal shorthands.
+Both retained journals also pass this stricter follow-up checker. Coverage row 27 records the measured scope and remaining gaps.
+
+All four licensed compile modes pass; 14790 main and 5743 portable cases pass with zero skips.
+Automated structural review binds this candidate. Public Alpha 0.3.4 remains the published build.
+The first heart stage is authored as an open seven-cell canvas horseshoe around the rite ground,
+not roofed housing; its catalogue grants no beds. This correction changes no architecture.
+
+## Published 0.3.4 Quickstart hotfix — finalized
+
+3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
+Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
+Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
+Inventory SHA-256: `a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
-merges are complete; compile, combined-suite, native progression and semantic review are owed.
+merges are complete. Current main/portable suites pass 14790/5743 cases with zero skips,
+and all four compile modes pass. Automated structural review binds the inventory above.
+All six location/advisor choices pass fourteen-day Quickstart, housing and paid construction,
+real save/cold load and a further paid commission on `86c0b5df`. The supplied housing crisis
+passes departure, retention of the final two, recovery and the complete save/load/next-action
+chain on `60f11aee`. Historical reader `55963285` preserves the genuine 0.3.3 fresh save,
+including its original stock and identities, without bootstrap replay. Later historical-save
+progression remains untested. Each result retains its exact inventory. Native creators (17 cases), guide topics (3) and first-guest correspondence (1) pass on
+`660ba354`. They do not prove rendered UI or physical guest admission/citizenship. Teardown passes both real build/strike cases on `b27a26c2`, including exact zero/positive
+salvage, Complete/Settled receipts, removed city work rows, repeated-strike refusal, two live
+crew and a clean strict log. Native failures identified and fixed an unassigned salvage
+destination ID and stale end-of-pass work rows. Later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
-No new version/tag/upload or Beta acceptance is claimed.
+Physical guest actions now pass on `d9d0f4b4`: genuine Quickstart, four living original founders,
+six beds, exact defer/admit/remain/welcome actions, one uncreeded guest enrolled, repeated action
+refusal and five citizens after another 1200 turns. Strict log and owned stop pass. Native testing
+also fixed unbound dialogue water authority, duplicate enrollment event IDs and an absent-creed
+projection mismatch. The no-bed repeated-welcome preservation case passes on `895e700e` with
+its disclosed synthetic camp. An earlier first-day founder-count loss remains an unexplained
+failed precondition; these results do not claim all-seed survival or guest save/load coverage.
+Private and public 0.3.4 are verified and finalized as recorded below. Broader Beta acceptance remains pending.
+
+
+### Public 0.3.4 — published and finalized
+
+[Release run 34740130479](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34740130479)
+passed all hosted/licensed gates and submitted the package for annotated `v0.3.4`, main source
+`8e85a5cc073f0a13564d0e058b73cf409d1d4240`. PRs #186 and #187 merged through their
+required checks with merge commits,
+preserving private candidate `101fd5a694898515b802264a145f2c8071b55f02`.
+Tag creation used the existing maintainer exception to the restricted release-tag rule;
+no branch protection was changed and no required merge check was bypassed.
+
+The workflow conclusion is `cancelled`, not success: its verification job remained queued
+without a runner assignment for over ten minutes, including after an idle runner reconnect.
+All gates and the publisher job had already succeeded. The queued workflow was cancelled
+before local fallback, with no active publisher, finalizer, game or runner worker. The
+replacement idle runner was stopped. No submission was retried and no tag was moved.
+The documented local `-Verify`, followed by one `-Finalize`, then passed using the exact
+retained plan, receipt, change note, package, item and registry, with fresh evidence directories.
+
+Public item `3794797472` reported `SubscribedInstallationVerified` and
+`attemptFinalized=true`. The 3129-file package was independently reproduced, submitted,
+verified on one subscribed installation and finalized. This is not all-subscriber delivery;
+`freshTransferVerified=false` and `releaseReady=false` remain explicit limits.
+
+- Public receipt SHA-256: `c450a9f63cf8c7d293a79737a6084c62330f9a94c70bede0eea6e0330b7811e7`.
+- Plan SHA-256: `4346c78c35803ac8a9f867a160c90de357baaca388c05de0d19e45f536dbc2bc`.
+- Installed inventory SHA-256: `070b615cd00df2a148978fc915bc42712133b157dc1ace4146e6185f61fa5f3e`.
+- Finalization SHA-256: `09b669f9ede602692fc18452cf13a71234d84b1f63cc19e979f673fdc92b4260`.
+
+Hosted Linux/Windows tests and all eleven licensed release-check stages passed, including
+14790 main and 5743 portable cases with zero managed skips, all four compile modes,
+46 launcher cases and structural validation. The same three PACKAGE/COPY/BACKUP bind-alias
+fixtures retained explicit environment-limited skips; this is not a zero-total-skips claim.
+Production/harness bytes are unchanged from the verified private candidate. The native
+fourteen-day construction, real save/cold-load and next-commission proof below therefore
+retains its exact runtime scope; no new native run on ordinary public Workshop loading is claimed.
+
+Raw host evidence remains under `C:\taf-release\run-34740130479-1`.
+The local archive `/home/r/work/taf-scratch/behaviour-evidence/releases/0.3.4/public/result.json`
+has SHA-256 `0163d99c2a58cc492222aeb9901e6ad2999835be1d9fbcbd9500edffef233eb6`. Historical 0.3.3 receipts below remain historical.
+
+### Private 0.3.4 — verified and finalized
+
+[Release run 34737798572](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34737798572)
+succeeded at annotated `staging-v0.3.4`, source
+`20a4c79c52ccebfec796adac561464845131e24f`. All eleven release-check stages passed,
+including 14790 main and 5743 portable cases with zero managed skips, all four compile
+modes, 46 launcher cases, package/deployment harnesses and structural validation.
+Three PACKAGE/COPY/BACKUP bind-alias fixtures reported environment-limited skips because
+`/tmp` is foreign-owned in the user namespace; this is not a zero-total-skips claim.
+The raw licensed log is retained at
+`C:\taf-release\run-34737798572-1\logs\release-check.log`.
+
+Private item `3796495680` reported `SubscribedInstallationVerified` and
+`attemptFinalized=true`. Verification covers one subscribed client;
+`freshTransferVerified=false` and `releaseReady=false` remain unchanged.
+
+- Package: 3129 files; receipt SHA-256
+  `79b516f0cb46d929d59fda0ae52bc556eb43126753e3085be4fd03f8052177a9`.
+- Plan SHA-256: `e4c36fbbf1be145afb3aacbeb5ae2ef7c0136ac18dcca1b6838f4fbb91e72cf7`.
+- Installed inventory SHA-256: `c60b9171e05cd96900252c766f6448488bb0f6605f10c7524185b68ed1a1671a`.
+- Finalization SHA-256: `cfa8862365a1e8598109058cb55365f688fa7d1afd1ea72bfc43051ae523b2ce`.
+
+After finalization, an automated native marsh/advisor-yes Quickstart pair passed on that
+exact source and production inventory. All four original founders remained housed after
+16800 real turns, with two shelters, six beds and a functional paid campfire. A real save,
+separate cold load and another paid commission passed; both strict logs and owned stops
+passed. All 3129 runtime files match the private package and subscribed installation;
+both closed profiles match the exact 3347 C# production/harness inputs. This is isolated
+native automation, not rendered UI, all-seed survival or guest save/load acceptance.
+
+The local archive is
+`/home/r/work/taf-scratch/behaviour-evidence/quickstart-lifecycle/20a4c79c/marsh-yes/`.
+Its `results.json` SHA-256 is
+`00174a7fe27c960c7437beb51fbb15ded0d86596468ac5426fc5f057137a7223`.
+Profiles `taf-scenario.d2TOXS` and `taf-scenario.FLI6sA` and their saves remain local.
+The private package receipt is copied byte-for-byte into
+`docs/PRIVATE_PACKAGE_RECEIPT.sha256`; this binding commit is the public Alpha candidate.
 
 The current draft additionally distinguishes fully authorized surveyed-heart physical access
 from ordinary positive road-network evidence. Exact public approach walkability remains required
@@ -2825,3 +4366,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in
 [RELEASING.md](RELEASING.md); structural gate semantics live in [STRUCTURE.md](STRUCTURE.md).
+
+Native room attempt at `48dcc2da` failed its first arrival expectation: the physical reading
+correctly returned one room, three bunks, twenty clear cells and Close quarters, but projected
+founder occupancy correctly returned Full for the single roof credit. The failed profile was
+closed and archived with its full pinned recipe. The fixture now requires Full while that credit
+exists and NoRoofAtAll when lost, preserving all four founders and capped enrollment. No native
+PASS is claimed. The new standalone cabinet blueprint also exposed an overly broad source-test
+count; the existing overlay test now counts only actual `Load="Merge"` overrides.

@@ -218,9 +218,11 @@ namespace ThousandAndFirst.Tests
 				Assert.That(word, Is.EqualTo("\"" + words[i].Trim() + "\""),
 					"script word " + i + " differs between persona and provider");
 			}
-			// The rung-2 script is untouched, and the provider still accepts exactly two.
-			Assert.That(provider, Does.Contain("private static readonly string[] Rung2Script = {"));
-			Assert.That(provider, Does.Contain("if (SameScript(script, Rung2Script)) return 2;"));
+			// The rung-2 forms are sealed once, by KingdomCampHeartScript (plain, save variant and
+			// the paid chain's prefix); the provider carries no second copy of that script and
+			// accepts exactly one other form, the rung-3 script above.
+			Assert.That(provider, Does.Not.Contain("Rung2Script"));
+			Assert.That(provider, Does.Contain("if (KingdomCampHeartScript.Matches(script)) return 2;"));
 			Assert.That(provider, Does.Contain("if (SameScript(script, Rung3Script)) return 3;"));
 			Assert.That(provider, Does.Contain(
 				"Require(false, \"the sealed camp heart script differs\");"));

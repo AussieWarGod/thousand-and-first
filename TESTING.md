@@ -1,19 +1,219 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Current combined heart candidate — gates owed
+## Recruitment admission and report follow-through — scoped PASS
 
-The planned compatibility compile runs across 3097 production C# sources (3093 baseline);
-the cold-install inventory contains 3128 files. Inventory `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+Native807a89fc proves report-policy agreement with a scoped extension catalogue/option-read probe,
+plus hostile waiting, original-head recovery and retained identity. Native9cc75930 then proves
+real guest admission, native body/name/origin/culture/species and resident-map agreement, actual
+starter housing, finite-water shortage/refill and real save/cold load. Two stale choices refuse;
+the next job pays exactly. Four founders remain housed alongside the same fifth citizen.
+The composed startup harness now applies its controlled founding reputation change once and
+verifies its retained witness on both observations. Its earlier failure is archived.
+
+Full profile recipes, strict final logs, guarded waits, validators and owned stops pass;
+exact archives and synthetic limitations are in STATUS. One human guest is not all-culture
+admission, ordinary multi-map life or balance acceptance. Rows26/28 and combinationC8 bind this
+new full developer input inventory; selection rows2/31 retain original native807a89fc scope.
+
+## Earlier coherent recruitment: original scoped native PASS
+
+Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile
+modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
+Fourteen new shared cases cover both reputation channels, monotonicity, bounds, hostility and
+fixed-event weighted draws. Native first-guest probes now require all six source factions,
+both selection routes, deterministic native names, body/culture agreement, empty hostile-pool
+refusal, and retained frozen guest identity after changed reputation across ordinary turns.
+The initial 12,000-turn native run passed at `7c386a81`; its closed archive is in STATUS.
+The expanded scenario passed at `10d4c2a5`: 18,000 requested / 18,001 actual turns, all-hostile
+wait with no body or water spend, retained original debt, downstream road checkpoint, explanatory
+status, original-head recovery and frozen identity after renewed hostility. See STATUS for its
+closed archive and the retained failed attempt caused by an initial-deadline fixture assumption.
+The main-only cadence codec regression preserves debt through repeated waits and serialization.
+Those probes use reversible synthetic reputation and unplaced body samples; correspondence
+is produced by the real cadence. The later proof above adds one real human guest, home and cold load;
+broader population and multi-map acceptance remain owed.
+
+## Accepted strike closure validation (abf41251)
+
+Development compile validation spans across 3108 production C# sources;
+the cold-install inventory contains 3141 files.
+`KingdomStrikeClosureTests` runs in both main and portable projects. The teardown native
+scenario must observe both actual closure windows, repeated public strike refusal with unchanged
+registry/building state, borrowed foreign-receipt refusal/restoration, then normal strike and
+exact salvage. No phases or completion are forced. This extends the existing synthetic crew
+and bill fixture. Native `abf41251` passed both cases across 16,800 ordinary turns with
+exact zero/one timber salvage; full profile recipe, final strict log and owned shutdown pass.
+Full licensed suites: 15,004 main / 5,895 portable cases, zero skips; all four engine compile
+modes pass. The main-only codec test covers registry reload; teardown cold load remains unproved.
+Exact archive and synthetic limitations are recorded in docs/STATUS.md.
+
+## Accepted founding reputation validation (40477cb7)
+
+The paired native logs also require:
+
+```bash
+python3 Tools/founding_regard_check.py SOURCE_PLAYER_LOG LOADED_PLAYER_LOG --results /fresh/path/founding-regard-results.json
+```
+
+This checker rejects
+missing/duplicate/reordered witnesses, an empty founding snapshot, wrong native reputation
+composition, cold-load replay and a changed saved standing digest. It supplements the existing
+lifecycle, exact profile, strict-log and owned-stop gates; its PASS alone is not acceptance.
+
+That accepted input passed full licensed integration: 14,988 main and 5,880 portable cases, zero skips.
+Focused snapshot/publication and directional tests also pass. The native chain at 40477cb7 covers
+real founding, independent city changes, personal reputation spillover and fresh cold load;
+exact source, synthetic probe inputs and limits are recorded in docs/STATUS.md. Compile validation spans across 3107 production C# sources;
+the development cold-install inventory contains 3140 files. Historical native evidence below
+retains its original inputs and does not prove this changed founding behavior.
+
+
+## Defensive-founder source acceptance
+
+Source `49af5f5e` passes marsh seed `#43101` warm/cold lifecycle with all four original founders
+still housed and defensive after 8,400 ordinary turns, two enclosed homes, six beds and 34 clear
+floor cells. The next paid commission debits one timber/two drams. Native neutral-assault probe
+and whole-zone rendering/restoration pass. Both owned processes are stopped; 3,449 warm/3,451 cold
+inputs match exactly. Archive `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`,
+SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+The probe uses two unplaced NPCs and assigns only its own attacker Snapjaws allegiance before
+asserting neutral feeling and actual retaliation. It fabricates no city population or housing.
+This source proof is not private package delivery acceptance; broader ecology remains #237.
+
+## Current source inventory (unreleased)
+
+The engine gate runs across 3106 production C# sources (3102 baseline);
+the cold-install inventory contains 3139 files. Inventory `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
+
+Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
+Quickstart homes, exact normal commissioning/debit, controlled test-registry price drift and a
+temporary storage-basket removal during handover. It requires Outstanding recovery, preserved
+contents and payment, and restores the catalogue before saving. The existing separate lifecycle
+load verifies the completed conversion and performs a new paid fire commission. Missing material
+units for both the conversion and that next commission, plus one brush contents sentinel
+are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
+modes and 66 persona checks pass. Warm and separate cold acceptance at `d5a0e96d` is
+recorded in [STATUS](docs/STATUS.md), including full recipes, owned shutdown and limits.
+The unfinished-job/version-change case and historical geometry remain open in #239 and #240.
+The paid-housing fixture now transfers 32 existing carried drams by a physical pour before payment,
+to fund the longer wait, and probes missing/moved/wrong-token fixture restoration. Physical mismatch
+must refuse without permanently poisoning intact owner receipts; malformed owner and upgrade
+authority keep their quarantine rules. Failed native reproductions and accepted exact restoration/retry
+are recorded in STATUS and #242; no repair of previously quarantined saves is claimed.
+The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
+exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact
+recovery. The chest is removed before ordinary insertion continues; no insertion verdict is replaced.
+The cohort floor witness counts the frozen variant's additional hearth and table separately:
+seventeen clear cells in canvas, sixteen in the basic hut, fifteen in hearth-and-table variants.
+These are exact authored expectations for this fixture, not changed production quality thresholds.
+
+The native startup observer also requires four local non-wandering founder anchors. Actual paid
+construction, later housing and cold-load checks remain required; neither a passing run nor the
+anchor rule proves immunity to wildlife or repairs historical founders. See #237.
+
+## Shared-hall access
+
+`Tools/run-personas.sh lodging-room-native` requires 29 observations. The first twenty use an
+ordinarily adopted synthetic room's benefit/privacy/arrival route; nine more use an explicit synthetic
+whole-building designation over native cells and restore the original adopted reading. Clear halls,
+walkable furniture, alternate exits and native open/closed lock states are covered. The closed run
+at `dc65f086` passes; see [STATUS](docs/STATUS.md) for its exact source and archive. It is not paid
+catalogue, multi-map, street-network or cold-load acceptance. Pure room cases are in the main suite.
+
+## Enclosed starter homes
+
+Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
+sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
+Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
+delta and all 24 fixed-lot conversion routes/target variants.
+`Tools/dev-check.sh tools hut_rooms_test.py` covers current hut enclosure, fixture access,
+Small-reader boundaries and clear entrance/court circulation across 192 variant/pose combinations.
+Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
+construction lifecycle; its two advances exceed the preparation default.
+The existing Quickstart lifecycle now also requires one enclosed room, three usable
+sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
+pass in the marsh construction/save/separate-cold-load chain at `2c0600b5`; see
+[the exact evidence scope](docs/ENCLOSED-STARTER-HOUSING-EVIDENCE.md). Historic S saves need
+separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
+
+The lifecycle persona's `CHECK=quickstart-housing` requires unique startup/grown journal
+observations, all four founders, six available beds, two enclosed rooms and 34 clear floor cells
+after the full ordinary wait. Missing, duplicated, refused or contradictory observations fail.
+After a separate cold load, also run
+`python3 Tools/personas/persona_housing.py SOURCE_JOURNAL LOAD_JOURNAL --cold-load`.
+This requires the loaded observation and monotonic turn continuity; it complements the existing
+whole construction-chain verdict, strict logs, full pinned profile proof and owned shutdown.
+
+## Physical room and furniture-clearance scenario
+
+`Tools/run-personas.sh lodging-room-native` runs genuine dune Quickstart followed by one synthetic
+ordinarily adopted room with three native beds against one roof credit. Set
+`TAF_SCENARIO_QUICKSTART_ADVISOR=yes` and a fresh report/capture location; never reuse a profile.
+The twenty positional witnesses cover shared-room privacy after spare-bunk removal, open/closed/locked
+doors, walkable doorway furniture, a trapped bed, solid/walkable obstructions, wall/bed loss, each
+restoration and an original founder occupant returned exactly. They observe the real benefit
+index, privacy and capped arrival refusal; all four founders retain projected housing priority.
+
+The complete scenario passed at `765e8e59d4819f3f3960df60cc660e6279097cbf`, with strict logs,
+all 3436 pinned profile inputs and exact owned shutdown. Archive and hash are in
+[docs/STATUS.md](docs/STATUS.md). This covers one synthetic room, not paid layouts, cross-room
+public-corridor connectivity, multi-map cities, cold load or release acceptance.
+
+## Quickstart housing hotfix acceptance (2026-09-13)
+
+The construction lifecycle now also observes the original four Quickstart citizens at startup,
+after its ordinary 16,800-turn construction interval (7,200 + 9,600), and after cold load. Each must retain its
+original physical identity, applied founding citizenship and living resident row. Startup requires
+unfinished shelter; the later observations require both reserved tent rows to be functionally
+built, sufficient physical roof capacity, and all four original citizens assigned to those homes.
+Master simulation, Growth and Lodging must remain enabled. No test citizens, housing completion,
+or home assignments are injected. The `quickstart-settlement` journal rows report measured counts;
+any refusal also fails the enclosing lifecycle step. This extends the real fire commission,
+save/load and next-action chain rather than treating that fire as evidence of working housing.
+All six location/advisor combinations pass the complete source, cold-load and next-commission
+chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
+under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
+Later production changes are the release-version literal, guide text and strike salvage
+stockpile identity binding and end-of-pass work projection refresh. The supplied housing
+crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
+The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
+
+The retained public 0.3.3 fresh-save fixture uses a source-bound observer grant of 24 drams;
+new saves require the current 64-dram grant. `Tools/prepare-quickstart-033-upgrade.py REPO PIN
+SOURCE DESTINATION` verifies the old public executable/content hashes, successful fresh-save
+journal, stopped ownership, sealed inputs and exact save hashes before creating a fresh reader.
+Its sealed historical marker binds the public commit, GameID, snapshot hash and original quantity.
+The observer requires that marker to own the active cold load, then checks the actual water,
+container, custody and receipts without replenishing stock. Malformed or mismatched markers
+refuse; they do not select a default. This fixture covers that exact fresh save, not arbitrary
+historical progression. Native reader `55963285` passes preactivation and post-load checks,
+strict logs and owned shutdown for the retained save; coverage row 25 binds the result.
+Creator fault fixtures use the current grant before injecting capacity or custody faults;
+the persona expects all 17 registered cases.
+
+Native teardown must prove both the physically removed building and its exact Complete/Settled
+strike receipt before accepting the material return. Dedicated stores may begin without an
+assigned ID: inventory salvage must acquire and record that identity, while null means ground
+salvage only. The larder case exercises positive salvage; the fire case exercises zero salvage.
+Both require a refused second strike. Strict Player.log remains decisive even when case summaries
+pass. Original quarantine failures and each subsequent run retain distinct profiles and receipts.
+
+## Retained combined heart candidate — superseded checkpoint
+
+The planned compatibility compile runs across 3098 production C# sources (3094 baseline);
+the cold-install inventory contains 3129 files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
 It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
 protected road ground remains protected. Predecessor native ingress census was RED.
 No combined compilation, licensed-suite or native progression result is claimed yet. Earlier
-figures below remain retained evidence for their own checkpoints. Current public release is
-0.3.3; this work prepares 0.3.4 and does not change the published tag or package.
+figures below remain retained evidence for their own checkpoints.
 
-The current public Alpha manifest is `0.3.3`, published to the public Workshop item.
-Its private candidate passed subscribed-install verification and finalization (2026-09-11).
-Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
+Public release status is tracked in [docs/STATUS.md](docs/STATUS.md).
+This test protocol stays byte-identical between private-candidate binding and public
+promotion; publication updates belong in the status ledger. Historical checkpoint:
+0.3.3 passed subscribed-install verification and finalization on 2026-09-11;
+0.3.2 was the preceding public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
 requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
@@ -769,16 +969,17 @@ neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Unattended observers for the attended light / guide / first-guest steps
 
-Three personas replace the human-eyes observations the pinned native protocol still asks for on
-the claimed-ground light, the camp guide's topics, and the first guest's correspondence. They are
-**registered, not yet run**: no native receipt exists for any of them, and nothing here is
-evidence of a pass.
+These personas inspect claimed-ground light, the camp guide's conversation graph, and first-guest
+correspondence automatically. Guide topics (three cases) and first-guest correspondence (one case)
+have native passes at `660ba354`; their exact receipts and limits are recorded in the coverage
+matrix. Those passes do not execute physical guest admission or citizenship, and do not prove
+rendered dialogue UI. Claimed-light evidence remains separately scoped in the matrix.
 
-| Persona | Command | Attended step it replaces |
+| Persona | Command | Automated observation |
 | --- | --- | --- |
 | [`claimed-light-native-check`](Tools/personas/claimed-light-native-check.persona) | `Tools/run-personas.sh claimed-light-native-check` | walking the held zone to see it lit, and reading part cardinality and `SettlementId` by eye |
-| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | talking through all five topics in order, comparing each rendered answer, and checking every return to Start |
-| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | reading the opening message once, and reading the Charter next-need ordering by eye |
+| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | conversation graph, topic text and return links |
+| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | one correspondence opening and the Charter next-need ordering |
 
 What the machine asserts:
 
@@ -1065,8 +1266,9 @@ Running it (unattended - no keyboard beyond starting the game):
    before `GlobalLocation.ResolveCell` generates the zone. Post-builders run at priority 5000, after
    the terrain, village, ruin, and lair builders, so it strips what they placed: every interior cell
    is cleared of anything the settlement's own `KingdomPlots.ReadObject` law does not already read
-   as bare, creatures and liquid pools included. It **keeps** the one-cell border (the zone's travel
-   connections to its neighbours) and any stairs (its connection to the strata below). It only ever
+   as bare, creatures and liquid pools included. Border creatures are also removed; non-creature
+   border objects (including travel connections) and stairs remain. The after-strip census refuses
+   if any non-player creature survives. It only ever
    removes, never places or rolls, so under the sealed seed it is deterministic. It is bound to the
    **resolved** location, so `TAF_SCENARIO_START` and a hand-walked chargen both get the same
    treatment, and it is inert without a sealed script — an attended profile is one an operator is
@@ -1125,7 +1327,18 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`. Refusals carry a **stable reason code** beside the prose — bind expectations to
+`advance-complete`, bracketed on EVERY road by two `advance-guard` bookkeeping rows (founder cell
+and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). DISCLOSURE, once,
+here: during every scripted `advance` the founder is not a hostile target - the guard raises the
+engine's own `XRLCore.IgnoreMe` (the `ignoreme` wish flag; `Brain.WantToKill` pushes no Kill goal
+against the player and `GameObject.IsHostileTowards` answers false toward the player), because the
+founder spends every advance turn in `Player.PassTurn()` with no hostile interrupt on any road and
+was bitten to death on both the live marsh (run 36) and the cleared teardown ground (run 39-1). It
+is not invulnerability (damage still lands if something attacks), changes no spawning, is never
+serialized, and is restored on every exit. A scripted player
+death is always a stop, on every road: the runner lands `SCRIPT-STOPPED DIED <category>; ...`
+(Harness/KingdomScenarioAutoRunner.Death.cs) even where production succession would have
+re-bodied the player, and the process is then left on the engine's death popup for the driver to reap. Refusals carry a **stable reason code** beside the prose — bind expectations to
 the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
@@ -1387,7 +1600,7 @@ fails a test rather than silently turning a persona green forever.
 **Strict in both directions.** The significant rows must equal the declared expectations exactly:
 an unexpected `OK` fails as loudly as an unexpected refusal, a missing row as loudly as an extra
 one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TESTGROUND-BUILT`,
-`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `VERB-REFUSED`.
+`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `advance-guard`, `VERB-REFUSED`.
 
 **`CHECK=status-digest-stable`** compares the 64-hex digests in the **first** and **last** `status`
 rows and fails if they differ or if the first carries none. Digests are data, not prose, so the
@@ -2828,3 +3041,34 @@ and controller. Optional physical descendants may fail without stranding their s
   went dark while the forge was still lit" is a bug. Recovery says **nothing** — a settlement that
   announced every recovery would be a settlement that never stops talking about itself — so a pass
   reporting "it never told me the power came back" is correct behaviour.
+
+## Physical first-guest action regressions
+
+Run these separately: the Quickstart profile requires its explicit advisor setting, while the
+synthetic founding profile rejects a Quickstart setting.
+
+```bash
+TAF_PERSONA_SEED='#43101' Tools/run-personas.sh guest-actions-native-check
+TAF_SCENARIO_QUICKSTART_ADVISOR=yes TAF_PERSONA_SEED='#43101' \
+  Tools/run-personas.sh guest-actions-quickstart-native-check
+```
+
+The first scenario uses disclosed synthetic founding and 64 drams, with no citizens or housing.
+Real cadence opens correspondence. It defers and admits the same guest through the production
+Charter API, reads the real inventory dialogue action, chooses to remain a guest, then attempts
+two welcomes without beds. Both refusals must preserve the exact interactable body, citizenship,
+population and water. Native pass `895e700e` predates the later refusal wording and scoped
+reconciliation changes; the coverage matrix retains its exact production inventory.
+
+The second scenario uses genuine Quickstart founding, all four original citizens, ordinary
+construction of six beds, and 8400 real turns before the same production choices. Explicit
+welcome must enroll the same body once, including a guest without a creed, and stale interaction
+must preserve water and population. After another 1200 real turns, the resource report must still
+show five citizens. Native pass `d9d0f4b4` has a clean strict Player.log and a stopped owned game.
+Founder death/departure observations and exact enrollment graph captures are diagnostic only;
+they cannot cancel actions, change callback results, or supply completion, supplies or citizens.
+The earlier three-founder run remains a failed precondition with an unresolved cause.
+
+Both scenarios provide scripted menu input only after exact title and option checks. They do not
+claim rendered UI or guest save/cold-load coverage. Historical failures and their exact source
+inventories remain archived; no intermediate case marker overrides a failed strict game log.

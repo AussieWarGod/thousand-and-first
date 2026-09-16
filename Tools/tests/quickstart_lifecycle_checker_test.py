@@ -7,6 +7,7 @@ BLOCKER cases here are the load-bearing ones.
 """
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -33,6 +34,123 @@ def whole_chain(**kwargs):
     for _, wanted in checker.LINKS:
         names.extend(wanted)
     return rows(*names, **kwargs)
+
+
+class FounderDeath(unittest.TestCase):
+    """A founder who died mid-run is its own FAIL class, never a blocker and never a pass."""
+
+    DIED = (
+        "DIED bitten to death; reason=You were bitten to death by a snapjaw.;"
+        " founderCell=40,12; zone=JoppaWorld.8.22.1.1.10; guard=armed-at-death;"
+        " ignoreMe=True; walk=none; scope=every-scripted-advance"
+    )
+
+    def mid_advance(self, message):
+        """The Quickstart road exactly as native run 36 left it: boot and build rows landed,
+        lifecycle-open landed, the advance armed, then the run stopped."""
+        driven = rows(*checker.BOOT_ROWS, *checker.BUILD_ROWS, "lifecycle-open", "advance")
+        driven.append(("advance-guard", "OK", "start; founderCell=40,12; guard=ignoreme-armed"))
+        driven.append(("SCRIPT-STOPPED", "REFUSED", message))
+        return driven
+
+    def test_a_died_row_is_the_founder_died_fail_class(self):
+        report = checker.judge(self.mid_advance(self.DIED))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertEqual(report["founderDeath"], self.DIED)
+        self.assertTrue(report["reason"].startswith("founder-died: DIED bitten to death"))
+        self.assertEqual(checker.EXITS[report["verdict"]], 4)
+
+    def test_the_death_outranks_the_blocker_the_unreached_links_would_read(self):
+        report = checker.judge(self.mid_advance(self.DIED))
+        states = {entry["link"]: entry["state"] for entry in report["links"]}
+        self.assertEqual(states["engine-turn-build"], checker.BLOCKER)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn(checker.FOUNDER_DIED, report["reason"])
+
+    def test_the_death_outranks_a_chain_fail_too(self):
+        # Kills the `if death is not None and verdict != FAIL` mutant: a refused lifecycle-grown
+        # row followed by the death must still be attributed to the death, the root cause.
+        driven = whole_chain(refused=("QUICKSTART-BUILD-CANPAY",))
+        self.assertEqual(checker.judge(driven)["failClass"], checker.CHAIN_FAIL)  # a real chain FAIL
+        driven.append(("SCRIPT-STOPPED", "REFUSED", self.DIED))
+        report = checker.judge(driven)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertTrue(report["reason"].startswith("founder-died: "))
+        self.assertNotIn("refused row(s)", report["reason"])
+
+    def test_an_ordinary_stopped_row_is_not_a_founder_death(self):
+        stopped = "refused at verb 5 of 7: lifecycle-grown"
+        report = checker.judge(self.mid_advance(stopped))
+        self.assertIsNone(report["founderDeath"])
+        self.assertNotEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+        self.assertIn("engine-turn-build", report["reason"])
+
+    def test_the_died_prefix_is_read_only_off_the_stopped_row(self):
+        driven = rows("lifecycle-open")
+        driven.append(("lifecycle-grown", "REFUSED", "DIED is just a word in a stall reading"))
+        self.assertIsNone(checker.founder_death(driven))
+
+    def test_a_chain_fail_carries_the_chain_class_and_a_pass_carries_none(self):
+        failed = checker.judge(whole_chain(refused=("QUICKSTART-BUILD-CANPAY",)))
+        self.assertEqual(failed["failClass"], checker.CHAIN_FAIL)
+        passed = checker.judge(whole_chain())
+        self.assertIsNone(passed["failClass"])
+        self.assertIsNone(passed["founderDeath"])
+
+
+class RunRecordEncoding(unittest.TestCase):
+    """Run 46: the driver's run-record.json may carry a UTF-8 BOM; the checker reads it either way."""
+
+    def test_a_bom_prefixed_and_a_bom_free_run_record_both_load(self):
+        payload = {"runId": "r1", "phases": {}}
+        for label, prefix in (("bom", b"\xef\xbb\xbf"), ("no-bom", b"")):
+            with self.subTest(record=label), tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "run-record.json"
+                path.write_bytes(prefix + json.dumps(payload).encode("utf-8"))
+                self.assertEqual(checker.read_record(path), payload)
+
+    def test_a_non_object_record_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "run-record.json"
+            path.write_bytes(b"\xef\xbb\xbf[1]")
+            with self.assertRaises(ValueError):
+                checker.read_record(path)
+
+
+class StoreIdentity(unittest.TestCase):
+    """Every step must pay from the one store lifecycle-open bound (native run 38)."""
+
+    def chain(self, *ids):
+        driven = whole_chain()
+        for index, store in enumerate(ids):
+            driven.append(("lifecycle-step-%d" % index, "OK", "step; storeId=%s; stores=2" % store))
+        return driven
+
+    def test_one_store_named_throughout_is_reported_and_passes(self):
+        report = checker.judge(self.chain("495", "495", "495"))
+        self.assertEqual(report["verdict"], checker.PASS)
+        self.assertEqual(report["storeIds"], ["495"])
+
+    def test_two_stores_across_steps_is_the_store_drift_fail_class(self):
+        report = checker.judge(self.chain("495", "1203"))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.STORE_DRIFT)
+        self.assertIn("495,1203", report["reason"])
+        self.assertEqual(checker.EXITS[report["verdict"]], 4)
+
+    def test_a_refused_row_naming_another_store_does_not_count(self):
+        driven = self.chain("495")
+        driven.append(("lifecycle-save", "REFUSED", "refused; storeId=1203; stores=2"))
+        report = checker.judge(driven)
+        self.assertEqual(report["storeIds"], ["495"])
+        self.assertNotEqual(report["failClass"], checker.STORE_DRIFT)
+
+    def test_the_store_field_is_read_exactly(self):
+        self.assertEqual(checker.store_in("x; storeId=495; stores=2"), "495")
+        self.assertIsNone(checker.store_in("x; stockpile=495; stores=2"))
 
 
 class StallClassification(unittest.TestCase):

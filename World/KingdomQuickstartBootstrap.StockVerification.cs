@@ -23,7 +23,8 @@ namespace ThousandAndFirst
 					|| !KingdomLiquids.HasFreshWater(volume))))
 			{
 				Failure = InitialQuantity
-					? "The starter water was not exactly 24 physical drams in its dedicated casks."
+					? "The starter water was not exactly " + KingdomQuickstartRules.StarterWaterDrams
+						+ " physical drams in its dedicated casks."
 					: "The receipted starter casks lost their durable identity or became a producer.";
 				return false;
 			}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using XRL;
 using XRL.World;
@@ -31,10 +32,25 @@ namespace ThousandAndFirst.Harness
 			Check(KingdomQuickstartSaveSnapshotCodec.TryEncode(Read(Game, Snapshot.Seed, request), out string before)
 				&& before == expected, "saved-world fields differ before physical verification");
 			KingdomQuickstartRules.TryProfile(Snapshot.ProfileKey, out var profile);
+			int waterDrams = InitialWater(Snapshot, expected);
 			Check(KingdomQuickstartBootstrap.NativeVerifyFreshBoot(Game, The.Player, The.ZoneManager?.ActiveZone,
-				profile, Snapshot.Advisor, out string failure), failure);
+				profile, Snapshot.Advisor, waterDrams, out string failure), failure);
 			Check(KingdomQuickstartSaveSnapshotCodec.TryEncode(Read(Game, Snapshot.Seed, request), out string after)
 				&& after == expected, "saved-world fields changed during physical verification");
+		}
+
+		private static int InitialWater(KingdomQuickstartSaveSnapshot Snapshot, string Wire)
+		{
+			string path = Path.Combine(KingdomScenarioSaveFiles.Root(), "Local", KingdomQuickstartHistoricalGrant.FileName);
+			if (!File.Exists(path) && !Directory.Exists(path)) return KingdomQuickstartRules.StarterWaterDrams;
+			Check(KingdomScenarioLoadEntry.Armed && ReferenceEquals(KingdomScenarioLoadEntry.QuickstartSnapshot, Snapshot)
+				&& KingdomScenarioLoadEntry.SnapshotWire == Wire,
+				"historical grant witness does not own this sealed load");
+			Check(KingdomQuickstartHistoricalGrant.TryRead(
+				KingdomScenarioSaveFiles.ReadText(path, KingdomQuickstartHistoricalGrant.MaxBytes),
+				Snapshot.GameId, KingdomScenarioSaveFiles.HashText(Wire), out int drams),
+				"historical grant witness differs from the exact public source and saved snapshot");
+			return drams;
 		}
 
 		private static KingdomQuickstartSaveSnapshot Read(XRLGame Game, string Seed,

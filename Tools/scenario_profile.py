@@ -14,6 +14,7 @@ normalizations, and anything that is not a regular file.
 
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -24,6 +25,7 @@ import unicodedata
 SEAL_HEADER = "taf-scenario-profile-seal-v1"
 MIN_SEED = 0
 MAX_SEED = 2147483647
+INVENTORY_WORKERS = 4
 
 # Windows FILE_ATTRIBUTE_REPARSE_POINT. Present on os.stat_result only on Windows builds; the
 # launcher checks the same flag, and neither side may narrow the other's sealed inventory.
@@ -493,8 +495,18 @@ def write_options(source: str, destination: str) -> None:
     options["OptionEnableSeed"] = "Yes"
     if advisor is not None:
         options[QUICKSTART_ADVISOR_OPTION] = advisor
+    # GameObject.Move and the completed-heart render scenario persist this absent option.
+    # Author its initial value and engine format before sealing these native scenarios.
+    # A used profile is never normalized or resealed when an engine write differs.
+    native_look_defaults = any(verb in tokens for verb in ("guest-save-supply", "heart-sight-inspect"))
+    if native_look_defaults:
+        options["OptionLookLocked"] = "No"
     with open(destination, "w", encoding="utf-8") as handle:
-        handle.write(json.dumps(options, indent=2) + "\n")
+        if native_look_defaults:
+            handle.write("{\n" + ",\n".join(json.dumps(key) + ":" + json.dumps(value)
+                                          for key, value in options.items()) + "\n}")
+        else:
+            handle.write(json.dumps(options, indent=2) + "\n")
     print("scenario profile exposes the native world-seed field for operator entry")
 
 
@@ -532,11 +544,23 @@ def refuse_links(full: str, directory: bool) -> None:
         )
 
 
+def inventory_file(full: str) -> str:
+    refuse_links(full, False)
+    if not os.path.isfile(full):
+        fail("profile tree contains a non-regular file: " + full)
+    digest = hashlib.sha256()
+    with open(full, "rb") as handle:
+        for block in iter(lambda: handle.read(65536), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def inventory(root: str) -> dict[str, str]:
     """Every regular file under root, keyed by normalized relative path.
 
     Refuses symlinks, hard links, reparse points, non-regular files, and any two paths that
-    normalize to one name. The walk never follows links.
+    normalize to one name. The walk never follows links. At most four file reads are
+    outstanding; executor shutdown joins sibling readers before propagating any failure.
     """
     if not os.path.isdir(root):
         fail("profile tree is missing: " + root)
@@ -546,27 +570,32 @@ def inventory(root: str) -> dict[str, str]:
     refuse_links(root, True)
     found: dict[str, str] = {}
     spellings: dict[str, str] = {}
-    for current, directories, files in os.walk(root, followlinks=False):
-        for name in list(directories):
-            refuse_links(os.path.join(current, name), True)
-        for name in files:
-            full = os.path.join(current, name)
-            refuse_links(full, False)
-            if not os.path.isfile(full):
-                fail("profile tree contains a non-regular file: " + full)
-            relative = os.path.relpath(full, root)
-            key = normalize(relative)
-            if key in spellings:
-                fail(
-                    "two profile paths normalize to one name: %s and %s"
-                    % (spellings[key], relative)
-                )
-            spellings[key] = relative
-            digest = hashlib.sha256()
-            with open(full, "rb") as handle:
-                for block in iter(lambda: handle.read(65536), b""):
-                    digest.update(block)
-            found[key] = digest.hexdigest()
+    batch: list[tuple[str, str]] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=INVENTORY_WORKERS) as pool:
+        def collect() -> None:
+            hashes = pool.map(inventory_file, [full for _, full in batch])
+            for (key, _), digest in zip(batch, hashes):
+                found[key] = digest
+            batch.clear()
+
+        for current, directories, files in os.walk(root, followlinks=False):
+            for name in list(directories):
+                refuse_links(os.path.join(current, name), True)
+            for name in files:
+                full = os.path.join(current, name)
+                relative = os.path.relpath(full, root)
+                key = normalize(relative)
+                if key in spellings:
+                    fail(
+                        "two profile paths normalize to one name: %s and %s"
+                        % (spellings[key], relative)
+                    )
+                spellings[key] = relative
+                batch.append((key, full))
+                if len(batch) == INVENTORY_WORKERS:
+                    collect()
+        if batch:
+            collect()
     if not found:
         fail("profile tree holds no files: " + root)
     return found

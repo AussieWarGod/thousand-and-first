@@ -1,0 +1,8 @@
+# Ordinary heart completion and source frames, then separate cold-load physical and render proof.
+DESCRIPTION=Measure completed first-heart canvas and claimed-zone sight across real save and cold load
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle marsh yes;lifecycle-open;heart-site-open;advance 8400;lifecycle-grown;heart-sight-inspect;yield-frames 3;heart-sight-check;lifecycle-save;stagedigest
+VERBS=lifecycle-open,heart-site-open,lifecycle-grown,heart-sight-inspect,heart-sight-check,lifecycle-save
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,lifecycle-open:OK,heart-site-open:OK,advance:OK,lifecycle-grown:OK,heart-sight-inspect:OK~canvas=7,yield-frames:OK,heart-sight-check:OK~whole-zone-drawn=true,lifecycle-save:OK~real-save=true,stagedigest:OK,COMPLETE
+SET=growth,native-regression
+TIMEOUT=1200

@@ -127,6 +127,43 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(50L, resumed.RemainingTicks);
 		}
 
+		[TestCase(0, false)]
+		[TestCase(1, false)]
+		[TestCase(2, false)]
+		[TestCase(3, false)]
+		[TestCase(4, false)]
+		[TestCase(5, false)]
+		[TestCase(6, true)]
+		[TestCase(7, false)]
+		[TestCase(8, true)]
+		[TestCase(9, false)]
+		[TestCase(10, false)]
+		[TestCase(11, false)]
+		[TestCase(12, false)]
+		[TestCase(13, false)]
+		[TestCase(14, false)]
+		[TestCase(255, false)]
+		public void ScaffoldRemovalInitialPhase(int Phase, bool Expected)
+		{
+			Assert.That(KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(
+				(KingdomConstructionPhase)Phase, KingdomPhysicalPhase.None, false, false), Is.EqualTo(Expected));
+		}
+
+		[TestCase(true, true, 0, true)]
+		[TestCase(false, true, 0, false)]
+		[TestCase(true, false, 0, false)]
+		[TestCase(false, false, 0, false)]
+		[TestCase(true, true, 1, false)]
+		[TestCase(true, true, 21, false)]
+		[TestCase(true, true, 255, false)]
+		public void ScaffoldRemovalOutstandingRetryNeedsCommittedProof(bool Improvement,
+			bool RemovalProved, int Physical, bool Expected)
+		{
+			Assert.That(KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(
+				KingdomConstructionPhase.Outstanding, (KingdomPhysicalPhase)Physical,
+				Improvement, RemovalProved), Is.EqualTo(Expected));
+		}
+
 		private static KingdomScaffoldLabourStep Advance(KingdomScaffoldLabourWindow Window,
 			long LastTick, long RemainingTicks, long Now)
 		{

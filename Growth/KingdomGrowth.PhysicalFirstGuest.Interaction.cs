@@ -70,6 +70,15 @@ namespace ThousandAndFirst
 				Popup.Show((failure ?? "Current conditions refuse citizenship")
 					+ ". The guest remains unchanged."); return;
 			}
+			// Refusing a home must leave the hosted body available for a later welcome.
+			// The consuming arrival transaction repeats this observation after its intent.
+			if (!KingdomLodging.ObservePreparedArrival(system, zone, body, PlannedCreed(body),
+				out KingdomLodgingRules.UnhousedReason housingReason, out string _))
+			{
+				Popup.Show(KingdomLodgingRules.ArrivalRefusedNote(housingReason)
+					+ " They remain your guest. Speak with them again when a suitable home is ready.");
+				return;
+			}
 			if (!KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth, candidate, now))
 			{
 				Popup.Show("The exact guest state changed; nothing was overwritten."); return;

@@ -68,8 +68,8 @@ namespace XRL.World.Parts
 				&& IsExactPendingImprovementSuccessor(Successor);
 			if (cell == null || string.IsNullOrEmpty(Blueprint)
 				|| (!scaffoldRoute && !improvement)
-				|| (Job.Phase != KingdomConstructionPhase.ProjectionPending
-					&& Job.Phase != KingdomConstructionPhase.Working)
+				|| !KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(Job.Phase,
+					Job.PhysicalPhase, improvement, HasRemovalProof(Successor, ScaffoldId))
 				|| !KingdomConstruction.Owns(System, Z, Job)
 				|| !KingdomConstruction.IsCurrent(Job)
 				|| !HasExactScaffoldRemovalIntent(Successor, ScaffoldId)

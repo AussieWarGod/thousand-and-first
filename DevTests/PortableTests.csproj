@@ -17,11 +17,31 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Core\KingdomFoundingRegardRules.cs" />
+    <Compile Include="KingdomFoundingRegardTests.cs" />
+    <Compile Include="KingdomStrikeClosureTests.cs" />
+    <Compile Include="..\Simulation\Kernel\KingdomRecruitmentRules.cs" />
+    <Compile Include="KingdomRecruitmentRulesTests.cs" />
+    <Compile Include="..\Simulation\Kernel\KingdomSemanticSelectionRules.cs" />
+    <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
+    <Compile Include="KingdomRetainedTransitionTests.cs" />
+    <Compile Include="KingdomRoomEnclosureBoundsTests.cs" />
+    <Compile Include="KingdomConstructionPayloadBoundsTests.cs" />
+    <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
     <Compile Include="KingdomHeartRungSettleTests.cs" />
     <Compile Include="KingdomCampHeartNativeSourceTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
+    <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
+    <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
+    <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
@@ -156,12 +176,23 @@
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleOpenWait.cs" />
+	<Compile Include="..\Harness\KingdomScenarioDeathRules.cs" />
 	<Compile Include="KingdomQuickstartLifecycleOpenWaitTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleDebitRules.cs" />
+	<Compile Include="KingdomQuickstartLifecycleDebitRulesTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleStoreRules.cs" />
+	<Compile Include="KingdomQuickstartLifecycleStoreRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />
 	<Compile Include="KingdomQuickstartLifecycleStallClassifyTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
+	<Compile Include="..\Harness\KingdomTeardownCrewAvailabilityRules.cs" />
+	<Compile Include="KingdomTeardownCrewAvailabilityRulesTests.cs" />
+	<Compile Include="..\Harness\KingdomTeardownRootResolution.cs" />
+	<Compile Include="KingdomTeardownRootResolutionTests.cs" />
+	<Compile Include="..\Harness\KingdomTeardownStrikeReadiness.cs" />
+	<Compile Include="KingdomTeardownStrikeReadinessTests.cs" />
 	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
 	<Compile Include="KingdomTeardownStrikeRowClaimsTests.cs" />
 	<Compile Include="KingdomTeardownCrewDepartureClaimsTests.cs" />
@@ -197,6 +228,7 @@
 	<Compile Include="KingdomPlotLabourWindowRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartChainTests.cs" />
+	<Compile Include="KingdomFoundingHeartUpgradePathTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
@@ -232,6 +264,8 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartUpgradePathRules.cs" />
+	<Compile Include="..\Growth\KingdomPlotHeartRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />
@@ -249,6 +283,8 @@
     <Compile Include="..\Growth\KingdomArchitectureReceiptPrefixRules.cs" />
     <Compile Include="..\Growth\KingdomMarketHandoffIntentRules.cs" />
     <Compile Include="..\Growth\KingdomPlotDeclarations.cs" />
+    <Compile Include="..\Growth\KingdomPlotRules.cs" />
+    <Compile Include="..\Growth\KingdomPlotBoundsRules.cs" />
     <Compile Include="..\Growth\KingdomResidentDepartureOperation.cs" />
     <Compile Include="..\Growth\KingdomResidentAdmissionOperation.cs" />
     <Compile Include="..\Core\KingdomCreedKind.cs" />
@@ -911,6 +947,7 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.InputRegistry.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.InputContract.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.OutboxCas.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.ScaffoldWork.cs" />
 	<Compile Include="..\Growth\KingdomConstructionClaims.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.Claims.cs" />
@@ -1402,6 +1439,7 @@
 	<Compile Include="..\Harness\KingdomSubsidenceRungSaveForecast.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadBarrier.cs" />
 	<Compile Include="KingdomScenarioLoadBarrierTests.cs" />
+	<Compile Include="KingdomScenarioLoadResumeTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioVerbProvider.cs" />
 	<Compile Include="..\Harness\KingdomScenarioVerbProviderRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioDigests.cs" />

@@ -13,10 +13,18 @@ namespace ThousandAndFirst
 		internal static bool NativeVerifyFreshBoot(XRLGame Game, GameObject Founder, Zone Zone,
 			KingdomQuickstartProfile Profile, bool Advisor, out string Failure)
 		{
+			return NativeVerifyFreshBoot(Game, Founder, Zone, Profile, Advisor,
+				KingdomQuickstartRules.StarterWaterDrams, out Failure);
+		}
+
+		internal static bool NativeVerifyFreshBoot(XRLGame Game, GameObject Founder, Zone Zone,
+			KingdomQuickstartProfile Profile, bool Advisor, int InitialWaterDrams, out string Failure)
+		{
 			Failure = "Native fresh boot authority did not match the captured owner.";
 			try
 			{
-				if (Game == null || Founder == null || Zone == null || Profile == null
+				if ((InitialWaterDrams != 24 && InitialWaterDrams != KingdomQuickstartRules.StarterWaterDrams)
+					|| Game == null || Founder == null || Zone == null || Profile == null
 					|| Game.StringGameState == null || Game.IntGameState == null
 					|| Game.Int64GameState == null || Game.ObjectGameState == null
 					|| Game.BooleanGameState == null) return false;
@@ -43,7 +51,7 @@ namespace ThousandAndFirst
 					return false;
 				}
 				if (!VerifyComplete(owner.System, Zone, receipt, out Failure)
-					|| !VerifyWaterGrant(Zone, grants[0], receipt, true, out Failure)
+					|| !NativeInitialWater(Zone, grants[0], receipt, InitialWaterDrams, out Failure)
 					|| !VerifyLarderGrant(Zone, grants[1], receipt, true, out Failure)
 					|| !VerifyMaterialsGrant(Zone, grants[2], receipt, true, out Failure)) return false;
 				if (!NativeBootRoster(Zone, Founder, receipt, out GameObject[] after, out Failure)) return false;
@@ -67,6 +75,16 @@ namespace ThousandAndFirst
 				Failure = "Native fresh boot verification threw " + ex.GetType().Name + ".";
 				return false;
 			}
+		}
+
+		private static bool NativeInitialWater(Zone Zone, GameObject Water,
+			KingdomQuickstartReceipt Receipt, int Drams, out string Failure)
+		{
+			if (!VerifyWaterGrant(Zone, Water, Receipt, false, out Failure)) return false;
+			LiquidVolume volume = Water.GetPart<LiquidVolume>();
+			if (volume.Volume == Drams && KingdomLiquids.HasFreshWater(volume)) return true;
+			Failure = "The saved starter water differs from its source-bound initial grant of " + Drams + " drams.";
+			return false;
 		}
 
 		private sealed class NativeBootOwner

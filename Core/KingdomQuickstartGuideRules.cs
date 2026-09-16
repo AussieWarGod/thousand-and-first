@@ -30,9 +30,8 @@ namespace ThousandAndFirst
 	/// The guide is a wayfarer, not a citizen: he holds nothing, gives nothing, and is verified
 	/// benefit-free on every recovery pass. So the only thing he can be widened with is TRUE
 	/// information about the rules the founder is already standing inside. Nothing here may
-	/// promise an arrival, a pair of hands, or a finished building &#8212; the settlement refuses
-	/// all three until a roof stands with room under it and somebody lives there, and a guide that
-	/// said otherwise would leave a player waiting for something that never comes.
+		/// promise an arrival or a finished building. Describe the founding provisions separately
+		/// from later recruitment, which requires a completed roof with spare beds.
 	/// </para>
 	/// <para>
 	/// Nothing here may state the roll's current size either. The guide speaks about roofs, hands
@@ -52,12 +51,11 @@ namespace ThousandAndFirst
 		/// </para>
 		/// </summary>
 		public const string Start =
-			"Count what is here, founder, not what you wish were here. The casks hold "
-			+ "twenty-four drams and the larder twelve meals. They make nothing. "
-			+ "Raise shelter, then give hands and ground to the works that gather food "
-			+ "and water; only such work replaces what the city spends. I am not on your roll. "
-			+ "I pass through, and I am not counted. Read the roll and the roofs instead: hands "
-			+ "come off the roll, and nobody new stays unless a roof stands with room left in it.";
+			"Quickstart normally provides four founding citizens and two marked shelter plots. "
+			+ "Open your charter to check the citizen roll and construction. Let the citizens finish "
+			+ "those shelters before recruiting more people; keep the plots clear. "
+			+ "The casks start with sixty-four drams and the larder twelve meals. Refill them: "
+			+ "they do not produce supplies. I am a visiting guide, not on your roll, and I do not build.";
 
 		/// <summary>How he ends it. The house farewell.</summary>
 		public const string Goodbye = "Live and drink.";
@@ -80,12 +78,13 @@ namespace ThousandAndFirst
 			new string[2]
 			{
 				"How does anything get built here?",
-				"You commission a design and the ground is marked. Nothing rises off a mark. "
-					+ "Every design names the materials it eats, and the stores must already "
-					+ "hold them; the chest holds one mud, three brush and four timber, and "
-					+ "nothing adds to it but work. Then the design wants hands — settlers who "
-					+ "live here and are not already spoken for. Where the roll is empty, or "
-					+ "every name on it is busy, a commission is a shape in the dirt that waits."
+				"The two starter shelters are already marked for construction. Founding citizens "
+					+ "can work before they have homes; you do not need to recruit a guest first. "
+					+ "Keep the shelter plots clear and let time pass. For additional buildings, "
+					+ "commission a design through your charter and supply its listed materials; "
+					+ "the chest holds one mud, three brush and four timber at the start. "
+					+ "Construction needs citizens available for work. If everyone is busy, "
+					+ "free workers from other jobs. A marked plot is not a completed building."
 			},
 			new string[2]
 			{
@@ -101,12 +100,13 @@ namespace ThousandAndFirst
 			new string[2]
 			{
 				"Will anyone come?",
-				"People pass. One of them may ask to be taken in, and asking is not staying. "
-					+ "Nobody joins a place that has no roof with room left under it — not a "
-					+ "stranger walking up, not a guest welcomed at your own fire. The welcome "
-					+ "is not the transaction; the bed is. Raise housing before it is wanted "
-					+ "and an arrival has somewhere to be put. Do not spend a face before it "
-					+ "comes."
+				"A visitor is not a citizen and does not build for you. New citizens need "
+					+ "a completed home with a spare bed. Finish the starter shelters first. "
+					+ "When a traveller writes, open your charter and choose Read the first "
+					+ "guest's correspondence, then Admit this person through Growth. This hosts "
+					+ "the visitor. Interact with them and choose speak with the first guest, "
+					+ "then Welcome as citizen when housing is available. "
+					+ "A guest can remain your guest while you finish a home."
 			},
 			new string[2]
 			{

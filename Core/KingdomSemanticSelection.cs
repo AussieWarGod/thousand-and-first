@@ -121,35 +121,7 @@ namespace ThousandAndFirst
 			ulong ordinal, long dueTick, bool firstGuest, out KingdomSemanticPersonPlan plan,
 			out string failure)
 		{
-			plan = null; failure = null;
-			if (ordinal == 0UL || ordinal > (ulong)long.MaxValue || dueTick < 0L)
-			{
-				failure = "growth arrival semantic identity is absent"; return false;
-			}
-			if (firstGuest) return TryPrepareGrowthFirstGuestPayload(system, ordinal, dueTick,
-				out plan, out failure);
-			long sequence = (long)ordinal;
-			if (!TryPreparePerson(system, "r_KingdomSettlers", "r_KingdomSettler",
-				GrowthArrivalStream, PersonEventKind, sequence, false, out plan, out failure))
-				return false;
-			SemanticEventKey key;
-			KernelFaultCode kernelFault;
-			if (!SemanticEventKey.TryCreate(plan.RulesVersion, system.CurrentSettlementId,
-				plan.StreamId, plan.EventKind, (ulong)sequence, out key, out kernelFault))
-			{
-				failure = "growth arrival event key refused";
-				return false;
-			}
-			if (!KingdomCreed.TryDraw(system, system.SimulationSeed, key, CreedDraw,
-				out plan.Creed))
-			{
-				failure = "growth arrival creed draw refused";
-				return false;
-			}
-			plan.Arrived = XRL.World.Calendar.GetDay(dueTick) + " of "
-				+ XRL.World.Calendar.GetMonth(dueTick) + ", "
-				+ XRL.World.Calendar.GetYear(dueTick) + " AR";
-			return true;
+			return TryPrepareSettlerPayload(system, ordinal, dueTick, firstGuest, out plan, out failure);
 		}
 
 		internal static bool TryLocateGrowthArrival(KingdomSystem system, Zone zone,

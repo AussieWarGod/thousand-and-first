@@ -18,12 +18,17 @@ namespace ThousandAndFirst
 				failure = "stand on the exact held ground named by this correspondence";
 				return false;
 			}
-			KingdomSurvey survey = KingdomSurvey.ActiveFor(zone) ?? KingdomSurvey.Take(zone, system);
-			ArrivalResult result = ReconcileArrival(system, zone, survey, tick,
-				out ArrivalRefusal _);
-			if (result != ArrivalResult.Failed) return true;
-			failure = "first-guest transaction retained its exact evidence for recovery";
-			return false;
+			if (!KingdomSurvey.TryBindLocalOperation(zone, system, out var scope, out failure))
+				return false;
+			using (scope)
+			{
+				KingdomSurvey survey = KingdomSurvey.ActiveFor(zone);
+				ArrivalResult result = ReconcileArrival(system, zone, survey, tick,
+					out ArrivalRefusal _);
+				if (result != ArrivalResult.Failed) return true;
+				failure = "first-guest transaction retained its exact evidence for recovery";
+				return false;
+			}
 		}
 	}
 }

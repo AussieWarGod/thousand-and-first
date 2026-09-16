@@ -17,7 +17,10 @@ namespace ThousandAndFirst
 			case "r_KingdomSettlerYoung":
 			case "r_KingdomSettlerPhysicker":
 			case "r_KingdomSettlerMechanimist":
-			case "r_KingdomSettlerSnapjaw": return true;
+			case "r_KingdomSettlerSnapjaw":
+			case "r_KingdomSettlerIssachari":
+			case "r_KingdomSettlerHindren":
+			case "r_KingdomSettlerDromad": return true;
 			default: return false;
 			}
 		}

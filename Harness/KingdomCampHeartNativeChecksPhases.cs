@@ -19,6 +19,7 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			internal void RecordBefore()
 			{
+				RecordResidentPresence("before");
 				int riteX, riteY;
 				Require(KingdomPlots.TryRiteGround(Zone, out riteX, out riteY),
 					"taf-camp-rite-absent: the founded camp has no provable rite ground");
@@ -94,6 +95,7 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			private void Phase1()
 			{
+				RecordResidentPresence("phase1");
 				Require(System.Stage >= GrowthStage.Steading,
 					"taf-camp-stage-short: the settlement never reached the stage the waterstone "
 						+ "asks for; stage=" + System.Stage);

@@ -30,7 +30,9 @@ namespace ThousandAndFirst
 			string ordinary = OrdinaryNeed(System, Here);
 			if (!KingdomFirstGuestRuntime.IsAwaitingAnswer(System))
 			{
-				return ordinary;
+				string recruitment = KingdomRecruitment.PendingNeed(System);
+				return recruitment == null ? ordinary
+					: ordinary.Length == 0 ? recruitment : recruitment + " " + ordinary;
 			}
 			string guest = "A first guest is waiting for your answer. (Charter: read the first guest's correspondence)";
 			return ordinary.Length == 0 ? guest : guest + " " + ordinary;

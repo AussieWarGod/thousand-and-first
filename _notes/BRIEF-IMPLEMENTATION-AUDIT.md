@@ -1,11 +1,42 @@
 # Brief-to-implementation audit
 
+## Coherent recruitment draft
+
+Current development: **3112** production C# files / 3146 package files. Six-faction coherent
+recruitment implemented; full licensed 15,019/5,909 cases and four engine modes pass. Native
+catalogue/frozen-guest and expanded hostile-wait checks passed at 10d4c2a5; physical admission/home/cold-load/multi-map proof
+remains owed under #231/#230. No saved fields change. docs/STATUS.md and common Git handoff
+own exact scope and live handles; previous entries below retain original evidence.
+
+## Unreleased strike closure feedback
+
+Current development tree contains **3108** production C# files. Existing strike refusals now
+identify exact own completed work still awaiting closure; no permission or persistence change.
+Native `abf41251` passes real fire/larder closure refusal, borrowed-receipt restoration,
+subsequent strike and exact salvage. Full licensed 15,004/5,895 cases, four engine compiles,
+closed profile recipe and structural delta review pass. Synthetic setup and no cold-load claim
+remain explicit; docs/STATUS.md owns exact evidence. Earlier entries retain their scope.
+
+## Unreleased founding reputation delta
+
+Development tree contains **3107** production C# files. New pure founding-snapshot rules and
+engine adapter implement one-time inbound inheritance; historical publication remains readable.
+Native warm/cold acceptance at `40477cb7`, full licensed integration (14,988 main /
+5,880 portable, zero skips) and current structural delta review are recorded in docs/STATUS.md.
+Reputation-weighted recruitment remains unfinished under #231.
+
+
+## Current source census — pending heart repair
+
+**3106** production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
+3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. This census is not native acceptance.
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-**3097** production C# files; 440,006 physical lines; 1446 direct-XRL files; zero cap failures;
-3128 cold-install files. Inventory `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+**3098** production C# files; 440,044 physical lines; 1448 direct-XRL files; zero cap failures;
+3129 cold-install files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 #141/#144/#139/#137 combined over dev with the 0.3.3 backmerge. Compile, native and semantic
 review are owed; old counts below are retained, not current acceptance. Public0.3.3 finalized.
 
@@ -13,7 +44,7 @@ review are owed; old counts below are retained, not current acceptance. Public0.
 
 Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
 skips; native pending. Census3079/437201/1434,
-zero cap failures; inventory `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+zero cap failures; inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 Earlier evidence below remains bound to its named checkpoints.
 
 ## Retained dev hotfix backmerge — 2026-09-11
