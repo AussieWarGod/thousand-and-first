@@ -63,6 +63,13 @@
 # is KingdomBuilt=1 with that job's receipt and the scaffold removal proof naming the waterstone, and
 # only then the waterstone reads globally absent. Journaled as `predecessor=retired id=<waterstone>
 # successor=<moot yard>`. A waterstone merely gone, with no chain, still refuses.
+# THE MOOT YARD HAS NO HEARTH BY DESIGN (native run 51 @ f208b825). CivicFaith.xml requires
+# fixture:hearth at the rite ground and the waterstone only; civic-heartmoot-l2 has no hearth glyph
+# and its palette no hearth slot, so the renovate-expand delta lists the camp fire's slot as Removed
+# and the stamper removes it before the successor settles. The final check no longer looks for the
+# camp fire; it asserts what the tier guarantees: no camp fire inside the moot rect, the rung-2 fire
+# no longer live (absent or tombstoned; still live refuses), two light:moot torch-posts, one rostrum,
+# and the first basin still the exact anchored fixture. All journaled on the phase3 hearth row.
 # The #162 halt lines are FORBIDDEN here too (PR #164): a heart that cannot be recovered after its
 # first climb never begins the second, and the rung-3 check also asks production's own recovery
 # predicate once the moot yard stands.

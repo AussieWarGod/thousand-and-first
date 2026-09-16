@@ -68,12 +68,7 @@ namespace ThousandAndFirst.Harness
 				RequireHeld(RetainedBrush, present, "brush");
 				RequireSameBodies(RetainedBrushBodies, bodies, "brush");
 				RequireAbsent(MintedRung3, present, "rung-3 bill");
-				GameObject fire = FireIn(standing);
-				Require(fire != null,
-					"taf-camp-rung3-fire-absent: no camp fire stands inside the moot yard");
-				Require(Offset(fire.CurrentCell) == Offset(FireCell),
-					"taf-camp-rung3-fire-moved: the camp fire left its rite-relative cell: "
-						+ Offset(FireCell) + " -> " + Offset(fire.CurrentCell));
+				RequireMootHasNoHearthByDesign(standing);
 				Evidence.Append("\nphase3 tick=").Append(Game.TimeTicks)
 					.Append("; standing=").Append(standing.IDIfAssigned)
 					.Append("; key=").Append(KingdomUpgrade.DesignKeyOf(standing))
@@ -86,9 +81,7 @@ namespace ThousandAndFirst.Harness
 					.Append("; store raw custody census=")
 					.Append(KingdomCampHeartNativeCensus.Describe(present))
 					.Append("; retained unasked units=")
-					.Append(KingdomCampHeartNativeCensus.Describe(RetainedBrush))
-					.Append("; fire=").Append(fire.IDIfAssigned)
-					.Append('@').Append(Offset(fire.CurrentCell));
+					.Append(KingdomCampHeartNativeCensus.Describe(RetainedBrush));
 			}
 
 			/// <summary>

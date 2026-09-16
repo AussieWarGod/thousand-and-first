@@ -21,6 +21,8 @@ namespace ThousandAndFirst.Tests
 		private const string Rung3 = "Harness/KingdomCampHeartNativeRung3.cs";
 		private const string Stock = "Harness/KingdomCampHeartNativeRung3Stock.cs";
 		private const string Diagnostics = "Harness/KingdomCampHeartNativeRung3Diagnostics.cs";
+		private const string Design = "Harness/KingdomCampHeartNativeRung3Design.cs";
+		private const string Faith = "Architecture/KingdomArchitectures-CivicFaith.xml";
 		private const string BillShard = "Harness/KingdomCampHeartNativeBill.cs";
 		private const string TownSeed = "Harness/KingdomCampHeartNativeTownSeed.cs";
 		private const string TownLots = "Harness/KingdomCampHeartNativeTownLots.cs";
@@ -588,6 +590,79 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("never by writing a home id"));
 			Assert.That(persona, Does.Contain("taf-camp-rung3-town-held"));
 
+		}
+
+		/// <summary>
+		/// Native run 51 (f208b825): the moot yard has no hearth BY DESIGN, so the old "camp fire
+		/// inside the moot yard" read refused a lawful climb. The authored catalogue is pinned
+		/// both ways (hearth required at rungs 1-2, absent at rung 3) and the replacement reads
+		/// what the heartmoot tier guarantees, drive nothing, and refuse a fire still live.
+		/// </summary>
+		[Test]
+		public void TheMootYardHasNoHearthByDesignAndTheCheckReadsWhatTheTierGuarantees()
+		{
+			string faith = Read(Faith);
+			string waterstoneTier = Block(faith, "<tier Key=\"heartwaterstone\"", "</tier>");
+			string mootTier = Block(faith, "<tier Key=\"heartmoot\"", "</tier>");
+			Assert.That(waterstoneTier, Does.Contain("<require Role=\"fixture:hearth\" Min=\"1\" />"));
+			Assert.That(mootTier, Does.Not.Contain("fixture:hearth"), "the moot yard authors no hearth");
+			Assert.That(mootTier, Does.Contain("<require Role=\"light:moot\" Min=\"2\" />"));
+			Assert.That(mootTier, Does.Contain("<require Role=\"fixture:first-basin\" Min=\"1\" />"));
+			Assert.That(mootTier, Does.Contain("<require Role=\"fixture:storage\" Min=\"1\" />"));
+			string waterstoneMap = Block(faith, "<map Key=\"civic-heartwaterstone-m1\"", "</map>");
+			string mootMap = Block(faith, "<map Key=\"civic-heartmoot-l2\"", "</map>");
+			Assert.That(waterstoneMap, Does.Contain("Object=\"$hearth\""));
+			Assert.That(mootMap, Does.Not.Contain("$hearth"), "no hearth glyph at rung 3");
+			Assert.That(mootMap, Does.Contain("Object=\"$light\""));
+			Assert.That(mootMap, Does.Contain("Object=\"$benefit-heartmoot-main\""));
+			string mootPalette = Block(faith, "<palette Key=\"civic-heart-moot\"", "</palette>");
+			Assert.That(mootPalette, Does.Not.Contain("Key=\"hearth\""));
+			Assert.That(mootPalette, Does.Contain("Blueprint=\"r_KingdomCivicTorchpost\""));
+			Assert.That(mootPalette, Does.Contain("Blueprint=\"r_KingdomMootRostrum\""));
+			Assert.That(Block(faith, "<palette Key=\"civic-heart-stone\"", "</palette>"),
+				Does.Contain("Key=\"hearth\" Blueprint=\"r_KingdomCivicCampfireCamp\""));
+
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("internal const string TorchpostBlueprint = \"r_KingdomCivicTorchpost\";"));
+			Assert.That(checks, Does.Contain("internal const string RostrumBlueprint = \"r_KingdomMootRostrum\";"));
+			Assert.That(checks, Does.Contain("internal const string FirstBasinRole = \"fixture:first-basin\";"));
+
+			string rung3 = Read(Rung3);
+			Assert.That(rung3, Does.Contain("RequireMootHasNoHearthByDesign(standing);"));
+			foreach (string stale in new[] { "taf-camp-rung3-fire-absent", "taf-camp-rung3-fire-moved",
+				"FireIn(standing)" })
+				Assert.That(rung3, Does.Not.Contain(stale), stale);
+
+			string design = Read(Design);
+			foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomPlots.Advance(",
+				"TryApplyUpgrade(", "SetIntProperty(", "SetStringProperty(", "Destroy(", "Obliterate(",
+				"RemoveFromContext(" })
+				Assert.That(design, Does.Not.Contain(driver), "the design shard must read, never drive: " + driver);
+			foreach (string read in new[] { "GameObject fire = FireIn(Standing);",
+				"KingdomConstruction.FindGlobalLiveId(FireId,",
+				"CountInRect(Standing, TorchpostBlueprint)", "CountInRect(Standing, RostrumBlueprint)",
+				"KingdomArchitectureStamper.TryExactAnchoredComponent(Standing,",
+				"Zone, FirstBasinRole, out basin, out basinFailure)",
+				"Evidence.Append(\"\\nphase3 hearth=none-by-design; camp fire in rect=\")",
+				"Require(fire == null, \"taf-camp-rung3-hearth-present",
+				"Require(fireLookup != KingdomPhysicalLookupState.Exact,",
+				"taf-camp-rung3-hearth-unremoved", "Require(torchposts >= 2, \"taf-camp-rung3-lights-short",
+				"Require(rostrums == 1, \"taf-camp-rung3-rostrum-miscount",
+				"Require(basinAnchored, \"taf-camp-rung3-basin-unanchored" })
+				Assert.That(design, Does.Contain(read), read);
+			int journal = design.IndexOf("Evidence.Append(\"\\nphase3 hearth=none-by-design", StringComparison.Ordinal);
+			int firstRequire = design.IndexOf("Require(fire == null,", StringComparison.Ordinal);
+			Assert.That(journal, Is.GreaterThan(-1));
+			Assert.That(firstRequire, Is.GreaterThan(journal), "every read is journaled before the first Require");
+		}
+
+		private static string Block(string Text, string Open, string Close)
+		{
+			int at = Text.IndexOf(Open, StringComparison.Ordinal);
+			Assert.That(at, Is.GreaterThan(-1), Open);
+			int end = Text.IndexOf(Close, at, StringComparison.Ordinal);
+			Assert.That(end, Is.GreaterThan(at), Close);
+			return Text.Substring(at, end - at);
 		}
 	}
 }

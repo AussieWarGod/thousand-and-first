@@ -110,8 +110,10 @@ namespace ThousandAndFirst.Tests
 			row.Append("\nphase3 tick=").Append(Nine).Append("; standing=").Append(new string('s', 64))
 				.Append("; key=heartmoot; stage=Town; population=").Append(Nine).Append("; craft=Workshop")
 				.Append("; zone rung read=3; basin capacity read=160; store=").Append(new string('s', 64))
-				.Append("; store raw custody census=").Append(text).Append("; retained unasked units=").Append(text)
-				.Append("; fire=").Append(new string('f', 64)).Append("@(9,9)");
+				.Append("; store raw custody census=").Append(text).Append("; retained unasked units=").Append(text);
+			row.Append("\nphase3 hearth=none-by-design; camp fire in rect=none; rung-2 fire=").Append(new string('f', 64))
+				.Append(" lookup=Ambiguous@99,99; torchposts=").Append(Nine).Append("; rostrum=").Append(Nine)
+				.Append("; first-basin=").Append(new string('b', 64)).Append("@(9,9)");
 			int length = row.Length;
 			Assert.That(length, Is.LessThan(KingdomScenarioJournalRules.MaxMessageChars),
 				"the rung-3 row's own reads must fit under the cap; they are " + length + " chars");

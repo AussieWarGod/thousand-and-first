@@ -25,6 +25,9 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string StoreBlueprint = "r_KingdomHeartStockpile";
 		internal const string FireBlueprint = "r_KingdomCivicCampfireCamp";
+		internal const string TorchpostBlueprint = "r_KingdomCivicTorchpost";
+		internal const string RostrumBlueprint = "r_KingdomMootRostrum";
+		internal const string FirstBasinRole = "fixture:first-basin";
 		internal const string StorageRole = "fixture:storage";
 		internal const string FirstRungKey = "heartbasin";
 		internal const string SecondRungKey = "heartwaterstone";
