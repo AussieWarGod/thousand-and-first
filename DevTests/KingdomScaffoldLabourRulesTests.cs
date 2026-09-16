@@ -188,7 +188,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ScaffoldRemovalIdentityPredicatesAreElevenDistinctNamesInProofOrder()
 		{
-			string[] predicates = KingdomConstructionRules.ScaffoldRemovalIdentityPredicates;
+			System.Collections.Generic.IReadOnlyList<string> predicates =
+				KingdomConstructionRules.ScaffoldRemovalIdentityPredicates;
 			CollectionAssert.AreEqual(new[]
 			{
 				KingdomConstructionRules.ScaffoldRemovalCellPredicate,
@@ -203,16 +204,39 @@ namespace ThousandAndFirst.Tests
 				KingdomConstructionRules.ScaffoldRemovalOutputPredicate,
 				KingdomConstructionRules.ScaffoldRemovalSameOutputPredicate
 			}, predicates);
-			ClassicAssert.AreEqual(11, predicates.Length);
+			ClassicAssert.AreEqual(11, predicates.Count);
 			CollectionAssert.AllItemsAreUnique(predicates);
 			foreach (string predicate in predicates)
 			{
 				ClassicAssert.IsFalse(string.IsNullOrWhiteSpace(predicate));
+				ClassicAssert.IsTrue(KingdomConstructionRules.IsScaffoldRemovalIdentityPredicate(predicate));
 				string refusal = KingdomConstructionRules.ScaffoldRemovalIdentityRefusal(predicate);
 				StringAssert.StartsWith(
 					KingdomConstructionRules.ScaffoldRemovalIdentitySentence + ": ", refusal);
 				StringAssert.EndsWith(predicate + ".", refusal);
 			}
+		}
+
+		[Test]
+		public void ScaffoldRemovalIdentityPredicatesCannotBeInjectedByCallers()
+		{
+			// Copilot review on PR #259: the names were a public mutable array, so a caller
+			// could add a name and have the refusal display a predicate never walked.
+			System.Collections.Generic.IReadOnlyList<string> view =
+				KingdomConstructionRules.ScaffoldRemovalIdentityPredicates;
+			ClassicAssert.IsFalse(view is string[], "the view must not be the backing array");
+			var list = view as System.Collections.Generic.IList<string>;
+			ClassicAssert.IsNotNull(list);
+			ClassicAssert.IsTrue(list.IsReadOnly);
+			Assert.Throws<System.NotSupportedException>(() => list.Add("injected predicate"));
+			Assert.Throws<System.NotSupportedException>(() => list[0] = "injected predicate");
+			ClassicAssert.IsFalse(
+				KingdomConstructionRules.IsScaffoldRemovalIdentityPredicate("injected predicate"));
+			ClassicAssert.IsFalse(KingdomConstructionRules.IsScaffoldRemovalIdentityPredicate(null));
+			ClassicAssert.IsFalse(KingdomConstructionRules.IsScaffoldRemovalIdentityPredicate(""));
+			ClassicAssert.AreEqual("Scaffold-removal intent or successor identity changed.",
+				KingdomConstructionRules.ScaffoldRemovalIdentityRefusal("injected predicate"));
+			ClassicAssert.AreEqual(11, KingdomConstructionRules.ScaffoldRemovalIdentityPredicates.Count);
 		}
 
 		private static KingdomScaffoldLabourStep Advance(KingdomScaffoldLabourWindow Window,

@@ -32,8 +32,10 @@ namespace ThousandAndFirst
 		public const string ScaffoldRemovalSameOutputPredicate =
 			"live output is a different object";
 
-		/// <summary>The identity predicates in the exact short-circuit order the proof walks.</summary>
-		public static readonly string[] ScaffoldRemovalIdentityPredicates =
+		/// <summary>The identity predicates in the exact short-circuit order the proof walks.
+		/// The backing array is private; callers see a read-only view, so no caller can add a
+		/// predicate the proof never evaluated.</summary>
+		private static readonly string[] ScaffoldRemovalIdentityPredicateNames =
 		{
 			ScaffoldRemovalCellPredicate, ScaffoldRemovalBlueprintPredicate,
 			ScaffoldRemovalRoutePredicate, ScaffoldRemovalPhasePredicate,
@@ -43,12 +45,24 @@ namespace ThousandAndFirst
 			ScaffoldRemovalSameOutputPredicate
 		};
 
-		/// <summary>Composes the refusal; an unnamed predicate keeps the bare sentence so no
-		/// caller can invent a predicate the proof never evaluated.</summary>
+		public static System.Collections.Generic.IReadOnlyList<string>
+			ScaffoldRemovalIdentityPredicates
+		{
+			get { return System.Array.AsReadOnly(ScaffoldRemovalIdentityPredicateNames); }
+		}
+
+		/// <summary>True only for a name the proof actually walks.</summary>
+		public static bool IsScaffoldRemovalIdentityPredicate(string Predicate)
+		{
+			return !string.IsNullOrEmpty(Predicate)
+				&& System.Array.IndexOf(ScaffoldRemovalIdentityPredicateNames, Predicate) >= 0;
+		}
+
+		/// <summary>Composes the refusal; an unnamed or invented predicate keeps the bare
+		/// sentence so no caller can display a predicate the proof never evaluated.</summary>
 		public static string ScaffoldRemovalIdentityRefusal(string Predicate)
 		{
-			if (string.IsNullOrEmpty(Predicate)
-				|| System.Array.IndexOf(ScaffoldRemovalIdentityPredicates, Predicate) < 0)
+			if (!IsScaffoldRemovalIdentityPredicate(Predicate))
 				return ScaffoldRemovalIdentitySentence + ".";
 			return ScaffoldRemovalIdentitySentence + ": " + Predicate + ".";
 		}
