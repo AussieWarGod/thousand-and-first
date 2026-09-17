@@ -17,6 +17,11 @@ namespace ThousandAndFirst.Simulation.City
 		public void Normalize()
 		{
 			if (SubsidenceReadFailed) return;
+			if (SchemaVersion >= 5 && !ValidResidenceColumns())
+			{
+				SubsidenceReadFailed = true;
+				return;
+			}
 			if (!ThousandAndFirst.KingdomSubsidenceStepCodec.TryDecode(SubsidenceModel,
 				out ThousandAndFirst.KingdomSubsidenceStepBook subsidence))
 			{

@@ -10,6 +10,7 @@ namespace ThousandAndFirst.Tests
 	public sealed class KingdomSubsidenceRungRuntimeSourceTests
 	{
 		private const string Capture = "Growth/KingdomSubsidenceStepRuntime.RungCapture.cs";
+		private const string Homes = "Growth/KingdomSubsidenceStepRuntime.RungHomes.cs";
 		private const string Frame = "Growth/KingdomSubsidenceStepRuntime.RungFrame.cs";
 		private const string Effects = "Growth/KingdomSubsidenceStepRuntime.RungEffects.cs";
 		private const string Release = "Growth/KingdomSubsidenceStepRuntime.RungRelease.cs";
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 			string body = Method(Capture, "internal static bool TryPrepareRung(");
 			Ordered(body, "XRLGame game = The.Game;", "long token = system.MasterAppliedResumeToken;",
 				"ReferenceEquals(game.GetSystem<KingdomSystem>(), system)",
-				"new List<GameObject>(survey.Built)", "CaptureRungRoofs(system, owner.City, survey, plot, roofs, residents)",
+				"new List<GameObject>(survey.Built)", "CaptureRungRoofs(system, owner.City, survey, plot, KingdomCityRules.StableId(work.IDIfAssigned), roofs, residents)",
 				"work.ShortDisplayName", "Game = game", "Token = token", "TryFreezeRungPlan(");
 		}
 
@@ -46,9 +47,13 @@ namespace ThousandAndFirst.Tests
 				"currentRoofs.Count != work.Roofs.Count", "currentRoofs[i].ResidentId != work.Roofs[i].ResidentId",
 				"currentRoofs[i].BodyObjectId != work.Roofs[i].BodyObjectId", "row.Warned != roof.BeforeWarned",
 				"TryFreezeRungPlan(", "SaveRung(frame, next)");
-			Ordered(Method(Capture, "private static bool CaptureRungRoofs("),
-				"city.TryCaptureSubsidenceRoof(", "!ReferenceEquals(prior, body)",
-				"residents[body.IDIfAssigned] = body;", "roofs.Add(");
+			Ordered(Method(Homes, "private static bool CaptureRungRoofs("),
+				"city.TryReadExact(", "KingdomResidenceRules.TryDecode(row.Residence,",
+				"KingdomResidenceRules.SameHome(home, survey.Ground.ZoneID, plot)",
+				"binding.ZoneId != row.BoundZoneId", "city.TryCaptureSubsidenceRoof(",
+				"CaptureRoofBody(", "home.ZoneId", "survey.CitizenBodies", "known.Contains(id)");
+			Ordered(Method(Homes, "private static bool CaptureRoofBody("),
+				"!RawRungProperty(", "!ReferenceEquals(prior, body)", "residents[body.IDIfAssigned] = body;");
 		}
 
 		[Test]
@@ -214,7 +219,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomSubsidenceEffectAction.Apply", "city.TryPublishSubsidenceRoof(frame.Owner.Wire, row,",
 				"RungRoofExact(", "!row.SameCarriers(after)", "TryProveRungRoof(", "SaveRung(frame, next)");
 			Has(Method(Roof, "private static bool RungRoofExact("), "binding.ObjectId != roof.BodyObjectId",
-				"binding.ZoneId != frame.Plan.ZoneId", "row.HomeWorkId != work.WorkId",
+				"binding.ZoneId != row.ZoneId", "KingdomSubsidenceRungRules.HomeOwnerMatches(",
+				"roof.HomeZoneId != null && !present && row.ZoneId != frame.Plan.ZoneId",
+				"body.CurrentZone?.ZoneID != binding.ZoneId",
 				"body.IDIfAssigned != roof.BodyObjectId", "KingdomCitizenship.BelongsTo(frame.System, body)",
 				"ReferenceEquals(frame.Survey.FindBoundBody(");
 		}

@@ -34,8 +34,8 @@ namespace ThousandAndFirst.Tests
 		/// <summary>LIVING-CITY-ARCHITECTURE §0.0(c), the widths, by value.</summary>
 		[TestCase(96, KingdomCityMemoryRules.ZoneRowBytes)]
 		[TestCase(64, KingdomCityMemoryRules.WorkRowBytes)]
-		[TestCase(120, KingdomCityMemoryRules.ResidentRowStructBytes)]
-		[TestCase(184, KingdomCityMemoryRules.ResidentRowBytes)]
+		[TestCase(128, KingdomCityMemoryRules.ResidentRowStructBytes)]
+		[TestCase(4320, KingdomCityMemoryRules.ResidentRowBytes)]
 		[TestCase(16, KingdomCityMemoryRules.ClockRowBytes)]
 		[TestCase(32, KingdomCityMemoryRules.ToldRowBytes)]
 		[TestCase(256, KingdomCityMemoryRules.CityHeaderBytes)]
@@ -78,8 +78,8 @@ namespace ThousandAndFirst.Tests
 		/// eating the row's remaining headroom.
 		/// <para>
 		/// Creed history first moved the row to 104. Retiring parallel roster authority then added
-		/// exact origin and frozen arrival presentation evidence as two shared references: 115
-		/// declared bytes, budgeted at 120. Measuring keeps both widenings falsifiable.
+		/// exact origin and frozen arrival presentation references. Residence then adds one reference:
+		/// 123 declared bytes, budgeted at 128. Measuring keeps these widenings falsifiable.
 		/// </para>
 		/// </summary>
 		[Test]
@@ -90,7 +90,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(17, bytes);
 			int row;
 			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomResidentRow), out row));
-			ClassicAssert.AreEqual(115, row, "the resident row moved; if it grew past 120, §0.0(c) needs the same edit");
+			ClassicAssert.AreEqual(123, row, "the residence reference must fit the 128-byte row budget");
 		}
 
 		/// <summary>
@@ -182,7 +182,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.LessOrEqual(bytes, budget, row.Name + " declares " + bytes + " bytes against a budget of " + budget);
 		}
 
-		/// <summary>69,216 bytes, with every possible City-stage plot in all four zones priced as
+		/// <summary>317,376 bytes including bounded residence heaps, with every possible City-stage plot in all four zones priced as
 		/// a work row rather than the retired flat forty-work proxy.</summary>
 		[Test]
 		public void OneCityAtTodaysCapsIsTheTablesOwnFigure()
@@ -190,7 +190,7 @@ namespace ThousandAndFirst.Tests
 			long bytes;
 			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(
 				KingdomCityState.MaxZones, KingdomCityState.MaxWorks, KingdomCityState.MaxResidents, KingdomCityState.MaxClocks, out bytes));
-			ClassicAssert.AreEqual(69216L, bytes);
+			ClassicAssert.AreEqual(317376L, bytes);
 		}
 
 		[Test]
@@ -237,7 +237,7 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out bytes));
-			ClassicAssert.AreEqual(294134L, bytes, "the composed three-city realm total moved");
+			ClassicAssert.AreEqual(1038614L, bytes, "the composed three-city realm total moved");
 			ClassicAssert.Less(bytes, KingdomBudgetRules.ModelBytesCeiling,
 				"the full live realm broke its bounded model ceiling");
 			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, bytes),
@@ -248,7 +248,7 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The same formula at one whole parasang, caps scaled with it. §0.0(f)'s claim is that
 		/// nothing here changes when the city grows — only R does — and this is the figure that
-		/// claim is worth: about 542 KiB, over today's ceiling and still under three quarters MiB,
+		/// claim is worth: 2,230,454 bytes with maximum residence heaps, over today's ceiling,
 		/// which is why the ceiling is checked against the formula at the live caps rather than
 		/// against a frozen number.
 		/// </summary>
@@ -257,9 +257,9 @@ namespace ThousandAndFirst.Tests
 		{
 			long bytes;
 			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtFullParasang(out bytes));
-			ClassicAssert.AreEqual(555374L, bytes);
+			ClassicAssert.AreEqual(2230454L, bytes);
 			ClassicAssert.Greater(bytes, KingdomBudgetRules.ModelBytesCeiling, "a nine-zone realm is over TODAY's ceiling by design");
-			ClassicAssert.Less(bytes, 768L * KiB, "still under three quarters of a MiB");
+			ClassicAssert.Less(bytes, 3072L * KiB, "including maximum bounded residence heaps");
 		}
 
 		/// <summary>Cost is O(rows) and nothing else: doubling the residents moves the total by

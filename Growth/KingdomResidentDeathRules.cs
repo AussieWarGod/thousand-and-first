@@ -28,6 +28,7 @@ namespace ThousandAndFirst
 			if (r == null || !KingdomIdentityRules.IsRealmId(r.Realm) || !KingdomIdentityRules.IsSettlementId(r.Settlement)
 				|| !Text(r.SettlementName, 1024, false) || !Text(r.Body, 1024, false) || !Text(r.Zone, 1024, false)
 				|| r.Tick < 0 || r.MintedTick < 0 || r.MintedTick > r.Tick || r.Before.ArrivedTick > r.Tick
+				|| !string.IsNullOrEmpty(r.Before.Residence) && !KingdomResidenceRules.TryDecode(r.Before.Residence, out _)
 				|| !BeforeValid(r.Before) || !KingdomResidentRules.CauseFits(KingdomResidentStanding.Dead, r.Cause)
 				|| (int)r.Phase < 0 || r.Phase > KingdomResidentDeathPhase.Settled
 				|| (int)r.Telling < 0 || r.Telling > KingdomResidentDeathTelling.Disabled

@@ -118,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Frozen frozen = ReadFrozen();
 			KingdomSettlement migrated = Decode(frozen.Payload);
-			ClassicAssert.AreEqual(4, migrated.City.SchemaVersion);
+			ClassicAssert.AreEqual(KingdomCityRules.SchemaVersion, migrated.City.SchemaVersion);
 			ClassicAssert.AreEqual("ss1:legacy", migrated.City.SubsidenceModel);
 			ClassicAssert.AreEqual(9876L, migrated.LastSubsidenceTick);
 			KingdomRealmArchive archive = Archive(migrated);
@@ -146,7 +146,7 @@ namespace ThousandAndFirst.Tests
 			string before = Basis18(archive);
 			ClassicAssert.AreEqual(HistoricalAuthorityHash, before);
 			ClassicAssert.IsTrue(Codec.TryEncode(migrated, out byte[] current, out string failure), failure);
-			ClassicAssert.AreEqual(19, Codec.CurrentVersion);
+			ClassicAssert.AreEqual(20, Codec.CurrentVersion);
 			ClassicAssert.AreEqual(Codec.CurrentVersion, BitConverter.ToInt32(current, 4));
 			archive.Seat = Decode(current);
 			ClassicAssert.AreEqual(before, Basis18(archive),
@@ -186,7 +186,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(0)]
-		[TestCase(20)]
+		[TestCase(Codec.CurrentVersion + 1)]
 		[TestCase(int.MinValue)]
 		[TestCase(int.MaxValue)]
 		public void InvalidSchemaRefusesEvenEmptyTopology(int schema)
@@ -195,7 +195,7 @@ namespace ThousandAndFirst.Tests
 			// seceded work, so an empty topology still refuses. Only the outputs are asserted;
 			// no counting hasher or encoder is injected to observe the work that did not run.
 			ClassicAssert.AreEqual(1, Codec.LegacyVersion);
-			ClassicAssert.AreEqual(19, Codec.CurrentVersion);
+			ClassicAssert.AreEqual(20, Codec.CurrentVersion);
 			KingdomRealmArchive archive = Archive(null);
 			ClassicAssert.AreEqual(0, archive.SettlementTopology.Count);
 			ClassicAssert.IsFalse(archive.TryAuthorityHash(archive.ReturnReputation,
@@ -293,7 +293,7 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSettlement Decode(byte[] payload)
 		{
-			ClassicAssert.AreEqual(19, Codec.CurrentVersion);
+			ClassicAssert.AreEqual(20, Codec.CurrentVersion);
 			ClassicAssert.IsTrue(Codec.TryDecode(payload, out KingdomSettlement result,
 				out int future, out string failure), failure);
 			ClassicAssert.AreEqual(0, future); ClassicAssert.IsNotNull(result); return result;

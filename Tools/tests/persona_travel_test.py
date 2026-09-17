@@ -57,6 +57,42 @@ class TravelTests(unittest.TestCase):
                     journal[4] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
                     self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
 
+    def test_master_pause_single_turn_advance_tolerates_next_player_action_overshoot(self):
+        # Verbatim row shape from the beta-economic-present@8a558fc3 native run report
+        # (docs/DEVELOPMENT.md: "the engine completes on the next player action opportunity,
+        # so 1201 actual turns for 1200 requested is valid"). persona_travel._advance_within_
+        # tolerance caps this at [requested, requested+1] - tighter than scenario_advance_check
+        # .judge(), which enforces only elapsed >= requested with no upper bound.
+        for mode in ("present", "away"):
+            for elapsed, valid in ((1, True), (2, True), (3, False), (0, False)):
+                with self.subTest(mode=mode, elapsed=elapsed):
+                    journal = economic_rows(mode)
+                    journal[6] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of 1 requested")
+                    self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
+
+    def test_1200_turn_middle_advances_tolerate_next_player_action_overshoot(self):
+        # The uniform [requested, requested+1] tolerance in _advance_within_tolerance applies
+        # to every middle economic-prefix advance alike, not only the 1-turn master-pause wait
+        # covered above: the 1200-turn local-pause wait, the 1200-turn return wait, and (for a
+        # continuity-only, non-economic persona whose prefix is just (1200,)) its single
+        # 1200-turn middle wait. Locate every "1200 turn(s) elapsed of 1200 requested" advance
+        # after the warmup (the first one) and prove each tolerates the same band.
+        for fixture in (rows, economic_rows):
+            for mode in ("present", "away"):
+                journal = fixture(mode)
+                targets = [index for index, row in enumerate(journal)
+                          if row[0] == "advance-complete"
+                          and row[2] == "1200 turn(s) elapsed of 1200 requested"][1:]
+                self.assertTrue(targets, "fixture lacks a 1200-turn middle advance to mutate")
+                for target in targets:
+                    for elapsed, valid in ((1200, True), (1201, True), (1202, False), (1199, False)):
+                        with self.subTest(fixture=fixture.__name__, mode=mode, target=target, elapsed=elapsed):
+                            mutated = list(journal)
+                            mutated[target] = ("advance-complete", "OK",
+                                               f"{elapsed} turn(s) elapsed of 1200 requested")
+                            self.assertEqual(not valid, bool(
+                                travel.assess(mutated, mode, fixture is economic_rows)))
+
     def test_warmup_requires_a_real_day_before_observation(self):
         for fixture in (rows, economic_rows):
             for elapsed, requested, valid in ((1200, 1200, True), (1201, 1200, True),
@@ -195,6 +231,33 @@ class TravelTests(unittest.TestCase):
         for message in ("teleport=true; steps=41", "normal-walk=true; steps=241", "normal-walk=true; steps=40"):
             original = [(v, o, message if v == "travel-return-complete" else m) for v, o, m in rows()]
             self.assertTrue(travel.assess(original, "away"))
+
+    def with_movement(self, out_message, back_message, base=None):
+        return [(v, o, out_message if v == "travel-out-complete" else back_message
+                 if v == "travel-return-complete" else m) for v, o, m in (base or rows())]
+
+    def test_egress_and_ingress_rows_are_accepted_when_explicit_equal_and_bounded(self):
+        # Verbatim shape from the d72b85ee native away leg: the founder left the camp by ten rows.
+        self.assertEqual([], travel.assess(self.with_movement(
+            "normal-walk=true; steps=121; egress=10", "normal-walk=true; steps=121; ingress=10"), "away"))
+        self.assertEqual([], travel.assess(self.with_movement(
+            "normal-walk=true; steps=41; egress=0", "normal-walk=true; steps=41; ingress=0"), "away"))
+        # The pre-egress shape (no fields) remains valid: a founder outside the heart ground owes none.
+        self.assertEqual([], travel.assess(rows(), "away"))
+
+    def test_egress_and_ingress_rows_must_agree_and_stay_explicit(self):
+        cases = (("normal-walk=true; steps=121; egress=10", "normal-walk=true; steps=121; ingress=9"),
+                 ("normal-walk=true; steps=121; egress=10", "normal-walk=true; steps=121"),
+                 ("normal-walk=true; steps=121", "normal-walk=true; steps=121; ingress=10"),
+                 ("normal-walk=true; steps=121; ingress=10", "normal-walk=true; steps=121; egress=10"),
+                 ("normal-walk=true; steps=121; egress=-1", "normal-walk=true; steps=121; ingress=-1"),
+                 ("normal-walk=true; steps=121; egress=010", "normal-walk=true; steps=121; ingress=010"),
+                 ("normal-walk=true; steps=121; egress=25", "normal-walk=true; steps=121; ingress=25"),
+                 ("normal-walk=true; steps=121; egress=10; extra=1", "normal-walk=true; steps=121; ingress=10; extra=1"),
+                 ("normal-walk=true; steps=121; egress=10", "normal-walk=true; steps=120; ingress=10"))
+        for out_message, back_message in cases:
+            with self.subTest(out=out_message, back=back_message):
+                self.assertTrue(travel.assess(self.with_movement(out_message, back_message), "away"))
 
     def test_present_cannot_move(self):
         self.assertTrue(travel.assess(rows("present", **{"travel-turns": "1"}), "present"))

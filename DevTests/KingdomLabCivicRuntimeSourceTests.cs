@@ -92,8 +92,14 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("recovered.IDIfAssigned, ExpectedTargetObjectId", lodging);
 			StringAssert.Contains("TryPrepareLabRehouse", lodging);
 			StringAssert.Contains("target?.IDIfAssigned, ExpectedTargetObjectId", lodging);
-			ClassicAssert.AreEqual(1, Count(lodging,
-				"Resident.SetStringProperty(HomePlotIdProperty, ExpectedTargetPlot)"));
+			StringAssert.Contains("TryAssignResidence(System, Z, Resident, target)", lodging);
+			StringAssert.Contains("TryAssignResidence(System, Z, Resident, recovered)", lodging);
+			StringAssert.DoesNotContain("Resident.SetStringProperty(HomePlotIdProperty", lodging);
+			string authority = Source("Simulation/City/KingdomResidents.Residence.cs");
+			int publish = authority.IndexOf("book.TryPublish(changed, out _)", StringComparison.Ordinal);
+			int project = authority.IndexOf("Body.SetStringProperty(KingdomLodging.HomePlotIdProperty", StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(publish, 0);
+			ClassicAssert.Greater(project, publish);
 			StringAssert.DoesNotContain("SetStringProperty(HomePlotIdProperty, null", lodging);
 		}
 
@@ -185,7 +191,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int revalidate = projection.IndexOf("ExactDepartureCause(System", marker,
 				StringComparison.Ordinal);
-			int clear = projection.IndexOf("SetStringProperty(KingdomLodging.HomePlotIdProperty, null)",
+			int clear = projection.IndexOf("TryAssignResidence(System, Z, Resident, null)",
 				revalidate, StringComparison.Ordinal);
 			int readback = projection.IndexOf("!string.IsNullOrEmpty(Resident.GetStringProperty(",
 				clear, StringComparison.Ordinal);

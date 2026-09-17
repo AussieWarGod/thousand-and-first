@@ -473,6 +473,18 @@ def write_script(destination: str, verbs: list[str]) -> None:
     print("sealed scenario script: " + ", ".join(chosen))
 
 
+# Harness verbs whose provider drives the engine's Options.SetOption, with the exact keys they
+# materialise and the FINAL value each holds when the run stops, in the order the engine appends
+# them. The pause pair restores both keys to their Options.xml default (Growth is written first);
+# the water persona's setup disables growth and raids for the whole run and never restores them.
+NATIVE_OPTION_WRITERS = (
+    (("beta-local-pause", "beta-master-pause"),
+     (("r_TAF_OptionGrowth", "Yes"), ("r_TAF_OptionMaster", "Yes"))),
+    (("water-maintenance-setup",),
+     (("r_TAF_OptionGrowth", "No"), ("r_TAF_OptionRaids", "No"))),
+)
+
+
 def write_options(source: str, destination: str) -> None:
     advisor = None
     script = os.environ.get("TAF_SCENARIO_SCRIPT", "")
@@ -501,8 +513,18 @@ def write_options(source: str, destination: str) -> None:
     native_look_defaults = any(verb in tokens for verb in ("guest-save-supply", "heart-sight-inspect"))
     if native_look_defaults:
         options["OptionLookLocked"] = "No"
+    # Harness providers that drive the engine's Options.SetOption (see NATIVE_OPTION_WRITERS)
+    # materialise their keys and flush the whole bag in NameValueBag format. Author the exact
+    # final values here, in the engine's append order, so the post-run file is byte-identical and
+    # the stop seal holds. Any other value surviving to stop still refuses; nothing is excluded.
+    native_option_writers = [keys for verbs, keys in NATIVE_OPTION_WRITERS if any(verb in tokens for verb in verbs)]
+    if len(native_option_writers) > 1:
+        fail("the scenario script combines harness verbs that write the same options differently")
+    for key, value in (native_option_writers[0] if native_option_writers else ()):
+        options[key] = value
+    native_format = native_look_defaults or bool(native_option_writers)
     with open(destination, "w", encoding="utf-8") as handle:
-        if native_look_defaults:
+        if native_format:
             handle.write("{\n" + ",\n".join(json.dumps(key) + ":" + json.dumps(value)
                                           for key, value in options.items()) + "\n}")
         else:

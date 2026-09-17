@@ -1,5 +1,39 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Native absent-owner damage defect
+
+At e5bac3f6, production roof capture and condemnation callback omit the original absent owner;
+source settlement clears their home without recording the loss tick. Controlled repair/return
+and ordinary rehousing succeed. Failed archive is closed; STATUS and behavioral row33 preserve
+scope. Fix durable home ownership through capture, frozen-plan apply/recovery and loss timing;
+preserve sr1/sr2 obligations and residence publication guards. #230 remains open; no production
+fix or release follows from this diagnostic.
+
+## Absent-home cold chain passes
+
+Native a70658a9 saves with three founders home/one away, preserves exact authority before/after
+activation and capacity before remote lookup, returns the original body, and commissions another
+paid fire. Both processes stopped; archive closed. STATUS carries exact evidence. Next #230
+case is home loss/replacement/condemnation while absent and honest roof-loss chronology. Existing
+ordinary travel, unique beds and all-building #229/#251 acceptance remain open. No Alpha release.
+
+## Home-save cold chain passes
+
+Native5c82d435 preserves four founder homes/bindings before and after cold activation, repeat
+controlled travel/return and another paid fire. Host02cbfc92 fixes diagnostic field parsing;
+full recipe/byte equality and both owned stops are closed. See STATUS for archive and failed
+attempts. Save occurs after return; absent-save, ordinary travel, damaged homes and unique bed
+use remain #230. No new Alpha release or all-building acceptance follows.
+
+## Residence integration checkpoint
+
+Current development: 3121 staged sources / 3155 package files. City schema 5, archive 20 and
+residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
+cases and four engine modes pass. Native149daf47 retains the exact home/reservation through a
+controlled same-city visit and ordinary return pass. PR #255 stays draft; unique bed use,
+ordinary travel, damage recovery and cold load remain #230. Handles live in the common Git handoff;
+all-building architecture/function requirements remain #229/#251. See docs/STATUS.md.
+
 ## Coherent recruitment draft
 
 Current development: 3112 staged sources / 3146 package files. Six-faction coherent

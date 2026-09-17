@@ -26,7 +26,8 @@ namespace ThousandAndFirst.Harness
 		{
 			if (version != 1 && version != 2 || value == null || !CanonicalId(value.GameId) || !Text(value.ZoneId, 128, false, false)
 				|| !Wire(value.StepWire, version == 1 ? LegacyStepWirePrefix : StepWirePrefix, MaxStepWireChars)
-				|| !Wire(value.RungWire, RungWirePrefix, MaxRungWireChars)
+				|| !(Wire(value.RungWire, RungWirePrefix, MaxRungWireChars)
+					|| version == 2 && Wire(value.RungWire, HomeRungWirePrefix, MaxRungWireChars))
 				|| !Text(value.StepId, MaxIdChars, false, false) || !Digest(value.TellingDigest)
 				|| value.Now < 0 || value.AnchorTick < 0 || value.DueTick < 0 || value.Sequence < 1
 				|| value.LastSubsidenceTick < 0 || value.AnchorTick > value.DueTick

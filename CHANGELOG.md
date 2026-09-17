@@ -1,8 +1,8 @@
 # Changelog
 
-Current 3112-file census is line-cap green: 441,029 physical lines; direct `XRL`
-imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
-The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
+Current 3121-file census is line-cap green: 441,804 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `49f38a49aebb5eabf902e31b2456cbd2ef17ec01f275ccd72dc62ee96c603aa8`.
+The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
@@ -17,6 +17,38 @@ records current acceptance.
   host import and journal/fact checks. No higher-heart native save/load has completed; this does
   not establish native persistence acceptance.
 
+- A refused scaffold-removal proof now names the first failed identity predicate (recorded
+  cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
+  gatehouse projection, live output, same output) instead of the bare shared sentence, and every
+  refusal of that proof is logged once with job, phase, scaffold and successor identities. The
+  eleven names and their order are a pure rule pinned by tests; admission is unchanged (#212).
+
+- Roof-loss claims now include map-qualified home ownership, so absent owners can retain the
+  original damage tick. Exact residence guards protect publication; old frozen claims retain
+  local-body requirements. Source suites and all four engine compile modes pass; the native damage
+  replay passes on the same sealed Quickstart case with controlled damage/restoration. Paid repair,
+  frozen-application recovery and damaged-home cold load remain open.
+
+- Added native save/load coverage while a founder remains on another claimed map: exact home
+  authority and capacity survive before remote lookup, then the citizen returns and the city
+  pays for new construction. Ordinary walking, damaged homes and unique bed use remain open.
+
+- Added native home persistence coverage: all four founders retain canonical home facts and
+  body bindings before/after cold activation, a repeat district visit retains capacity, and
+  the loaded city pays for another building. Controlled transfers and saving after return
+  remain explicit limits; absent saves, actual bed use and ordinary travel remain open.
+
+- Integrated map-qualified home authority into check-in, assignment, absent household occupancy,
+  local room reads and laboratory rehouse/departure recovery. The strengthened native regression
+  passes after real Quickstart construction: absent capacity, exact home identity and return
+  reconciliation survive a controlled same-city visit. Unique physical sleeping places and
+  ordinary travel/save recovery remain open.
+
+- Added residence persistence groundwork: map-qualified homes, optional bed identities and
+  observed household facts survive model/archive/death-receipt round trips. Legacy unknown
+  facts and historical archive hashes remain distinct from new claims. Live lodging integration
+  and the reproduced multi-map housing defect remain open in #230; this is not native acceptance.
+
 - Behavioural coverage evidence: founding-first-city, subsidence-native-checks and the
   lifecycle-founding-road bounded refusal now carry typed native `ea7d20ab` receipts (rows 1,
   19 and 20 move to native pass). Water maintenance stays an unverified gap: the enroll step
@@ -25,6 +57,12 @@ records current acceptance.
   defect (row 14; fixture fix in progress, roaded-testground proof tracked in #256). Travel
   present/away and the master settlement plan resume stay unverified pending a harness fix for
   a runner seal-check drift and a genuine away-travel refusal (rows 16-17).
+
+- Row 20 (Construction lifecycle on the founded road) corrected from `NATIVE_PASS` to
+  `NEGATIVE_PASS`: the same lifecycle-founding-road-refusal receipt proves only the bounded
+  refusal at `lifecycle-open` ("no dedicated stockpile appeared within 500 ordinary engine
+  turns of waiting"), not this row's declared positive chain or effects. The positive
+  founded-road chain remains unproven; a follow-up issue tracks it.
 
 - Recruitment availability respects the civic-story setting, including ordinary extension
   profiles outside the first-guest allowlist. Native admission/load checks now compare actual

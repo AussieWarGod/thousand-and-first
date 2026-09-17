@@ -211,7 +211,7 @@ namespace ThousandAndFirst
 			Dictionary<string, List<GameObject>> households = new Dictionary<string, List<GameObject>>();
 			for (int i = 0; i < Residents.Count; i++)
 			{
-				string plotId = Residents[i].GetStringProperty(KingdomLodging.HomePlotIdProperty);
+				string plotId = KingdomLodging.LocalHomePlot(Residents[i].CurrentZone, Residents[i]);
 				if (string.IsNullOrEmpty(plotId))
 				{
 					continue;

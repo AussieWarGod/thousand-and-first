@@ -64,7 +64,9 @@ namespace ThousandAndFirst
 		/// <summary>First archive surface carrying exact final expedition/deed outbox receipts.</summary>
 		public const int ExpeditionResultVersion = 18;
 		public const int SubsidenceStorageVersion = 19;
-		public const int CurrentVersion = SubsidenceStorageVersion;
+		/// <summary>First archive surface carrying map-qualified resident home authority.</summary>
+		public const int ResidenceVersion = 20;
+		public const int CurrentVersion = ResidenceVersion;
 		public const int MaxPayloadBytes = 2 * 1024 * 1024;
 		public const int MaxStringBytes = 16 * 1024;
 		public const int MaxByteArrayBytes = 512 * 1024;

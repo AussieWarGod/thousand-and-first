@@ -213,15 +213,20 @@ class DocumentationFreshnessTests(unittest.TestCase):
         CHECKER.audit_research_alignment_contract(problems)
         self.assertEqual([], problems)
 
-    def test_archive_contract_tracks_current_v19_and_historical_v1_to_v18(self) -> None:
+    def test_archive_contract_tracks_current_v20_and_historical_v1_to_v19(self) -> None:
         problems = []
         CHECKER.audit_archive_contract(problems)
         self.assertEqual([], problems)
 
     def test_archive_contract_rejects_stale_alias_reader_or_subsidence_payload(self) -> None:
         mutations = (
+            ("Core/KingdomArchivedSettlementCodec.Schema.cs",
+             'string.Equals(Name, "ResidentResidences", StringComparison.Ordinal)) return false;',
+             'string.Equals(Name, "DiscardedResidence", StringComparison.Ordinal)) return false;'),
+            ("Core/KingdomArchivedSettlementCodec.ValueReader.cs",
+             "!city.TryMigrateResidenceStorage()", "false"),
             ("Core/KingdomArchivedSettlementCodec.cs",
-             "public const int CurrentVersion = SubsidenceStorageVersion;",
+             "public const int CurrentVersion = ResidenceVersion;",
              "public const int CurrentVersion = ExpeditionResultVersion;"),
             ("Core/KingdomArchivedSettlementCodec.cs",
              "public const int SubsidenceStorageVersion = 19;",

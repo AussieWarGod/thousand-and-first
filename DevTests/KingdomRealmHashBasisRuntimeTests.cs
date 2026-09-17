@@ -347,6 +347,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(19)]
+		[TestCase(Codec.CurrentVersion)]
 		[TestCase(0)]
 		public void VerifySettledResolvesTheSettleBasisIndependentlyOfTheIntentBasis(int stored)
 		{
@@ -354,12 +355,13 @@ namespace ThousandAndFirst.Tests
 			string afterHash = Digest(912);
 			KingdomRealmCallbackReceipt receipt = Settled(18, stored, archiveHash, afterHash);
 			Hasher authority = new Hasher(Only(18, archiveHash, 100));
-			Hasher graph = new Hasher(Only(Codec.CurrentVersion, afterHash, 300));
+			int expectedBasis = stored == 0 ? Codec.CurrentVersion : stored;
+			Hasher graph = new Hasher(Only(expectedBasis, afterHash, 300));
 			ClassicAssert.IsTrue(Runtime.TryVerifySettled(receipt, new Owners().Proof, graph.Compute,
 				authority.Compute, out string failure), failure);
 			CollectionAssert.AreEqual(new[] { 18, 18 }, authority.Order(),
 				"the archive half stays on the intent basis");
-			ClassicAssert.AreEqual(Codec.CurrentVersion, graph.Order()[graph.Order().Length - 1]);
+			ClassicAssert.AreEqual(expectedBasis, graph.Order()[graph.Order().Length - 1]);
 			ClassicAssert.AreEqual(stored, receipt.SettledSettlementSchema, "the verifier writes nothing");
 			ClassicAssert.AreEqual(18, receipt.IntentSettlementSchema);
 			ClassicAssert.AreEqual(afterHash, receipt.AfterGraph);
