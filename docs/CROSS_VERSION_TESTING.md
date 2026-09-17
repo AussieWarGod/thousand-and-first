@@ -66,7 +66,10 @@ Root creates the state using real old-version gameplay in ordinary Kingdom mode,
 serializer roundtrip or current constructor. Keep the first world's complete save/store/death
 history while selecting inheritance in a later world. For the detached case, use actual realm
 return/exile that leaves a populated `PolityTransition.Legacy` in Detached phase. `LegacyText`
-and this nested legacy are separate authorities and need separate evidence.
+and this nested legacy are separate authorities and need separate evidence. The v2 protocol does
+not script this case: see the detached-transition disposition in
+[CROSS_VERSION_UNATTENDED.md](CROSS_VERSION_UNATTENDED.md) for what a lawful Detached fixture would
+have to reach and why it is a separate fixture rather than a Reserved variant.
 
 Once the desired genuine state exists, invoke `kingdom:upgrade-arm`, then save normally to Primary.
 The wish only arms observation of the next real SaveGame; it does not create/advance/repair state
