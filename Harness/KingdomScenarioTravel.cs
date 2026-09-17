@@ -80,8 +80,10 @@ namespace ThousandAndFirst.Harness
 		internal static string Return()
 		{
 			Observe();
-			Require(State == Phase.Waiting && Game.Turns - WaitTurn == KingdomScenarioTravelRules.WaitTurns,
-				"return requires exactly 1200 completed advance turns");
+			long elapsedWait = Game.Turns - WaitTurn;
+			Require(State == Phase.Waiting
+				&& KingdomScenarioTravelRules.ReturnReady(elapsedWait, KingdomScenarioTravelRules.WaitTurns),
+				"return requires 1200 or 1201 completed advance turns; observed " + elapsedWait);
 			ReturnTurn = Game.Turns;
 			if (Away)
 			{

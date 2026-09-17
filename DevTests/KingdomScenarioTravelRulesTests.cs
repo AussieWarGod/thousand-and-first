@@ -356,6 +356,20 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\"beta-local-pause\", \"advance 1200\"",
 				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));
 		}
+
+		// The engine completes an advance on the next player action opportunity, so a
+		// 1200-turn wait can be observed as 1201 elapsed turns (docs/DEVELOPMENT.md); return
+		// must accept that single-turn overshoot and refuse anything else.
+		[TestCase(1199L, false)]
+		[TestCase(1200L, true)]
+		[TestCase(1201L, true)]
+		[TestCase(1202L, false)]
+		public void ReturnReadyAcceptsExactWaitOrOneTurnOvershoot(long elapsed, bool ready)
+			=> ClassicAssert.AreEqual(ready, KingdomScenarioTravelRules.ReturnReady(elapsed, KingdomScenarioTravelRules.WaitTurns));
+
+		[Test]
+		public void ReturnReadyRefusesANegativeRequirement()
+			=> ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(0L, -1L));
 	}
 }
 #endif
