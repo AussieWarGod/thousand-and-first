@@ -383,14 +383,14 @@
     {
       "id": 12,
       "behaviour": "Multiple cities",
-      "prerequisites": "founded seat + second claim",
-      "transitions": "second-city founding",
-      "effects": "ClaimedZones.Count>1",
+      "prerequisites": "founded seat + a non-adjacent second site",
+      "transitions": "second-city founding (KingdomFounding.FoundSecond -> TryFoundSecondWithoutWater) and the seat exchange on zone activation",
+      "effects": "SettlementCount 1->2, seat moves to the new city, the first city enters the non-seat topology keeping its own claims",
       "save_cold_load": "COVERAGE_GAP",
-      "negative": "COVERAGE_GAP",
-      "driver": "NONE found among the 30 [KingdomScenarioVerbProvider] classes on dev",
-      "status": "NONE",
-      "note": "COVERAGE GAP, not a proven defect: every native fixture surveyed founds exactly one city; no failed second-founding transition or production proof of unreachability was found",
+      "negative": "second founding on ground the realm now holds must refuse GroundIsAlreadyOurs and change no settlement or claim",
+      "driver": "Harness/KingdomSecondCityNativeProvider.cs (verbs second-city-setup, second-city-check) with Harness/KingdomSecondCityNativeChecks.cs, Harness/KingdomSecondCityNativeCases.cs, Harness/KingdomSecondCityScript.cs, Harness/KingdomSecondCitySiteRules.cs and Tools/personas/second-city-native-check.persona",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Written and compiled, never natively executed. City one is founded by the built-in realize verb; city two by KingdomFounding.FoundSecond with Force false, so the adjacency law stands and the bordering parasang is observed as GroundIsTooClose rather than bypassed. DISCLOSED SYNTHETIC SETUP: the founder is relocated by zero-energy SystemMoveTo plus SetActiveZone instead of walking the world map, and FoundSecond is the waterless route, so the basin rite's dram cost and its three popup prompts are not exercised; a sealed script cannot answer a popup. City two has no population, buildings, stockpile or economy and no turn is spent. STILL UNCOVERED: save, cold load and next action on either city (this row's save/cold-load sub-scope remains a gap), the third city and the RealmIsFull cap, and ordinary pedestrian travel between the two cities. Row 32 and issue 211 cover one city spanning several claimed maps, which is a different case.",
       "evidence": null
     },
     {

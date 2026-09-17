@@ -1,0 +1,36 @@
+# Behavioural coverage row 12 "Multiple cities": found a second, independent city of the same
+# realm on a NON-adjacent surface parasang, refuse a further founding on ground now held, and
+# prove the seat comes back when the founder returns to the first city.
+#
+# City one is founded by the built-in realize verb -- the production first-city transaction,
+# never a harness copy. City two is founded through KingdomFounding.FoundSecond
+# (Core/KingdomFounding.03.SiteJudgmentAndStyle.cs:69), the same transaction the founder's
+# basin rite commits through, with Force FALSE so the adjacency law stands.
+#
+# SYNTHETIC SETUP, DISCLOSED:
+#  - the founder is relocated with zero-energy SystemMoveTo plus SetActiveZone, not walked
+#    across the world map; travel time, encounters and the away economy are NOT exercised.
+#  - FoundSecond is the waterless route: the rite's 8-dram debit and its three Popup prompts
+#    (name, vocation, refusal) are NOT exercised. A sealed script cannot answer a popup, and
+#    Harness/KingdomScenarioVerbProvider.cs forbids a provider from showing one.
+#  - the second site is ordinary worldgen; only the START zone is born-clean. The site is
+#    accepted only if it builds, answers to no foreign faction, offers an empty landing cell
+#    and reads Allowed from KingdomFounding.JudgeSite. Every rejected candidate is journalled.
+#  - city two has no population, buildings, stockpile or economy, and no turn is spent: every
+#    case re-proves Game.Turns and Game.TimeTicks are unchanged.
+#
+# NOT COVERED, DISCLOSED: save -> cold load -> next action on either city (row 12's
+# save_cold_load sub-scope stays a gap), the third city and the RealmIsFull cap, and ordinary
+# pedestrian travel between the two cities.
+#
+# The return leg asserts production's own seat exchange: KingdomSystem.HandleEvent
+# (ZoneActivatedEvent) calls TrySeat before the claim guard (Core/KingdomSystem.z20.Events.cs),
+# so activating the first city's ground must bring its seat back with nothing seated here.
+DESCRIPTION=a realm founds a second city on a non-adjacent parasang, refuses a further founding on its own ground, and recovers the first city's seat on return
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;realize;second-city-setup;second-city-check;second-city-check;second-city-check;second-city-check;stagedigest
+VERBS=second-city-setup,second-city-check
+EXPECT=stagedigest:OK~founded=false,realize:OK,second-city-site:OK~adjacent=false,second-city-setup:OK~cases=4 passed=0 failed=0,second-city-check:OK~case=travel-out,second-city-topology:OK~settlements=2,second-city-check:OK~case=found-second,second-city-check:OK~case=refused-already-ours,second-city-check:OK~cases=4 passed=4 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=founding,growth,native-regression
+TIMEOUT=900

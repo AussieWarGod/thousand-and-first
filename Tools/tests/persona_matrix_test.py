@@ -833,7 +833,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(107, len(self.personas()))
+        self.assertEqual(108, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1071,6 +1071,8 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
+                (("second-city-site",), "second-city-setup"),
+                (("second-city-topology",), "second-city-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),

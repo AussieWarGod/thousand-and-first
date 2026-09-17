@@ -158,6 +158,11 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-renovation-cleared",
 )
 
+# Evidence rows the second-city family writes beside its automatic verb rows: the resolved
+# site (home, bordering parasang and its GroundIsTooClose verdict, chosen non-adjacent site)
+# and the published two-city topology. Not callable verbs.
+SECOND_CITY_EVIDENCE_ROWS = ("second-city-site", "second-city-topology")
+
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
 # exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
@@ -555,6 +560,7 @@ def parse_expect(
             and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
+            and verb not in SECOND_CITY_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
