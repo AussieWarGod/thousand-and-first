@@ -89,8 +89,10 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("KingdomFounding.FoundSecond"));
 			Assert.That(source, Does.Contain("Force: false"));
 			Assert.That(source, Does.Not.Contain("Force: true"));
-			Assert.That(source, Does.Not.Contain("System.TrySeat"));
-			Assert.That(source, Does.Not.Contain("ClaimZone"));
+			// The cases name TrySeat in prose only: none of them may CALL it, or the seat
+			// exchange the return leg claims to observe would be the harness's own doing.
+			Assert.That(source, Does.Not.Contain("TrySeat("));
+			Assert.That(source, Does.Not.Contain("ClaimZone("));
 		}
 
 		[Test]
