@@ -1,0 +1,15 @@
+# Ordinary (non-heart) building tier upgrade: a real settlement raises its own paid tent
+# into a staked tent-row through the real settlement pass. Behaviour-coverage row 8.
+# Synthetic: the camp founding, the dedicated water, four enrolled residents and their born
+# provenance, the minted brush and timber units, and the pre-marked once-per-game modal first
+# notice. The tent itself is NOT synthetic: it is commissioned and built by production.
+# The negative leg withholds fixture-minted brush units to make the material shortage exact.
+DESCRIPTION=ordinary tent to tent-row tier upgrade paid and handed over by the settlement pass
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;tier-upgrade-setup;advance 1200;tier-upgrade-check;tier-upgrade-short;advance 1200;tier-upgrade-check;advance 1200;tier-upgrade-check;stagedigest
+VERBS=tier-upgrade-setup,tier-upgrade-check,tier-upgrade-short
+EXPECT=stagedigest:OK~founded=false,tier-upgrade-setup:OK~native-tier-upgrade phase=1,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=2,tier-upgrade-short:OK~native-tier-upgrade phase=3,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_FORBID=["architecture: improvement refused before debit:","The improvement receipt remains outstanding.","ordinary plot-envelope growth cannot claim founding-heart authority"]
+SET=tier-upgrade,native-regression,test-only
+TIMEOUT=3600
