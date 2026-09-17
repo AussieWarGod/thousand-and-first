@@ -305,9 +305,21 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
       "driver": "Tools/personas/camp-heart-chain.persona and Harness/KingdomCampHeartChainProvider.cs request 31200 ordinary turns through paid 1->2->3->4 with disclosed synthetic city support. No full-chain native PASS. Row 30 retains narrower accepted paid 1->2 and cold-load coverage.",
-      "status": "COVERAGE_GAP",
-      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Full-chain attempts remain incomplete or refused; latest bbd430f4 attempt was stopped after sealed input-option drift (docs/STATUS.md). Native paid progression through every rung, higher-rung save/cold load and present/away settlement remain unverified. Row 30 tracks the narrower accepted 1->2 driver without claiming the full chain.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. Row 30 carries the narrower accepted native PASS for rung 1->2, next-day settlement and cold-loaded construction; that evidence is unchanged and retained there. Native c82e01c0 (test/034-heart-rung-3-persona, PR #170, issue #159) now proves rung 2->3 cleanly: camp-heart-rung3-native-check is SCRIPT-COMPLETE with all three `heart rung raised` lines (1, 2, 3) in Player.log, an exact envelope/material/water match and a clean receipt-chain predecessor retirement (see evidence below). This closes the 2->3 leg for this driver. Rung 3->4, save/cold load at rung >=3, ordinary/Quickstart founding and other seeds remain unverified -- the earlier full-chain claim (camp-heart-chain.persona / KingdomCampHeartChainProvider.cs, 31200 ordinary turns through paid 1->2->3->4 with disclosed synthetic city support) still has no full-chain native PASS.",
+      "evidence": [
+        {
+          "commit": "c82e01c033f9c37f79e61390cd2f15d38d7a31c4",
+          "artifactPath": "camp-heart-rung3/c82e01c0/camp-heart-rung3-native-check-1/result.json",
+          "artifactSha256": "8c0fef146f00e6c4bea1b6c63ad7b0263c90b74c1e134c6bb1ea513d97e6164d",
+          "artifactBytes": 3672,
+          "verdict": "PASS - real heart rung 1->2->3 native climb; envelope match, exact material and water debits, receipt-chain retirement of the predecessor waterstone, Town standing held at both boundaries, and the new hearth-tier-guarantee check passing as designed",
+          "scope": "First GREEN native run of camp-heart-rung3-native-check persona on test/034-heart-rung-3-persona at c82e01c0 (snap-native-c82e01c0); SCRIPT-COMPLETE, 149 journal rows, all 9 script verbs plus stagedigest bookends ran without a refusal; three `heart rung raised` lines (1 heartbasin, 2 heartwaterstone, 3 heartmoot) all present in Player.log; rung3-job phase=Complete/EffectsSettled; predecessor waterstone id=1626 retired with chained-successor receipt to successor id=1712; heart-envelope-check rung=3 predicted/live rect and lanes match; DIED/MODERROR both 0, no LOG_FORBID match; seal check clean (3471 files, closed both ways, seed #51606640 matched). Proves the 2->3 leg only: no save/cold load, no rung 3->4, no ordinary/Quickstart founding, no other seed.",
+          "historicalScope": true,
+          "currentDevCoverage": false,
+          "inventoryDigest": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4"
+        }
+      ]
     },
     {
       "id": 10,

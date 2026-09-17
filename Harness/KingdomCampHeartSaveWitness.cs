@@ -39,7 +39,9 @@ namespace ThousandAndFirst.Harness
 		{
 			Require(Game != null && ReferenceEquals(Game, The.Game) && Zone != null
 				&& ReferenceEquals(Zone, The.ZoneManager?.ActiveZone), "camp is not the active game and zone");
-			var frame = new Frame(Game, Zone) { System = Game.GetSystem<KingdomSystem>() };
+			// The save witness observes the rung-2 camp (the HeartRung(Zone) == 2 Require below);
+			// the frame's target rung is that same rung, never a higher climb.
+			var frame = new Frame(Game, Zone, TargetRung: 2) { System = Game.GetSystem<KingdomSystem>() };
 			Require(frame.System != null && frame.System.Founded && frame.System.ClaimedZones.Contains(Zone.ZoneID),
 				"camp has no founded settlement claiming this zone");
 			frame.Heart = frame.StandingHeart();

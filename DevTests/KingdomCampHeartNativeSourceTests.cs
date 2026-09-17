@@ -71,7 +71,8 @@ namespace ThousandAndFirst.Tests
 				"internal const string CheckVerb = \"camp-heart-check\";"));
 			Assert.That(provider, Does.Contain("KingdomCampHeartScript.Matches(script)"));
 			Assert.That(provider, Does.Contain(
-				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, out complete)"));
+				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, targetRung,"));
+			Assert.That(provider, Does.Contain("int targetRung = SealedTargetRung();"));
 		}
 
 		[TestCase(0)]
@@ -123,8 +124,8 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in new[] {
 				"KingdomNativeCampFounding.Found(Game, Zone, RequirePair)",
 				"KingdomScenarioCompletedHeart.Complete(Game, System, Zone)",
-				"KingdomPlots.HeartRung(Zone) == 1", "EnrollResidents()",
-				"KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,",
+				"KingdomPlots.HeartRung(Zone) == 1", "EnrollResidents(Residents)",
+				"KingdomNativeCampFounding.Dedicate(Game, Zone, System, Drams,",
 				"MintStoreContents()",
 				"Game.SetIntGameState(KingdomUpgrade.NoticedState, 1)" })
 				Assert.That(checks, Does.Contain(token), token);
@@ -134,7 +135,7 @@ namespace ThousandAndFirst.Tests
 				"Store.Inventory.Objects.Count == 0",
 				"Mint(KingdomMaterial.Stone, MintedStoneUnits, MintedStone)",
 				"Mint(KingdomMaterial.Timber, MintedTimberUnits, MintedTimber)",
-				"Mint(KingdomMaterial.Brush, MintedBrushUnits, MintedBrush)" })
+				"Mint(KingdomMaterial.Brush, Unasked, MintedBrush)" })
 				Assert.That(fixture, Does.Contain(token), token);
 		}
 

@@ -19,13 +19,18 @@ namespace ThousandAndFirst.Harness
 
 			// Read the real job and scaffold at each boundary, including a failed completion.
 			// A duration estimate is not evidence that work advanced or that handover succeeded.
-			private void RecordJobProgress()
+			private void RecordJobProgress() { RecordJobProgress(JobId, Heart); }
+
+			/// <summary>The same read keyed on an explicit job and the root whose improvement
+			/// part carries it: the rung-3 leg reads the moot yard's own job and the waterstone,
+			/// never the retained rung-2 pair.</summary>
+			private void RecordJobProgress(string Id, GameObject Root)
 			{
 				try
 				{
 					Evidence.Append("\njob-progress tick=").Append(Game.TimeTicks)
-						.Append("; turns=").Append(Game.Turns).Append("; job=").Append(JobId);
-					if (!KingdomConstruction.TryFind(JobId, out var job) || job == null)
+						.Append("; turns=").Append(Game.Turns).Append("; job=").Append(Id);
+					if (!KingdomConstruction.TryFind(Id, out var job) || job == null)
 					{ Evidence.Append("; row=absent"); return; }
 					Evidence.Append("; phase=").Append(job.Phase).Append("; physical=")
 						.Append(job.PhysicalPhase).Append("; started=").Append(job.StartedTick)
@@ -34,7 +39,7 @@ namespace ThousandAndFirst.Harness
 					Evidence.Append("; input-receipt-present=").Append(!string.IsNullOrEmpty(job.InputReceipt));
 					if (KingdomConstructionRules.TryGetInputReceipt(job, out var input))
 						Evidence.Append("; input-phase=").Append(input.TxPhase);
-					var improvement = Heart?.GetPart<XRL.World.Parts.r_KingdomImprovement>();
+					var improvement = Root?.GetPart<XRL.World.Parts.r_KingdomImprovement>();
 					var scaffold = improvement?.Scaffold?.GetPart<XRL.World.Parts.r_KingdomScaffold>();
 					Evidence.Append("; improvement-working=").Append(improvement?.Working)
 						.Append("; improvement-due=").Append(improvement?.WorkCompleteTick)
