@@ -80,6 +80,19 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TravelReturnAcceptsTheDocumentedOneTurnOvershootAndNamesBothNumbers()
+		{
+			string source = Read("Harness/KingdomScenarioTravel.cs");
+			StringAssert.Contains(
+				"KingdomScenarioTravelRules.ReturnReady(elapsedWait, KingdomScenarioTravelRules.WaitTurns)",
+				source);
+			StringAssert.Contains(
+				"\"return requires 1200 or 1201 completed advance turns; observed \" + elapsedWait",
+				source);
+			StringAssert.DoesNotContain("Game.Turns - WaitTurn == KingdomScenarioTravelRules.WaitTurns", source);
+		}
+
+		[Test]
 		public void ContainerStressCatchUsesTheHelperWithItsOwnPrefix()
 		{
 			string source = Read("Harness/KingdomScenarioContainerStress.cs");
