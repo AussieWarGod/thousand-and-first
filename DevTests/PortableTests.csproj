@@ -42,6 +42,8 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomTierUpgradeScript.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />

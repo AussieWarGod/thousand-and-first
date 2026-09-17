@@ -290,10 +290,10 @@
       "transitions": "KingdomArchitectureStamper/KingdomUpgrade renovate-expand transitions",
       "effects": "phase, output identity",
       "save_cold_load": "COVERAGE_GAP",
-      "negative": "COVERAGE_GAP",
-      "driver": "NONE among the 30 [KingdomScenarioVerbProvider] classes on dev; KingdomUpgradeSourceProvider.cs/KingdomUpgradeStageProvider.cs are the SAVE-SCHEMA migration/downgrade lane (Donor/Reserved/Stage verbs, water-scarcity profile_schema), not gameplay building-tier replacement -- verified by reading their verb names and doc scope",
-      "status": "NONE",
-      "note": "COVERAGE GAP: no driver exercises ordinary (non-heart) building tier replacement; the two Upgrade*Provider classes are a different, unrelated system (save-schema migration)",
+      "negative": "named refusal leg in the same run: with the canvas short, KingdomUpgrade.Assess returns UpgradeVerdict.NotEnoughMaterial (rung 13 of the ordered ladder, Growth/KingdomUpgradeRules.Assessment.cs:111-114) with the production ReasonLine sentence and a zero debit; supplying canvas:2 returns it to Ready",
+      "driver": "Harness/KingdomTierUpgradeProvider.cs (verbs tier-upgrade-setup/-check/-short); Tools/personas/tier-upgrade-native-check.persona",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Drives the REAL settlement pass: the seam calls no Begin/BeginPrepared/TryApplyUpgrade/TryFundNew (pinned in DevTests/KingdomTierUpgradeNativeSourceTests.cs). tent -> tentrow, the only shipped ordinary chain; the tent is commissioned and built by production, only the camp, water, residents, minted units and the modal first-notice suppression are synthetic. Source-pinned only; no native run performed this pass, so this cannot be marked covered or PASS. save_cold_load remains a gap: no cold-load leg is authored.",
       "evidence": null
     },
     {
