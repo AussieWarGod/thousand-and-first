@@ -48,10 +48,17 @@ namespace ThousandAndFirst.Harness
 				using (scope)
 					KingdomLodging.OnSettlementPass(System, Zone, KingdomSurvey.ActiveFor(Zone));
 				Require(!KingdomSurvey.HasBoundPass, "housing setup left its survey bound");
-				for (int i = 0; i < KingdomZoningRules.PointsForLevel(TechLevel.Foundry); i++)
+				// SYNTHETIC CRAFT, DISCLOSED. The four-rung chain needs foundry for the great
+				// court; the arcology's own gate is MinTech="arclight"
+				// (RuntimeData/KingdomBuildings.xml:1407), and research nodes are worth zero craft
+				// points (Growth/KingdomZoningRules.cs:234), so the level is reached by disk
+				// lessons and read BACK rather than written.
+				TechLevel craft = ChainFinalRung == 5 ? TechLevel.Arclight : TechLevel.Foundry;
+				for (int i = 0; i < KingdomZoningRules.PointsForLevel(craft); i++)
 					Require(KingdomZoning.Learn(System, "disk", "paid-heart-chain-fixture-" + i),
 						"synthetic craft lesson already present or refused");
-				Require(KingdomZoning.Tech(System) == TechLevel.Foundry, "synthetic lessons did not reach foundry craft");
+				Require(KingdomZoning.Tech(System) == craft,
+					"synthetic lessons did not reach the fixture craft level: " + KingdomZoning.Tech(System));
 				foreach (var root in Census().Built)
 					if (root.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1)
 						root.RequirePart<r_KingdomImprovement>().Held = true;
