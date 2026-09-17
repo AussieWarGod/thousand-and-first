@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using XRL.World;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {

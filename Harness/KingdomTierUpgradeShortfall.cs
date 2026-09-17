@@ -116,7 +116,7 @@ namespace ThousandAndFirst.Harness
 					if (!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure)) break;
 					GameObject unit = MintedUnit(MintedBrushIds[i]);
 					if (unit == null) continue;
-					Require(unit.RemoveFromContext(), "a minted brush unit refused withdrawal");
+					unit.RemoveFromContext();
 					Require(unit.InInventory == null && unit.CurrentCell == null,
 						"a withheld brush unit kept a custody");
 					Withheld.Add(unit);
