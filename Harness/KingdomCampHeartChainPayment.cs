@@ -12,6 +12,8 @@ namespace ThousandAndFirst.Harness
 			private void SupplyChain(int Target)
 			{
 				Require(Target == 3 || Target == 4, "unknown heart chain target");
+				if (Target == 3 && KingdomScenarioScript.TryRead(out var script, out _)
+					&& KingdomCampHeartChainScript.Matches(script, true)) PreflightChainNextWork(true);
 				ChainTarget = Target; ChainFrom = Target == 3 ? "heartwaterstone" : "heartmoot";
 				ChainTo = Target == 3 ? "heartmoot" : "heartcourt";
 				ChainWater = Target == 3 ? 28 : 50;
@@ -77,8 +79,16 @@ namespace ThousandAndFirst.Harness
 
 			private void CheckChainComplete()
 			{
+				Require(!KingdomSurvey.HasBoundPass, "chain completion found an outstanding survey");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope, out string failure), failure);
+				using (scope) CheckChainCompleteInPass(KingdomSurvey.ActiveFor(Zone));
+				Require(!KingdomSurvey.HasBoundPass, "chain completion left its survey bound");
+			}
+
+			private void CheckChainCompleteInPass(KingdomSurvey Survey)
+			{
 				RequireChainTrack();
-				RequireChainSupport();
+				RequireChainSupportInPass(Survey);
 				Require(KingdomCampHeartChainHandoverOccupancy.Proved,
 					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,

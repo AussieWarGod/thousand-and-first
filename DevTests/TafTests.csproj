@@ -44,6 +44,11 @@
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainFacts.cs" />
+    <Compile Include="KingdomCampHeartChainFactsTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainSnapshotCodec.cs" />
+    <Compile Include="KingdomCampHeartChainSnapshotTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />

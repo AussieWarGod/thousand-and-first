@@ -1,0 +1,150 @@
+# Higher-heart cold-load acceptance
+
+## Native22 closed; distinguish a hint from reserved ground
+
+Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then
+refused the early survey quote because the ordinary planner still selected future heart ground.
+`TryQuotePlan` treats the stake as a scoring preference, not an exact plot binding. The early
+harness assertion incorrectly promoted that preference into authority. No higher payment or
+save/load occurred. Full profile/source recipe, strict log, and exact owned stop passed; scenario
+failed. Archive `beta-heart-chain/a51ac81d/planned-next-fire-future-ground-refused-1/result.json`,
+SHA-256 `d4a7c2c9c9298531ef41f24a41282f5a170531217d875b9f0c50c084cd6b699e`.
+
+The corrected early check proves the spared rectangle, its lane, typed production payload and
+physical ingress directly, and separately checks the ordinary quoted bill without spending.
+It does not promise the planner will select that site before expansion. Actual ordinary quotes
+at completed-heart save and cold-load payment still must avoid the final heart, and the next
+paid job must finish while all original physical witnesses remain intact. Host oracle8/persona65
+passed; fresh engine/native acceptance remains pending. No runtime production code changed.
+
+
+## Current retry
+
+Native21 at `d46f77e3` is CLOSED FAIL before higher payment: the next fire quote occupied future
+court ground, and the dense fixture had filled every spare housing plot. Its full sealed archive
+is recorded in STATUS.md. No save or load occurred.
+
+The retry retains seventeen full authored tent rows (51 physical beds), all fifty test residents,
+and every water producer, while leaving one separate small plot for the next job. Early evidence
+uses ground, crowding, typed payload and physical ingress preflight there, plus the ordinary quoted price; source save and loaded payment independently
+require an ordinary commission quote outside the final heart. Housing assignment, costs, custody,
+all prior receipts, completed construction and full cold-load facts remain required. This does
+not establish ordinary one-tile balance. Main136/portable120 and host8/persona65 checks passed;
+engine and native validation remain separate.
+
+
+Work for #159, #160, #212–#216 and draft PR #207. This remains part of the
+Beta objective; it does not replace same-city multi-map acceptance in #211 or the
+land-use direction in [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md).
+
+## Current scope
+
+The existing camp snapshot and observer pin rung two, its fire, its paid tent job,
+21 brush units and one extra timber for a later job. That evidence cannot establish
+the identity, physical support or persistence of a later heart.
+
+`KingdomCampHeartChainSnapshot` and its codec define a separate bounded witness for
+completed rungs three and four. A separate `camp-heart-chain-save` persona now runs the
+whole paid chain and saves after rung-four next-day recovery. Its observer captures the
+real completed heart, physical support, original anchors and paid receipts. Continue
+dispatch and the loaded next-job continuation are implemented and engine-compiled but await
+native execution; do not launch an acceptance run until both source and consumer are
+validated and sealed together. No new native save
+has been executed. Codec tests validate the evidence format, not persistence.
+Rung five and interrupted paid handovers still require their own coverage; refusing
+them in this test record is not a gameplay restriction or completion of those tasks.
+
+The record binds game, realm, city and local map; the heart, original basin, original
+store and retained unpaid track by exact identity and coordinates; the displaced
+resident and paid heart job; population, physical water/food and the game clock.
+Separate digests bind job receipts, the resident census, support works and original
+store custody. No population limit is imposed by the codec.
+
+The save route retains four canonical fact files (`camp-heart-chain-*-facts.txt`) beside
+the external snapshot. Facts have length-prefixed fields, explicit nulls, sorted unique
+row identities, strict UTF-8 and bounded aggregate size. They include complete encoded
+per-city paid jobs, exact resident rows and physical bodies, city work rows, verified
+authored roots and their layouts, the disclosed legacy producers, all four authenticated
+stakes, water mixtures and larder/stockpile contents. Anonymous food stacks retain their
+observed inventory position and raw count; observation never assigns them an identity.
+
+Before the first higher construction wait, the save variant requests an ordinary fire
+quote outside the future court footprint, checking its two-drams/one-timber bill and no
+change to paid jobs, original store custody or civic water. It quotes again before saving,
+then explicitly adds one next-job timber to the original store. The whole snapshot must
+match again after actual Primary serialization before the save receipt is published.
+Completion reads share one local survey and prove disposal; no speedup is claimed yet.
+
+## Required native integration
+
+1. Implemented, unexecuted: an exact save variant of the paid chain. Its save verb follows successful
+   ordinary completion, recovery and custody checks. Retain the existing unsaved
+   chain and rung-two save regression. Validate the persona before game preparation.
+2. Implemented, unexecuted: capture the actual completed heart and its physical objects, without repairing,
+   relocating, enrolling or minting anything during observation. Define canonical,
+   bounded digests for per-city paid receipts, resident rows and bodies, and physical
+   support works. Include the original survey stakes. Retain the underlying rows in
+   evidence so a digest mismatch can be diagnosed.
+3. Implemented, unexecuted: preflight the next ordinary paid job before the long save run. Any synthetic
+   material supplied for that job must be disclosed and included in the saved custody
+   census. Do not replay the 50-resident setup or backdate any completion after loading.
+4. Source route implemented, unexecuted: write the witness to durable game state and external snapshot, save the actual
+   primary, and retain exact save/metadata/cache hashes. Verify clock and custody
+   across serialization. The host must stop the owned source game before importing
+   the sealed primary into a fresh, separately sealed profile.
+5. Implemented, unexecuted: dispatch this prefix explicitly through the existing Continue barrier and raw-reader
+   witness. Unknown/malformed higher-heart records must refuse, with no fallback to a
+   new game, rung-two observer or alternate save. Reconstruct and compare the entire
+   witness before `AfterGameLoaded` callbacks. Never populate missing data from it.
+6. Implemented, unexecuted: after normal activation, verify all physical layouts, founding recovery, exact paid
+   receipts, resident identity/citizenship, support and original stock. Re-arm input
+   isolation for this dedicated loaded game; its current owner flag is nonserialized.
+   Preserve ordinary input in other games and restore popup ownership on every exit.
+7. Implemented, unexecuted: perform the next paid action through its ordinary quote, commission and settlement
+   turns. Prove one debit, exact completion, preserved prior jobs and original custody,
+   support over subsequent days, and no replay of the source script or setup.
+8. Host format/import/journal/fact checks implemented and tested. Integrate the existing
+   native driver and archive for the optional save persona, retaining preactivation,
+   activation, next-action and completion witnesses, strict logs, full source/profile
+   bindings and exact owned shutdown. Tests reject absent, duplicate, refused and
+   wrong-identity evidence. A parser pass or a
+   `SCRIPT-COMPLETE` row alone is insufficient.
+
+The host importer binds all four source fact files to the saved digests, copies their exact
+bytes into the fresh Local profile, seals them and reproves source custody. The load observer
+retains separate preactivation, activated and completed facts. Before any new action, all facts
+must match exactly. After ordinary work, resident movement and resource use are allowed while
+original resident identities, anchors, stakes, prior jobs and 21 original brush units remain
+required; the saved timber must pay the new fire job. The oracle keeps actual wait overshoot.
+Run `Tools/dev-check.sh tools 'camp_heart_chain_*test.py'` and the existing
+`scenario_load_profile_test.py` selection for these host contracts.
+
+The installed Hearthpyre update to 2.2.4 initially stopped the canonical gate at its exact
+2.2.3 reference check (#217). An authentic upstream 2.2.3 checkout now matches all pinned hashes,
+and the four-mode gate passed using the existing reference override. See
+[DEVELOPMENT.md](DEVELOPMENT.md) for the shared command. Installed 2.2.4 integration is not
+accepted by this reference proof. The existing native driver/archive now support the optional
+save persona, actual guarded waits and complete pinned source-profile recipes; real source
+and load execution remains outstanding.
+
+## Remaining scenarios
+
+- Save/load at completed higher rungs, followed by another ordinary action.
+- Save/load during a paid Outstanding handover after transient obstruction, preserving
+  the same job, physical identities, custody and no second debit.
+- Resident movement after payment; protected founder/foreign bodies; no safe destination;
+  successful later recovery and preservation of any moved post.
+- Rung-five arcology progression and persistence (#160/#144).
+- Multi-claimed-map travel, unload/reconciliation, construction, support disruptions and
+  real cold-load continuation on both maps (#211).
+
+Keep [STATUS.md](STATUS.md) authoritative for actual executed evidence. Isolated preparation
+must not change the checkout or profile of an already running native scenario.
+
+## Native23 refusal and next diagnostic
+
+The spare-site proof passed at `ded5e3fe`. The first higher upgrade then refused protected
+ground at `42,13`, before payment or save. STATUS.md records the closed failed archive.
+Failure context now records the exact cell objects without changing them. The original
+paid-chain release validation runs separately on #207; this extended persistence coverage
+remains #219. No source or loaded court has yet been accepted.

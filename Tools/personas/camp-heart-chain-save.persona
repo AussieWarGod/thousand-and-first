@@ -1,0 +1,20 @@
+# Physical input isolated for this exact dedicated game, through owned shutdown.
+# Synthetic city support: 50 enrolled bodies, 18 authored tent rows via setup-only calendar completion,
+# 3600 additional drams, 1728 food, foundry knowledge, one supplemental granary stockpile.
+# Founder walks west before the source tent commission; its reserved lane must clear the final heart.
+# The source paid tent completes during an ordinary day, then its improvement is held.
+# All non-heart improvements held before the exact next heart material bill is supplied per leg.
+# At paid handover, place a real resident on annexed wall ground; protect founder/stranger,
+# force no destination, then require safe clearance and a distinct stranger-obstruction retry.
+# Paid heart improvements use ordinary turns only. Source save is not cold-load acceptance.
+# Save adds one disclosed next-job timber; retains exact jobs/residents/support/custody facts.
+DESCRIPTION=paid heart through court and real save for separately verified cold-load continuation
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;stagedigest;camp-heart-chain-setup;advance 1200;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 7200;camp-heart-chain-check;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 6600;advance 6600;camp-heart-chain-check;advance 1200;camp-heart-chain-check;camp-heart-chain-save
+VERBS=camp-heart-setup,camp-heart-check,camp-heart-chain-setup,camp-heart-chain-check,camp-heart-chain-supply,camp-heart-chain-save
+EXPECT=camp-heart-chain-input:OK~original-update-skipped=true,stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,camp-heart-chain-founder:OK~outside-rung4=true,camp-heart-chain-setup:OK~paid-heart-chain setup,advance:OK,camp-heart-chain-spatial:OK,camp-heart-chain-next-preflight:OK~spare-site-preflight=true,camp-heart-chain-occupancy:OK~synthetic-placement=true; retained-walkable=true; scoped-assessment=true,camp-heart-chain-road-wear:OK~worn-trodden-path-admitted=true,camp-heart-chain-supply:OK~target=3,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=3,advance:OK,camp-heart-chain-handover-refusals:OK~post-payment-resident=true,camp-heart-chain-handover-cleared:OK~post-payment-resident=true,camp-heart-chain-retry-obstruction:OK~strict-baseline=true,camp-heart-chain-retry-outstanding:OK~phase=Outstanding,camp-heart-chain-retry-removal:OK~committed-removal-reproved=true,camp-heart-chain-check:OK~paid-heart-chain completed; rung=3,camp-heart-chain-renovation:OK~retained-new-wall=true; resident-preflight=true; scoped-assessment=true,camp-heart-chain-survey-stakes:OK~four-exact-stakes=true; founding-recovery-restored=true,camp-heart-chain-supply:OK~target=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=4,advance:OK,advance:OK,camp-heart-chain-renovation-refusals:OK~post-payment-resident=true,camp-heart-chain-renovation-cleared:OK~post-payment-resident=true,camp-heart-chain-check:OK~paid-heart-chain completed; rung=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain complete;,camp-heart-chain-save:OK~paid-heart-chain-save=true; rung=4,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
+SET=camp,native-regression,test-only
+TIMEOUT=3600

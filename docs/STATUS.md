@@ -924,6 +924,67 @@ codec evidence, not loaded-game acceptance. Fresh native court validation remain
 Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
 PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
 candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+## Native23 closed; source release validation separated from cold load
+
+Native23 at `ded5e3fe` passed the spare-site payload, ingress and ordinary-price checks,
+then refused the first higher upgrade: `NoGroundToGrow`, protected successor ground at
+`42,13`. The recorded reason does not identify the occupant. No higher payment or save/load
+occurred. Full pinned profile recipe, strict log and exact owned shutdown passed; scenario
+failed. Archive `beta-heart-chain/ded5e3fe/supplied-successor-ground-refused-1/result.json`,
+SHA-256 `658537f7480fc88c64dbca7c44aa2b0bc76df73ac0230e8095d59bfb071c656d`.
+
+The harness now appends the exact refused cell's object identities, blueprints, ground
+classifications, resident/citizenship facts and plot/component markers when a coordinate is
+available. This is observation only; it does not move occupants or relax production checks.
+PR #207's gameplay branch is being validated separately with its original eighteen-home
+paid-chain persona. PR #219's extended cold-load fixture remains a separate Beta coverage
+step. Neither the fixture changes nor this failed run establish ordinary population balance.
+
+## Native22 closed; distinguish a hint from reserved ground
+
+Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then
+refused the early survey quote because the ordinary planner still selected future heart ground.
+`TryQuotePlan` treats the stake as a scoring preference, not an exact plot binding. The early
+harness assertion incorrectly promoted that preference into authority. No higher payment or
+save/load occurred. Full profile/source recipe, strict log, and exact owned stop passed; scenario
+failed. Archive `beta-heart-chain/a51ac81d/planned-next-fire-future-ground-refused-1/result.json`,
+SHA-256 `d4a7c2c9c9298531ef41f24a41282f5a170531217d875b9f0c50c084cd6b699e`.
+
+The corrected early check proves the spared rectangle, its lane, typed production payload and
+physical ingress directly, and separately checks the ordinary quoted bill without spending.
+It does not promise the planner will select that site before expansion. Actual ordinary quotes
+at completed-heart save and cold-load payment still must avoid the final heart, and the next
+paid job must finish while all original physical witnesses remain intact. Host oracle8/persona65
+passed; fresh engine/native acceptance remains pending. No runtime production code changed.
+
+
+## Alpha priority and next-work fixture repair — 2026-09-14
+
+User direction: defer Hearthpyre compatibility until Beta; prioritize gameplay progress and
+further Alpha releases. Capability work is parked, unmerged and unpublished at `4ce10bfe` on
+`codex/hearthpyre-capabilities`, tracked by #218. The next Alpha work remains heart progression,
+construction recovery, and real cold-load continuation; city balance and multi-map requirements
+remain in CITY-GROWTH-BALANCE.md and issues #208–#211.
+
+Native21 at `d46f77e3` stopped before the higher-heart payment because the next fire quote
+intersected the future court. Its dense fixture had assigned all eighteen available housing
+plots and reserved no space for the next job. Archive
+`beta-heart-chain/d46f77e3/next-fire-future-ground-refused-1/result.json`, SHA-256
+`e494924927d3579f0b671274d9ce76cb2aa524aabfd1e124dbc344e0ab22217e`:
+scenario FAIL; full pinned profile recipe (3435 entries/3397 C#), strict log and owned stop PASS.
+No source save or cold load occurred. The profile remains closed and must not be reused.
+
+The fixture now leaves `(16,8)..(21,11)` for the next job and places seventeen unchanged
+three-bed tent rows; actual physical roof assignments for all fifty residents remain mandatory.
+Supply containers also keep the spare plot and its approach clear. Early preflight now proves the spare plot through ordinary ground, crowding, typed payload and
+physical ingress checks, plus the ordinary quoted price, with no stake or debit; after the court completes,
+the actual save and cold-loaded payment still use ordinary commission siting and must both
+remain outside the completed heart. The oracle requires both early and final proofs. This is a
+synthetic stress fixture correction, not single-map balance acceptance or a construction bypass.
+Focused checks: 136 main / 120 portable CampHeart cases, zero skips; 8 journal/fact-oracle and
+65 persona cases passed. All four engine modes passed (3096/3100 ordinary, 3393/3397 developer);
+log `/tmp/taf-heart-chain-next-site-gate-1.log`. Fresh native source/load acceptance remains pending.
+
 
 ## Accepted city-growth direction — planned
 
@@ -976,7 +1037,7 @@ now includes the court's six renovated floors, whose actual added placements are
 counted by the CampHeart regression. The prior focused and compile passes do not override
 this full-suite failure. All 270 focused main material-rule cases passed with zero skips after
 the correction. This fixture is also main-only; the attempted portable selector returned no
-matches (exit 2). Replacement CI remains pending; production and Harness inputs are unchanged
+matches (exit 2). Replacement CI `34808115103` passed at `1729bae6`; production and Harness inputs are unchanged
 from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
@@ -988,6 +1049,54 @@ The cold-install inventory has 3132 files.
 3106 staged C# files / 440,880 physical lines; zero strict line-cap failures.
 Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
+
+## Retained higher-heart persistence preparation (PR #219 branch)
+
+Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
+The `camp-heart-chain-save` variant now follows completed rung-four next-day recovery with
+physical capture and actual Primary serialization. It preflights a separate spare fire plot and the ordinary quoted price
+before the higher construction waits and ordinary commission siting at save, discloses one next-job timber at save, retains exact
+jobs/residents/support/custody fact files, and compares the whole snapshot after serialization.
+Facts bind original anchors, all four survey stakes, water mixtures, larders and material
+stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
+Completion checks now share one local survey and verify disposal; speedup is unmeasured.
+Continue dispatch, full preactivation/activation comparison, dedicated input rearming and an
+ordinary paid fire followed by 3600 requested turns are now implemented and engine-compiled,
+but its first fresh native source attempt stopped at the early fixture preflight described above. The host importer validates, copies and seals all four retained fact files. The new
+source/load oracle checks exact identity, payment, guarded wait accounting and retained physical
+facts. No higher-heart native save/load has completed. Each new attempt requires source and consumer
+under the same sealed inputs.
+[HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md) records the remaining integration and scenarios.
+Current consumer checks: 136 main and 120 portable CampHeart cases passed with zero skips;
+six host-format tests, 30 save-import tests and seven journal/fact-oracle tests passed. Shared
+native/host fixtures preserve Unicode, nulls and binary field boundaries. An adversarial test
+caught resume preceding wait intent; the oracle now refuses that order. The existing shared
+load suite passed 78 cases, its save/load source contracts passed 33 after accounting for both
+popup owners, and all 65 persona tests passed. Harness registration covers 306 shards
+(63 engine-free, 243 engine-bound); registration is not compilation.
+The canonical engine gate stopped before compilation because the installed Hearthpyre manifest
+is now 2.2.4 while the exact integration reference requires 2.2.3. This is tracked in
+[#217](https://github.com/AussieWarGod/thousand-and-first/issues/217). Retained failed log:
+`/tmp/taf-heart-chain-consumer-gate-1.log`. The exact upstream 2.2.3 reference was then recovered from the author's GitLab commit
+`25470b94930b46d8dc406c430253e4bf9e4ea4b9`; all recorded file hashes match. With the existing
+`TAF_HEARTHPYRE_223_ROOT` override, the canonical gate passed all four modes: 3096/3100 ordinary
+and 3393/3397 developer sources. Log `/tmp/taf-heart-chain-consumer-gate-2.log`, stage
+`/tmp/taf-stage.71scqQ`, developer stage `/tmp/taf-devharness.tT1ajn`. These current results
+cover consumer code at `e3c77a36`; they do not add integration support for installed 2.2.4.
+[DEVELOPMENT.md](DEVELOPMENT.md) records the reusable authentic reference for both agents.
+The existing native driver/archive now accept the optional save persona, require actual guarded
+wait accounting and retain load facts with pinned profile inputs. Native21 failed before serialization.
+
+
+Earlier source-save-only checks at `52c7428d`: 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.
+Canonical facts passed nine portable cases, including Unicode, framing, duplicate identities
+and aggregate bounds. Initial malformed-Unicode attribute data was replaced by .NET metadata;
+the corrected tests construct the invalid strings at runtime. All four final engine compiles
+passed (3096/3100 ordinary, 3390/3394 developer), including the explicit no-debit and
+material-stockpile observations. All 118 portable CampHeart cases passed with zero skips.
+Those four-mode results precede the new consumer and cannot establish its engine compilation.
+These are implementation checks, not persistence acceptance. Original 31-case snapshot-format
+evidence remains separate from actual game behavior.
 
 ## In-progress paid heart chain
 
