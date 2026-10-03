@@ -130,7 +130,9 @@ handover boundary, test protected occupants and failed displacement, and require
 clearance and retry witnesses in the persona. Do not count an unrelated natural retry as a
 controlled fault test or remove real residents merely to make a long fixture complete.
 Validate changed personas with `python3 Tools/personas/persona_matrix.py fields PATH` before
-native preparation. New observation rows need explicit host grammar and positional expectations;
+native preparation. It also refuses a script over the runner's 48-verb sealed-script bound,
+counted as the runner counts lines, so `advance N` is one verb.
+New observation rows need explicit host grammar and positional expectations;
 test missing, duplicate and refused evidence. Repeated diagnostics may be non-positional only
 when their failures still stop acceptance and required behavioral witnesses remain mandatory.
 Scope repeated physical reads across the complete operation and verify disposal; component-by-component

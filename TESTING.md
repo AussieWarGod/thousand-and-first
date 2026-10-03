@@ -1324,7 +1324,9 @@ Running it (unattended - no keyboard beyond starting the game):
    argument — `advance <turns>` and `yield-frames <frames>` — written as two shell words that
    `Tools/scenario_profile.py` folds into one sealed line, refusing a count outside `1..10000`
    and `1..240` respectively:
-   `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`.
+   `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`. The runner reads at most 48 verbs,
+   one per sealed line (`Harness/KingdomScenarioScriptRules.cs`), so `advance 1200` counts once;
+   `Tools/scenario_profile.py` counts the same way and refuses a longer script before the seal.
    `TAF_REQUEST="arch-gallery-slice;facing=south"` chooses the request — the scenario key and its
    declared parameters, **without a seed**. The seed stays this script's to freeze, because it is
    the one field the launcher owns and the new-game gate independently proves; a `TAF_REQUEST`
@@ -1694,7 +1696,7 @@ ignored**.
 | Key | Required | Meaning |
 |---|---|---|
 | `REQUEST` | yes | The request to freeze, **without** its seed — `arch-gallery-slice;facing=south`. `TAF_REQUEST` carries it into `Tools/prepare-scenario.sh`, which appends the seed it froze. A persona naming its own seed is refused. |
-| `SCRIPT` | yes | Verbs, semicolon-separated — `flatten;realize;status`, or `advance 300` as one step. `@<file>` reads a sibling file, one verb per line. |
+| `SCRIPT` | yes | Verbs, semicolon-separated — `flatten;realize;status`, or `advance 300` as one step. `@<file>` reads a sibling file, one verb per line. At most 48 steps: each step is one sealed line and one runner verb, and a longer script is refused here rather than by the runner before its first verb. |
 | `EXPECT` | yes | Ordered per-verb expectations, ending in exactly one terminal. |
 | `START` | no | `TAF_SCENARIO_START` — the dev start parasang, `<wx>.<wy>[@x,y]`. |
 | `CHECK` | no | One extra assertion. Today: `status-digest-stable`. |

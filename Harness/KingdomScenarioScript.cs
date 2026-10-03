@@ -27,19 +27,12 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string FileName = "scenario-script.txt";
 
-		/// <summary>Comment marker, so a sealed script can explain itself to the next reader.</summary>
-		internal const char Comment = '#';
-
 		/// <summary>
-		/// Bounds. A script is a short list of harness verbs, not a program: refusing an oversized
-		/// or over-long file outright is cheaper than discovering mid-run that a profile was sealed
-		/// around something nobody meant to run.
+		/// The file bound. An oversized file is refused before it is read; what its lines mean, and
+		/// how many verbs and characters a line may carry, is <c>KingdomScenarioScriptRules</c>'s
+		/// alone, so the offline tools mirror one parser rather than two.
 		/// </summary>
-		internal const int MaxVerbs = 32;
-
 		internal const int MaxFileBytes = 65536;
-
-		internal const int MaxVerbChars = KingdomScenarioRules.MaxTextChars;
 
 		/// <summary>
 		/// The script's full path, or null when the engine exposes no shared path.
@@ -83,8 +76,8 @@ namespace ThousandAndFirst.Harness
 
 		/// <summary>
 		/// Reads the sealed script. Fail-closed: a file that is present but oversized, unreadable,
-		/// empty of verbs, or carrying an over-long line refuses by name rather than running a
-		/// partial script.
+		/// empty of verbs, past the verb bound, or carrying an over-long line refuses by name rather
+		/// than running a partial script. The line rules are <c>KingdomScenarioScriptRules</c>'s.
 		/// </summary>
 		internal static bool TryRead(out IList<string> Verbs, out string Failure)
 		{
@@ -109,38 +102,7 @@ namespace ThousandAndFirst.Harness
 				return Refuse("the script file could not be read: "
 					+ KingdomScenarioRules.Bounded(exception.Message), out Failure);
 			}
-			return TryParse(lines, out Verbs, out Failure);
-		}
-
-		/// <summary>
-		/// Pure line-to-verb parsing. Blank lines and comments are dropped; everything else is a
-		/// verb, passed through verbatim so the script and the wish always mean the same thing.
-		/// This never decides whether a verb EXISTS - the shared entry owns the closed verb set, and
-		/// duplicating it here would give a script two places to disagree with the wish.
-		/// </summary>
-		internal static bool TryParse(IList<string> Lines, out IList<string> Verbs,
-			out string Failure)
-		{
-			Verbs = null;
-			Failure = null;
-			List<string> found = new List<string>();
-			for (int i = 0; Lines != null && i < Lines.Count; i++)
-			{
-				string line = (Lines[i] ?? "").Trim();
-				if (line.Length == 0 || line[0] == Comment) continue;
-				if (line.Length > MaxVerbChars)
-					return Refuse("script line " + (i + 1) + " is " + line.Length
-						+ " characters, over the " + MaxVerbChars + "-character bound",
-						out Failure);
-				if (found.Count == MaxVerbs)
-					return Refuse("the script declares more than " + MaxVerbs + " verbs",
-						out Failure);
-				found.Add(line);
-			}
-			if (found.Count == 0)
-				return Refuse("the script file declares no verbs", out Failure);
-			Verbs = found;
-			return true;
+			return KingdomScenarioScriptRules.TryParse(lines, out Verbs, out Failure);
 		}
 
 		private static bool Refuse(string Message, out string Failure)

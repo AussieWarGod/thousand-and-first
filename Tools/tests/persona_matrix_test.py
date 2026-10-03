@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -433,6 +434,117 @@ class ScriptGrammarTest(unittest.TestCase):
         )
         self.assertIn("frame", profile.SCRIPT_VERBS)
         self.assertIn("frame", profile.RESERVED_VERBS)
+
+
+class ScriptVerbBoundTest(unittest.TestCase):
+    """The runner's sealed-script verb bound, mirrored so `load` and `fields` refuse a persona the
+    runner would refuse before its first verb (native run 4ce2a6a1: 35 verbs against the old 32)."""
+
+    RUNTIME = ROOT / "Harness" / "KingdomScenarioScriptRules.cs"
+    RUNG5 = ROOT / "Tools" / "personas" / "camp-heart-rung5-native-check.persona"
+
+    @staticmethod
+    def script(verbs: int) -> str:
+        # The last step is a counted verb: two shell words, one sealed line, ONE runtime verb.
+        return ";".join(["status"] * (verbs - 1) + ["advance 1200"])
+
+    @staticmethod
+    def manifest(verbs: int) -> str:
+        return (
+            "REQUEST=founding-first-city\nSCRIPT=%s\nEXPECT=status:OK,COMPLETE\n"
+            % ScriptVerbBoundTest.script(verbs)
+        )
+
+    def test_the_bound_is_one_value_in_the_runtime_and_both_tools(self):
+        declared = re.findall(
+            r"^\s*internal const int MaxVerbs = (\d+);\r?$",
+            self.RUNTIME.read_text(encoding="utf-8"),
+            re.M,
+        )
+        self.assertEqual(["48"], declared)
+        self.assertEqual(48, matrix.MAX_SCRIPT_VERBS)
+        self.assertEqual(matrix.MAX_SCRIPT_VERBS, profile.MAX_SCRIPT_VERBS)
+
+    def test_exactly_the_bound_is_accepted_and_advance_counts_once(self):
+        lines = matrix.script_lines(self.script(48), "x")
+        self.assertEqual(48, len(lines))
+        self.assertEqual("advance 1200", lines[-1])
+        self.assertEqual(49, len(matrix.script_words(self.script(48), "x")))
+        found = matrix.parse_manifest(self.manifest(48), "x")
+        self.assertEqual(49, len(found["SCRIPT_WORDS"].split()))
+
+    def test_one_verb_past_the_bound_is_refused_by_every_entry(self):
+        for call in (
+            lambda: matrix.script_words(self.script(49), "x"),
+            lambda: matrix.script_lines(self.script(49), "x"),
+            lambda: matrix.parse_manifest(self.manifest(49), "x"),
+        ):
+            with self.subTest(call=call), self.assertRaises(SystemExit) as caught:
+                call()
+            self.assertIn("declares 49 verbs, over the 48-verb bound", str(caught.exception))
+
+    def test_fields_refuses_a_persona_past_the_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            persona = pathlib.Path(directory) / "long.persona"
+            for verbs, code in ((48, 0), (49, 1)):
+                persona.write_text(self.manifest(verbs), encoding="utf-8")
+                result = subprocess.run(
+                    [sys.executable, str(SPEC.origin), "fields", str(persona)],
+                    capture_output=True,
+                    check=False,
+                )
+                with self.subTest(verbs=verbs):
+                    self.assertEqual(code, result.returncode, result.stderr)
+            self.assertIn(b"declares 49 verbs, over the 48-verb bound", result.stderr)
+            self.assertEqual(b"", result.stdout)
+
+    def test_the_rung_five_persona_seals_thirty_five_verbs(self):
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        extra = tuple(found["VERBS"].split(","))
+        lines = matrix.script_lines(found["SCRIPT"], self.RUNG5.name, extra)
+        self.assertEqual(35, len(lines))
+        sealed = profile.SCRIPT_HEADER + "\n".join(lines) + "\n"
+        self.assertEqual(lines, matrix.runtime_verbs(sealed))
+        self.assertEqual(lines, profile.runtime_verbs(sealed))
+        self.assertLessEqual(len(lines), matrix.MAX_SCRIPT_VERBS)
+
+    def test_the_count_reads_lines_exactly_as_the_runner_does(self):
+        for count in (matrix.runtime_verbs, profile.runtime_verbs):
+            with self.subTest(tool=count.__module__):
+                self.assertEqual(
+                    ["status", "advance 1200"],
+                    count("# header\n\n   \n  status  \r\nadvance 1200\r\t# indented\n"),
+                )
+                # .NET white space trims (NBSP, line separator, vertical tab, form feed) without
+                # splitting the line; U+001C stays a verb although str.isspace calls it white space.
+                self.assertEqual(["status"], count("\u00a0status\u2028\n"))
+                self.assertEqual(["status"], count("\x0bstatus\x0c"))
+                self.assertEqual(["\x1c"], count("\x1c\n"))
+                self.assertEqual(["a # b"], count(" a # b \n"))
+                self.assertEqual([], count(""))
+
+    def test_both_tools_agree_on_white_space_for_every_basic_plane_character(self):
+        for code in range(0x10000):
+            char = chr(code)
+            self.assertEqual(
+                profile.dotnet_white_space(char), matrix.dotnet_white_space(char), hex(code)
+            )
+
+    def test_every_shipped_persona_seals_the_lines_the_profile_tool_writes(self):
+        top = sorted((ROOT / "Tools" / "personas").glob("*.persona"))
+        cross = sorted((ROOT / "Tools" / "personas" / "cross-version").glob("*.persona"))
+        # The count itself is ShippedPersonaTest's one pin; this proves both trees are walked.
+        self.assertIn(self.RUNG5, top)
+        self.assertTrue(cross)
+        for path in top + cross:
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+            if found.get("RELOAD"):
+                continue  # a reload seals the one fixed Quickstart save command
+            extra = tuple(verb for verb in found["VERBS"].split(",") if verb)
+            lines = matrix.script_lines(found["SCRIPT"], path.name, extra)
+            with self.subTest(persona=path.name):
+                self.assertEqual(profile.parse_script(found["SCRIPT_WORDS"].split(), extra), lines)
+                self.assertLessEqual(len(lines), matrix.MAX_SCRIPT_VERBS)
 
 
 class ExtraVerbTest(unittest.TestCase):
