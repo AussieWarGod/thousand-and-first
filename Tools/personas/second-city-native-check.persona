@@ -3,21 +3,30 @@
 # prove the seat comes back when the founder returns to the first city.
 #
 # City one is founded by the built-in realize verb -- the production first-city transaction,
-# never a harness copy. City two is founded through KingdomFounding.FoundSecond
-# (Core/KingdomFounding.03.SiteJudgmentAndStyle.cs:69), the same transaction the founder's
-# basin rite commits through, with Force FALSE so the adjacency law stands.
+# never a harness copy -- and then lives one ordinary turn (advance 1). That turn is required:
+# production's ZoneActivatedEvent handler seats a returning founder only after
+# KingdomMaster.ObserveAutomaticWake, which consumes the wake on the tick the master latch
+# changes (Core/KingdomMaster.cs). Without it, realize, the latch's first observation and both
+# controlled transfers share one tick and the return leg would read a consumed wake. The setup
+# verb re-proves the latch with KingdomMaster.AutomaticWorkAllowed; no case after it spends a
+# turn. City two is founded through KingdomFoundingTransaction.TryFoundSecondWithoutWater -- the
+# exact call KingdomFounding.FoundSecond (Core/KingdomFounding.03.SiteJudgmentAndStyle.cs)
+# makes, taken directly so a refusal keeps its sentence -- with Force FALSE so the adjacency
+# law stands.
 #
 # SYNTHETIC SETUP, DISCLOSED:
 #  - the founder is relocated with zero-energy SystemMoveTo plus SetActiveZone, not walked
 #    across the world map; travel time, encounters and the away economy are NOT exercised.
-#  - FoundSecond is the waterless route: the rite's 8-dram debit and its three Popup prompts
-#    (name, vocation, refusal) are NOT exercised. A sealed script cannot answer a popup, and
+#  - the waterless route: the rite's 8-dram debit and its three Popup prompts (name, vocation,
+#    refusal) are NOT exercised. A sealed script cannot answer a popup, and
 #    Harness/KingdomScenarioVerbProvider.cs forbids a provider from showing one.
-#  - the second site is ordinary worldgen; only the START zone is born-clean. The site is
-#    accepted only if it builds, answers to no foreign faction, offers an empty landing cell
-#    and reads Allowed from KingdomFounding.JudgeSite. Every rejected candidate is journalled.
-#  - city two has no population, buildings, stockpile or economy, and no turn is spent: every
-#    case re-proves Game.Turns and Game.TimeTicks are unchanged.
+#  - the second site is ordinary worldgen; only the START zone is born-clean. A parasang is
+#    accepted only if it builds, answers to no foreign faction and reads Allowed from
+#    KingdomFounding.JudgeSite, and only on an empty rite cell whose rung-1 heart rect is the
+#    unslid rect city one's rite has, holds no liquid, and sits in an ingress envelope every
+#    cell of which passes KingdomRoads.Walkable. Every rejected candidate is journalled.
+#  - city two has no population, buildings, stockpile or economy, and no case spends a turn:
+#    every case re-proves Game.Turns and Game.TimeTicks are unchanged since setup.
 #
 # NOT COVERED, DISCLOSED: save -> cold load -> next action on either city (row 12's
 # save_cold_load sub-scope stays a gap), the third city and the RealmIsFull cap, and ordinary
@@ -29,8 +38,8 @@
 DESCRIPTION=a realm founds a second city on a non-adjacent parasang, refuses a further founding on its own ground, and recovers the first city's seat on return
 REQUEST=founding-first-city
 START=8.22@40,12
-SCRIPT=stagedigest;realize;second-city-setup;second-city-check;second-city-check;second-city-check;second-city-check;stagedigest
+SCRIPT=stagedigest;realize;advance 1;second-city-setup;second-city-check;second-city-check;second-city-check;second-city-check;stagedigest
 VERBS=second-city-setup,second-city-check
-EXPECT=stagedigest:OK~founded=false,realize:OK,second-city-site:OK~adjacent=false,second-city-setup:OK~cases=4 passed=0 failed=0,second-city-check:OK~case=travel-out,second-city-topology:OK~settlements=2,second-city-check:OK~case=found-second,second-city-check:OK~case=refused-already-ours,second-city-check:OK~cases=4 passed=4 failed=0,stagedigest:OK~founded=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,realize:OK,advance:OK,second-city-site:OK~adjacent=false,second-city-setup:OK~cases=4 passed=0 failed=0,second-city-check:OK~case=travel-out,second-city-topology:OK~settlements=2,second-city-check:OK~case=found-second,second-city-check:OK~case=refused-already-ours,second-city-check:OK~cases=4 passed=4 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=founding,growth,native-regression
 TIMEOUT=900

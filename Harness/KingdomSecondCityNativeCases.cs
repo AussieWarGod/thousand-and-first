@@ -8,9 +8,12 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// The four second-city cases, one per scripted check call. Each reads production's own
-	/// answer: KingdomFounding.JudgeSite for the verdicts, KingdomFounding.FoundSecond for the
-	/// transaction, and the ZoneActivatedEvent handler's own KingdomSystem.TrySeat for the seat
-	/// exchange on return. Nothing here seats, claims or publishes anything itself.
+	/// answer: KingdomFounding.JudgeSite for the verdicts,
+	/// KingdomFoundingTransaction.TryFoundSecondWithoutWater for the transaction - the exact call
+	/// KingdomFounding.FoundSecond makes, taken directly so its failure sentence is retained in
+	/// the evidence instead of discarded - and the ZoneActivatedEvent handler's own
+	/// KingdomSystem.TrySeat for the seat exchange on return. Nothing here seats, claims or
+	/// publishes anything itself.
 	/// </summary>
 	internal static class KingdomSecondCityNativeCases
 	{
@@ -18,6 +21,14 @@ namespace ThousandAndFirst.Harness
 		internal const string FoundCase = "found-second";
 		internal const string RefusedCase = "refused-already-ours";
 		internal const string ReturnCase = "return-seat";
+
+		/// <summary>
+		/// Production's refusal for a further founding on ground whose second city is published
+		/// (Core/KingdomFoundingTransaction.04DirectSecond.cs). Bound exactly, so the negative
+		/// case cannot pass on an unrelated refusal such as the active-ground or faction guards.
+		/// </summary>
+		internal const string HeldGroundRefusal =
+			"This ground already carries a completed second-city publication.";
 
 		internal static void Run(int Index, XRLGame Game, StringBuilder Detail)
 		{
@@ -71,10 +82,13 @@ namespace ThousandAndFirst.Harness
 			Require(KingdomFounding.JudgeSite(System, KingdomSecondCityNativeChecks.SiteZone)
 				== KingdomSettlement.SecondFoundingVerdict.Allowed,
 				"the second site stopped reading as Allowed before the pour");
-			Require(KingdomFounding.FoundSecond(KingdomSecondCityNativeChecks.SecondCityName,
+			string failure;
+			bool founded = KingdomFoundingTransaction.TryFoundSecondWithoutWater(
+				KingdomSecondCityNativeChecks.SecondCityName,
 				KingdomSecondCityNativeChecks.SecondVocation,
-				KingdomSecondCityNativeChecks.SiteZone, Force: false),
-				"the production second-city transaction refused an Allowed site");
+				KingdomSecondCityNativeChecks.SiteZone, Force: false, Failure: out failure);
+			Require(founded, "the production second-city transaction refused an Allowed site: "
+				+ (string.IsNullOrEmpty(failure) ? "(no reason given)" : failure));
 			Require(System.SettlementCount == 2 && System.NonSeatSettlementCount == 1,
 				"the realm did not end the founding holding exactly two cities");
 			string seat = System.City == null ? null : System.City.SettlementId;
@@ -120,17 +134,21 @@ namespace ThousandAndFirst.Harness
 				== KingdomSettlement.SecondFoundingVerdict.GroundIsAlreadyOurs,
 				"held ground did not read as GroundIsAlreadyOurs");
 			string before = Topology(System);
-			Require(!KingdomFounding.FoundSecond(KingdomSecondCityNativeChecks.RefusedCityName,
+			string failure;
+			Require(!KingdomFoundingTransaction.TryFoundSecondWithoutWater(
+				KingdomSecondCityNativeChecks.RefusedCityName,
 				KingdomSecondCityNativeChecks.RefusedVocation,
-				KingdomSecondCityNativeChecks.SiteZone, Force: false),
+				KingdomSecondCityNativeChecks.SiteZone, Force: false, Failure: out failure),
 				"a second founding on held ground was accepted");
+			Require(failure == HeldGroundRefusal,
+				"held ground refused for another reason: " + (failure ?? "(none)"));
 			Require(Topology(System) == before,
 				"the refused founding changed the realm's settlement topology");
 			Require(System.SettlementCount == 2 && System.NonSeatSettlementCount == 1,
 				"the refused founding changed the realm's city count");
 			Still(Game);
 			Detail.Append("; case=").Append(RefusedCase)
-				.Append(" verdict=GroundIsAlreadyOurs settlements=2");
+				.Append(" verdict=GroundIsAlreadyOurs refusal=held-ground settlements=2");
 		}
 
 		/// <summary>

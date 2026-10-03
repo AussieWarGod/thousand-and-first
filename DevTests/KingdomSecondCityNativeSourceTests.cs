@@ -8,22 +8,34 @@ namespace ThousandAndFirst.Tests
 	/// <summary>
 	/// SOURCE PINS ONLY for behavioural coverage row 12 "Multiple cities". These prove the
 	/// provider, its checks and the persona agree with each other and with the production
-	/// entries they claim to drive. They are NOT native acceptance: row 12's status stays
-	/// implemented-unexecuted until a typed native evidence id exists.
+	/// entries and predicates they claim to drive or mirror. They are NOT native acceptance:
+	/// row 12's status stays implemented-unexecuted until a typed native evidence id exists.
 	/// </summary>
 	public class KingdomSecondCityNativeSourceTests
 	{
 		private const string Provider = "Harness/KingdomSecondCityNativeProvider.cs";
 		private const string Checks = "Harness/KingdomSecondCityNativeChecks.cs";
 		private const string Cases = "Harness/KingdomSecondCityNativeCases.cs";
-		private const string Script = "Harness/KingdomSecondCityScript.cs";
-		private const string SiteRules = "Harness/KingdomSecondCitySiteRules.cs";
+		private const string Site = "Harness/KingdomSecondCityNativeSite.cs";
 		private const string Persona = "Tools/personas/second-city-native-check.persona";
 		private const string Matrix = "Tools/personas/persona_matrix.py";
+
+		/// <summary>The held-ground sentence both production and the cases must carry verbatim.</summary>
+		private const string HeldGroundRefusal =
+			"This ground already carries a completed second-city publication.";
 
 		private static string Read(string Path)
 		{
 			return TestMain.ReadRepositoryText(Path);
+		}
+
+		/// <summary>Source with every space, tab and line break removed, for multi-line pins.</summary>
+		private static string Squash(string Source)
+		{
+			System.Text.StringBuilder kept = new System.Text.StringBuilder(Source.Length);
+			foreach (char c in Source)
+				if (c != ' ' && c != '\t' && c != '\r' && c != '\n') kept.Append(c);
+			return kept.ToString();
 		}
 
 		private static IList<string> PersonaScriptSteps()
@@ -75,6 +87,26 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void OneOrdinaryTurnSeparatesRealizeFromSetupBecauseTheWakeIsConsumedOnTheLatchTick()
+		{
+			// The production law that makes the turn necessary: the wake is refused on the tick
+			// the latch changed, and the seat exchange on activation sits behind that wake.
+			Assert.That(Read("Core/KingdomMaster.cs"),
+				Does.Contain("return decision.AutomaticWorkAllowed && decision.ChangedAtTick != now;"));
+			Assert.That(Read("Core/KingdomMaster.cs"),
+				Does.Contain("&& (now < 0L || system.MasterOptionTick != now);"));
+			string events = Read("Core/KingdomSystem.z20.Events.cs");
+			int wake = events.IndexOf("if (!KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks))",
+				events.IndexOf("public override bool HandleEvent(ZoneActivatedEvent E)"));
+			Assert.That(wake, Is.GreaterThan(0));
+			Assert.That(events.IndexOf("if (TrySeat(E.Zone))", wake), Is.GreaterThan(wake));
+			Assert.That(KingdomSecondCityScript.Steps[2], Is.EqualTo(KingdomSecondCityScript.SettleStep));
+			Assert.That(KingdomSecondCityScript.SettleStep, Is.EqualTo("advance 1"));
+			Assert.That(Read(Provider), Does.Contain(
+				"Require(KingdomMaster.AutomaticWorkAllowed(game.GetSystem<KingdomSystem>()),"));
+		}
+
+		[Test]
 		public void APerCaseFailureRefusesTheVerbInsteadOfReportingGreen()
 		{
 			Assert.That(Read(Provider),
@@ -85,9 +117,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheSecondFoundingDrivesTheProductionTransactionAndNeverForcesIt()
 		{
+			// FoundSecond is exactly this delegation, so the cases drive the same transaction
+			// while keeping its failure sentence.
+			Assert.That(Squash(Read("Core/KingdomFounding.03.SiteJudgmentAndStyle.cs")), Does.Contain(
+				Squash("public static bool FoundSecond(string Name, string Vocation, Zone Site, bool Force = false)"
+					+ "{ string failure; return KingdomFoundingTransaction.TryFoundSecondWithoutWater("
+					+ "Name, Vocation, Site, Force, out failure); }")));
 			string source = Read(Cases);
-			Assert.That(source, Does.Contain("KingdomFounding.FoundSecond"));
-			Assert.That(source, Does.Contain("Force: false"));
+			Assert.That(source, Does.Contain("KingdomFoundingTransaction.TryFoundSecondWithoutWater("));
+			Assert.That(source, Does.Contain("Force: false, Failure: out failure"));
 			Assert.That(source, Does.Not.Contain("Force: true"));
 			// The cases name TrySeat in prose only: none of them may CALL it, or the seat
 			// exchange the return leg claims to observe would be the harness's own doing.
@@ -96,10 +134,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheHeldGroundRefusalIsBoundToProductionsExactSentence()
+		{
+			Assert.That(Read("Core/KingdomFoundingTransaction.04DirectSecond.cs"), Does.Contain(
+				"Failure = \"" + HeldGroundRefusal + "\";"));
+			Assert.That(Read(Cases), Does.Contain("Require(failure == HeldGroundRefusal,"));
+			Assert.That(Squash(Read(Cases)), Does.Contain(Squash(
+				"internal const string HeldGroundRefusal = \"" + HeldGroundRefusal + "\";")));
+		}
+
+		[Test]
 		public void EveryTabledVerdictTheCasesBindIsOneProductionDeclares()
 		{
 			string verdicts = Read("Core/KingdomSettlement.Vocations.cs");
-			string source = Read(Cases) + Read(Checks);
+			string source = Read(Cases) + Read(Checks) + Read(Site);
 			foreach (string verdict in new[] { "Allowed", "GroundIsAlreadyOurs",
 				"GroundIsTooClose" })
 			{
@@ -123,7 +171,14 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("a second-city case advanced world time"));
 			Assert.That(source, Does.Contain("Game.Turns == KingdomSecondCityNativeChecks.Turns"));
 			Assert.That(source, Does.Contain("Game.TimeTicks == KingdomSecondCityNativeChecks.Ticks"));
-			Assert.That(PersonaScriptSteps(), Has.No.Member("advance"));
+			IList<string> steps = PersonaScriptSteps();
+			int setup = steps.IndexOf(KingdomSecondCityScript.SetupVerb);
+			Assert.That(setup, Is.GreaterThan(0));
+			for (int i = setup; i < steps.Count; i++)
+				Assert.That(steps[i].StartsWith("advance"), Is.False, steps[i]);
+			int advances = 0;
+			foreach (string step in steps) if (step.StartsWith("advance")) advances++;
+			Assert.That(advances, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -148,6 +203,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("save -> cold load"));
 			Assert.That(persona, Does.Contain("Force FALSE"));
 			Assert.That(persona, Does.Contain("zero-energy SystemMoveTo"));
+			Assert.That(persona, Does.Contain("one ordinary turn (advance 1)"));
 		}
 
 		[Test]
@@ -158,14 +214,38 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheSiteSearchIsBoundedAndStartsOutsideTheBorderingBand()
+		public void TheSiteSearchIsBoundedAndNamesItsProbeLimitWhenItRefuses()
 		{
 			Assert.That(KingdomSecondCitySiteRules.MinRing, Is.EqualTo(2));
-			string source = Read(Checks);
+			string source = Read(Site);
 			Assert.That(source, Does.Contain("internal const int MaxProbes = 8;"));
 			Assert.That(source, Does.Contain("probes < MaxProbes"));
 			Assert.That(source, Does.Contain("GroundIsForeignFaction"));
-			Assert.That(source, Does.Contain("no eligible second-city site within"));
+			Assert.That(source, Does.Contain("\"no eligible second-city site: probed \" + probes + \" of at most \""));
+		}
+
+		[Test]
+		public void TheRiteGroundIsJudgedByProductionsOwnFoundingHeartPredicates()
+		{
+			string site = Read(Site);
+			Assert.That(site, Does.Contain("TryRite(zone, homeCell.X, homeCell.Y,"));
+			Assert.That(site, Does.Contain("KingdomSecondCitySiteRules.RiteOrder(PreferredX, PreferredY,"));
+			Assert.That(site, Does.Contain("new KingdomPlots.GroundGrid(Zone)"));
+			Assert.That(site, Does.Contain("Grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid"));
+			Assert.That(site, Does.Contain("KingdomRoads.Walkable(Zone.GetCell(x, y))"));
+			Assert.That(site, Does.Contain("KingdomSecondCitySiteRules.IngressEnvelope(rect)"));
+			// The production text each mirrored predicate stands for.
+			string heart = Read("Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs");
+			Assert.That(heart, Does.Contain("if (grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid) return false;"));
+			Assert.That(heart, Does.Contain("KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Z.Width, Z.Height,"));
+			Assert.That(heart, Does.Contain("KingdomPlotRules.HeartSizeForRung(1), out KingdomPlotRules.PlotRect rect)"));
+			Assert.That(Read("Growth/KingdomArchitectureRuntime.FoundingHeart.cs"),
+				Does.Contain("if (basinX != RiteX || basinY != RiteY) continue;"));
+			string ingress = Read("Growth/KingdomArchitectureRuntime.RoadIngress.cs");
+			Assert.That(ingress, Does.Contain("if (!KingdomRoads.Walkable(Z.GetCell(point.X, point.Y)))"));
+			Assert.That(ingress, Does.Contain("if (!KingdomRoads.Walkable(Z.GetCell(laneX, laneY)))"));
+			Assert.That(Read("Growth/KingdomRoadRules.Entrance.cs"),
+				Does.Contain("KingdomPlotRules.RoadMargin + 1, out LaneX, out LaneY)"));
 		}
 	}
 }

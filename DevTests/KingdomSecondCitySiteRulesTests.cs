@@ -7,14 +7,18 @@ namespace ThousandAndFirst.Tests
 {
 	/// <summary>
 	/// Real execution against the engine-free second-city site arithmetic, not a source pin:
-	/// every assertion below drives KingdomSecondCitySiteRules and reads the values it actually
-	/// produces. These are the facts the native run cannot re-derive once it is under way -- a
-	/// candidate inside the bordering band would be refused as GroundIsTooClose, and an off-map
-	/// candidate crashes zone build instead of refusing.
+	/// every assertion below drives KingdomSecondCitySiteRules (and, through it, production's
+	/// own KingdomPlotRules heart geometry) and reads the values it actually produces. These are
+	/// the facts the native run cannot re-derive once it is under way -- a candidate inside the
+	/// bordering band would be refused as GroundIsTooClose, an off-map candidate crashes zone
+	/// build instead of refusing, and a rite poured where the heart rect slides can never bind
+	/// the founding basin.
 	/// </summary>
 	public class KingdomSecondCitySiteRulesTests
 	{
 		private const string Home = "JoppaWorld.8.22.1.1.10";
+		private const int MapWidth = 80;
+		private const int MapHeight = 25;
 
 		[Test]
 		public void ASurfaceZoneIdSplitsIntoItsWorldParasangAndSubCell()
@@ -150,6 +154,105 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheFirstCitysRiteGetsTheUnslidHeartRectProductionDrafts()
+		{
+			KingdomPlotRules.PlotRect rect;
+			Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(40, 12, MapWidth, MapHeight,
+				out rect), Is.True);
+			Assert.That(new[] { rect.X1, rect.Y1, rect.X2, rect.Y2 },
+				Is.EqualTo(new[] { 38, 11, 43, 14 }));
+			// The same rect production's founding draft computes for that rite.
+			KingdomPlotRules.PlotRect survey;
+			KingdomPlotRules.PlotRect drafted;
+			Assert.That(KingdomPlotRules.TrySurveyedHeart(40, 12, MapWidth, MapHeight, out survey),
+				Is.True);
+			Assert.That(KingdomPlotRules.TryHeartRect(survey, 40, 12,
+				KingdomPlotRules.HeartSizeForRung(1), out drafted), Is.True);
+			Assert.That(new[] { drafted.X1, drafted.Y1, drafted.X2, drafted.Y2 },
+				Is.EqualTo(new[] { rect.X1, rect.Y1, rect.X2, rect.Y2 }));
+		}
+
+		[TestCase(4, 12, true)]
+		[TestCase(3, 12, false)]
+		[TestCase(74, 12, true)]
+		[TestCase(75, 12, false)]
+		[TestCase(40, 3, true)]
+		[TestCase(40, 2, false)]
+		[TestCase(40, 20, true)]
+		[TestCase(40, 21, false)]
+		[TestCase(1, 1, false)]
+		public void ARiteNearTheMapEdgeHasNoUnslidHeartRect(int X, int Y, bool Unslid)
+		{
+			KingdomPlotRules.PlotRect rect;
+			Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(X, Y, MapWidth, MapHeight,
+				out rect), Is.EqualTo(Unslid));
+			if (!Unslid) return;
+			Assert.That(rect.Contains(X, Y), Is.True);
+			Assert.That(rect.X1, Is.EqualTo(X - (rect.Width - 1) / 2));
+			Assert.That(rect.Y1, Is.EqualTo(Y - (rect.Height - 1) / 2));
+		}
+
+		[Test]
+		public void TheIngressEnvelopeIsTheRectPlusTheRoadMarginAndTheLaneEndpoint()
+		{
+			KingdomPlotRules.PlotRect envelope = KingdomSecondCitySiteRules.IngressEnvelope(
+				new KingdomPlotRules.PlotRect(38, 11, 43, 14));
+			Assert.That(KingdomPlotRules.RoadMargin, Is.EqualTo(1));
+			Assert.That(new[] { envelope.X1, envelope.Y1, envelope.X2, envelope.Y2 },
+				Is.EqualTo(new[] { 36, 9, 45, 16 }));
+		}
+
+		[Test]
+		public void TheRiteOrderOpensOnTheFirstCitysRite()
+		{
+			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(40, 12, MapWidth, MapHeight);
+			Assert.That(order.Count, Is.GreaterThan(0));
+			Assert.That(order[0], Is.EqualTo(12 * MapWidth + 40));
+		}
+
+		[Test]
+		public void TheRiteOrderIsDistinctNearestFirstAndOffersOnlySeatableRites()
+		{
+			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(40, 12, MapWidth, MapHeight);
+			// Exactly the cells x 4..74, y 3..20 on an 80x25 map: 71 columns by 18 rows.
+			Assert.That(order.Count, Is.EqualTo(71 * 18));
+			var seen = new HashSet<int>();
+			int previous = 0;
+			foreach (int packed in order)
+			{
+				Assert.That(seen.Add(packed), Is.True, packed + " was offered twice");
+				int x = packed % MapWidth;
+				int y = packed / MapWidth;
+				int dx = x > 40 ? x - 40 : 40 - x;
+				int dy = y > 12 ? y - 12 : 12 - y;
+				int ring = dx > dy ? dx : dy;
+				Assert.That(ring, Is.GreaterThanOrEqualTo(previous));
+				previous = ring;
+				KingdomPlotRules.PlotRect rect;
+				Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(x, y, MapWidth, MapHeight,
+					out rect), Is.True);
+				KingdomPlotRules.PlotRect envelope = KingdomSecondCitySiteRules.IngressEnvelope(rect);
+				Assert.That(envelope.X1 >= 0 && envelope.Y1 >= 0 && envelope.X2 < MapWidth
+					&& envelope.Y2 < MapHeight, Is.True, x + "," + y);
+			}
+		}
+
+		[Test]
+		public void ARitePreferredOnTheMapEdgeStartsAtTheNearestSeatableCell()
+		{
+			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(1, 1, MapWidth, MapHeight);
+			Assert.That(order.Count, Is.EqualTo(71 * 18));
+			Assert.That(order[0], Is.EqualTo(3 * MapWidth + 4));
+		}
+
+		[Test]
+		public void AMapTooSmallForTheHeartSurveyOffersNoRite()
+		{
+			Assert.That(KingdomSecondCitySiteRules.RiteOrder(5, 5, 10, 10).Count, Is.EqualTo(0));
+			Assert.That(KingdomSecondCitySiteRules.RiteOrder(0, 0, 0, 0).Count, Is.EqualTo(0));
+		}
+
+		[Test]
 		public void TheScriptDeclaresOneCheckCallPerCase()
 		{
 			Assert.That(KingdomSecondCityScript.CheckCalls, Is.EqualTo(4));
@@ -161,6 +264,9 @@ namespace ThousandAndFirst.Tests
 			var wrong = new List<string>(KingdomSecondCityScript.Steps);
 			wrong[1] = "status";
 			Assert.That(KingdomSecondCityScript.Matches(wrong), Is.False);
+			var unsettled = new List<string>(KingdomSecondCityScript.Steps);
+			unsettled.Remove(KingdomSecondCityScript.SettleStep);
+			Assert.That(KingdomSecondCityScript.Matches(unsettled), Is.False);
 		}
 	}
 }

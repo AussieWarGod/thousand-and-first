@@ -8,19 +8,20 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Behavioural coverage row 12 "Multiple cities". City one is founded by the built-in
-	/// realize verb - the production first-city transaction, never a harness copy. This provider
-	/// then resolves a second site on a non-adjacent surface parasang, relocates the founder,
-	/// drives the production second-city transaction through KingdomFounding.FoundSecond, proves
-	/// the held-ground refusal spends nothing, and proves the seat comes back by production's own
-	/// ZoneActivatedEvent handler when the founder returns.
+	/// realize verb - the production first-city transaction, never a harness copy - and lives one
+	/// ordinary turn. This provider then resolves a second site on a non-adjacent surface
+	/// parasang, relocates the founder, drives the production second-city transaction
+	/// (KingdomFoundingTransaction.TryFoundSecondWithoutWater, which KingdomFounding.FoundSecond
+	/// wraps), proves the held-ground refusal spends nothing, and proves the seat comes back by
+	/// production's own ZoneActivatedEvent handler when the founder returns.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED: zero-energy SystemMoveTo plus SetActiveZone instead of walking
-	/// the world map; FoundSecond is the waterless route, so the basin's dram cost and its three
-	/// Popup prompts (name, vocation, refusal) are NOT exercised - a sealed script cannot answer
-	/// a popup and KingdomScenarioVerbProvider forbids one outright. Force is never passed, so
-	/// GroundIsTooClose is observed on the bordering parasang rather than bypassed. No turns are
-	/// spent; city two has no population, buildings, stockpile or economy. Save and cold load are
-	/// out of scope for this persona.
+	/// the world map; the waterless route, so the basin's dram cost and its three Popup prompts
+	/// (name, vocation, refusal) are NOT exercised - a sealed script cannot answer a popup and
+	/// KingdomScenarioVerbProvider forbids one outright. Force is never passed, so
+	/// GroundIsTooClose is observed on the bordering parasang rather than bypassed. No case spends
+	/// a turn; city two has no population, buildings, stockpile or economy. Save and cold load
+	/// are out of scope for this persona.
 	/// </para>
 	/// NOT YET NATIVELY RUN: written and compiled only; the sealed script below has not executed.
 	/// </summary>
@@ -52,6 +53,12 @@ namespace ThousandAndFirst.Harness
 				{
 					Require(Eligible(game, zone), "requires the realized single-city marsh camp "
 						+ "with the master and growth cadence enabled");
+					// The return leg's seat exchange runs only past ObserveAutomaticWake, which
+					// consumes the wake on the tick the master latch changed; the script's one
+					// ordinary turn after realize must have moved that change to an earlier tick.
+					Require(KingdomMaster.AutomaticWorkAllowed(game.GetSystem<KingdomSystem>()),
+						"the master latch is not observed on an earlier tick than this one, so "
+						+ "production would consume the return leg's wake instead of seating");
 					game.SetStringGameState(Receipt, "intent");
 					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
 						"the second-city intent failed its exact readback");
