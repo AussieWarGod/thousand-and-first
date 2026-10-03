@@ -84,12 +84,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read("Harness/KingdomScenarioTravel.cs");
 			StringAssert.Contains(
-				"KingdomScenarioTravelRules.ReturnReady(elapsedWait, KingdomScenarioTravelRules.WaitTurns)",
+				"Require(State == Phase.Waiting, \"return requires the waiting travel phase; observed \" + State);",
 				source);
 			StringAssert.Contains(
-				"\"return requires 1200 or 1201 completed advance turns; observed \" + elapsedWait",
+				"KingdomScenarioTravelRules.ReturnReady(elapsedWait, KingdomScenarioTravelRules.WaitTurns)",
 				source);
+			StringAssert.Contains("KingdomScenarioTravelRules.ReturnRefusal(elapsedWait)", source);
 			StringAssert.DoesNotContain("Game.Turns - WaitTurn == KingdomScenarioTravelRules.WaitTurns", source);
+			StringAssert.DoesNotContain("1200 or 1201", source);
 		}
 
 		[Test]

@@ -370,6 +370,22 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReturnReadyRefusesANegativeRequirement()
 			=> ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(0L, -1L));
+
+		// Required + 1 wraps at Int64.MaxValue; the band must hold at the type boundary.
+		[Test]
+		public void ReturnReadyHoldsTheBandAtTheInt64Boundary()
+		{
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue - 1));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue - 1, long.MaxValue));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue - 2));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, 0L));
+		}
+
+		[TestCase(1199L, "return requires 1200 or 1201 completed advance turns; observed 1199")]
+		[TestCase(1202L, "return requires 1200 or 1201 completed advance turns; observed 1202")]
+		public void ReturnRefusalNamesTheAcceptedWaitAndTheObservedTurns(long elapsed, string expected)
+			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.ReturnRefusal(elapsed));
 	}
 }
 #endif
