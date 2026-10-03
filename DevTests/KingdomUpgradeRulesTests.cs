@@ -468,6 +468,41 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(1, ready);
 		}
 
+		/// <summary>
+		/// A refused climb must be readable in Player.log, not only in the founder's ledger: run 49
+		/// had a rung-3 climb refuse with nothing in the log to name it. Every blocked verdict
+		/// therefore carries a line with both keys, the verdict and the reason.
+		/// Mutation: dropping the verdict or either key from the line fails the contains-checks;
+		/// dropping the "unknown"/"unstated" fallbacks leaves a gap where a fact should be.
+		/// </summary>
+		[Test]
+		public void ARefusedImprovementNamesItsKeysVerdictAndReasonForTheLog()
+		{
+			foreach (KingdomUpgradeRules.UpgradeVerdict verdict in Verdicts())
+			{
+				if (!KingdomUpgradeRules.IsBlocked(verdict)) continue;
+				string reason = KingdomUpgradeRules.ReasonLine(verdict, "cask rack",
+					"great cistern", GrowthStage.Steading, 2, 7);
+				string line = KingdomUpgradeRules.RefusedLine("CaskRack", "GreatCistern", verdict,
+					reason);
+				StringAssert.StartsWith("improvement refused: ", line);
+				StringAssert.Contains("CaskRack", line);
+				StringAssert.Contains("GreatCistern", line);
+				StringAssert.Contains("verdict=" + verdict, line);
+				if (reason != null) StringAssert.Contains(reason, line);
+			}
+		}
+
+		[Test]
+		public void ARefusedImprovementLineLeavesNoGapWhereAFactShouldBe()
+		{
+			string line = KingdomUpgradeRules.RefusedLine(null, "",
+				KingdomUpgradeRules.UpgradeVerdict.NoGroundToGrow, null);
+			StringAssert.Contains("unknown -> unknown", line);
+			StringAssert.Contains("verdict=NoGroundToGrow", line);
+			StringAssert.Contains("reason=unstated", line);
+		}
+
 		[Test]
 		public void EveryVerdictIsEitherSilentForAReasonOrCarriesASentence()
 		{

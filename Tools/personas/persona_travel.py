@@ -59,6 +59,22 @@ def witness(rows):
     return result
 
 
+def _advance_within_tolerance(text, requested):
+    """The engine completes on the next player action opportunity (docs/DEVELOPMENT.md),
+    so an intervening scripted advance may land at requested or requested+1 turns elapsed.
+    This applies uniformly to every middle economic-prefix advance in assess() below -
+    the 1200-turn local-pause wait, the 1-turn master-pause wait, the 1200-turn return
+    wait, and (for a continuity-only, non-economic persona) its single 1200-turn middle
+    wait - because the engine's own completion rule does not distinguish between them.
+    Tools/scenario_advance_check.py's judge() mirrors the same underlying engine behaviour
+    but enforces only 'int(match[1]) >= int(match[2])' (elapsed >= requested, unbounded
+    above) for its own guarded ordinary waits; this helper narrows that to the same
+    [requested, requested+1] band already used for the outer warmup/drain advances here,
+    and does not widen it further."""
+    match = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of " + str(requested) + r" requested", text)
+    return match is not None and requested <= int(match[1]) <= requested + 1
+
+
 def assess(rows, mode, require_economic=False):
     try:
         result = witness(rows)
@@ -78,10 +94,12 @@ def assess(rows, mode, require_economic=False):
                               advances[0] if advances else "")
         drain = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of 39 requested",
                              advances[-1] if advances else "")
+        middle = advances[1:-1]
         if (warmup is None or not 1200 <= int(warmup[1]) <= 9223372036854775807
-                or advances[1:-1] != [f"{n} turn(s) elapsed of {n} requested" for n in prefix]
+                or len(middle) != len(prefix)
+                or any(not _advance_within_tolerance(text, n) for text, n in zip(middle, prefix))
                 or drain is None or not 39 <= int(drain[1]) <= 9223372036854775807):
-            raise ValueError("travel requires completed 1200-turn warmup, exact intervening waits, and completed requested 39-turn drain advance")
+            raise ValueError("travel requires completed 1200-turn warmup, intervening waits within the next-player-action-opportunity tolerance, and completed requested 39-turn drain advance")
         names = [row[0] for row in rows]
         expected = ["realize", "advance-complete", "beta-" + mode]
         if economic:
@@ -98,15 +116,23 @@ def assess(rows, mode, require_economic=False):
         if [name for name in names if name in relevant] != expected:
             raise ValueError("travel phases and completed advances are out of order")
         if mode == "away":
-            steps = []
-            for name in ("travel-out-complete", "travel-return-complete"):
+            steps, detours = [], []
+            # The walker leaves the surveyed heart ground southward before its westward row and
+            # re-enters northward (Harness/KingdomScenarioTravel.cs PlanEgress). Those rows are
+            # reported as egress= on the outbound row and ingress= on the return row; both are
+            # optional (a founder outside the heart ground owes none) but must be explicit,
+            # bounded non-negative decimals that agree with each other.
+            for name, field in (("travel-out-complete", "egress"), ("travel-return-complete", "ingress")):
                 message = next(row[2] for row in rows if row[0] == name)
-                match = re.fullmatch(r"normal-walk=true; steps=([1-9][0-9]{0,2})", message)
+                match = re.fullmatch(r"normal-walk=true; steps=([1-9][0-9]{0,2})(?:; " + field + r"=(0|[1-9][0-9]?))?", message)
                 if not match or not 1 <= int(match[1]) <= 240:
                     raise ValueError("travel lacks bounded normal-walk evidence")
                 steps.append(int(match[1]))
+                detours.append(int(match[2]) if match[2] is not None else 0)
             if steps[0] != steps[1]:
                 raise ValueError("travel route lengths differ")
+            if detours[0] != detours[1] or not 0 <= detours[0] <= 24:
+                raise ValueError("travel egress and ingress rows differ")
         for name in ("beta-" + mode, "beta-return", "beta-check", "SCRIPT-COMPLETE", "yield-frames-complete"):
             if names.count(name) != 1:
                 raise ValueError("missing or duplicate travel milestone: " + name)

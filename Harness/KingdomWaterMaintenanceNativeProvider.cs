@@ -111,6 +111,7 @@ namespace ThousandAndFirst.Harness
 		internal readonly LiquidVolume[] Liquids = new LiquidVolume[4];
 		internal readonly KingdomRaidContactBody[] VesselProofs = new KingdomRaidContactBody[4];
 		internal readonly KingdomWaterMaintenanceMarkerDiagnostic[] MarkerDiagnostics = new KingdomWaterMaintenanceMarkerDiagnostic[4];
+		internal string DedicationSurvey = "unread";
 		internal KingdomWaterMaintenanceSetup(XRLGame game, Zone zone) { Game = game; Zone = zone; }
 		internal KingdomSystem Found()
 		{
@@ -177,9 +178,13 @@ namespace ThousandAndFirst.Harness
 			Require(counter >= 0 && counter < int.MaxValue - 2, "dedication counter is not bounded");
 			for (int i = 0; i < 4; i++) Require(!Vessels[i].HasIntProperty(KingdomCity.DedicationOrderProperty), "fresh vessel already has dedication order");
 			KingdomSurvey survey = KingdomSurvey.Take(Zone, system); prove();
-			Require(survey.Stores.Count == 2 && ReferenceEquals(survey.Stores[0], Liquids[0])
-				&& ReferenceEquals(survey.Stores[1], Liquids[2]) && survey.StoredWater == 1
-				&& survey.Larders.Count == 0 && survey.Citizens == 0, "dedication survey differs from exact empty camp");
+			int heartWater = KingdomWaterMaintenanceHeartStores.Water(survey, Zone, Liquids, out int heartStores, out string heart);
+			DedicationSurvey = "stores=" + survey.Stores.Count + " fixture=2 heart-stores=" + heartStores + " heart=" + heart
+				+ " stored-water=" + survey.StoredWater + " fixture-water=1 heart-water=" + heartWater
+				+ " larders=" + survey.Larders.Count + " citizens=" + survey.Citizens;
+			Require(survey.Stores.Count == 2 + heartStores && survey.Stores.Contains(Liquids[0]) && survey.Stores.Contains(Liquids[2])
+				&& survey.StoredWater == 1 + heartWater && survey.Larders.Count == 0 && survey.Citizens == 0,
+				"dedication survey differs from exact empty camp plus its heart stores; " + DedicationSurvey);
 			using (survey.BindPass())
 			{
 				Require(ReferenceEquals(KingdomSurvey.ActiveFor(Zone), survey), "dedication survey did not bind");

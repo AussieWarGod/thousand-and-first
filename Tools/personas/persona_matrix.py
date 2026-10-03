@@ -53,6 +53,10 @@ BOOKKEEPING = frozenset(
         "yield-frames-complete",
         "travel-out-complete",
         "travel-return-complete",
+        # The away walker's egress plan off the surveyed heart ground (Harness/KingdomScenarioTravel.cs
+        # PlanEgress): the rite ground is a camp open only to the south, so the founder steps
+        # south before the westward row and north again on return. Wiring, never a scripted verb.
+        "travel-egress",
         # Written once per quickstart-lifecycle boot, right after QUICKSTART-BOOT-BEGIN
         # (Harness/KingdomQuickstartLifecycleRunnerPatch.cs), never for quickstart-boot/-save/
         # -build. It describes the runner's OWN wiring for this run, not a verb the script asked
@@ -63,6 +67,11 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Native run 49: the camp-heart Town seed's per-lot lines (rects, ingress sides, refusals),
+        # written once by Harness/KingdomCampHeartNativeTownSeed.cs so the setup and check rows
+        # keep their own reads under the journal row cap. Detail, never a verb the script asked
+        # for, so it never belongs in a positional EXPECT.
+        "town-lots",
         # Read-only paid-handover diagnostics; explicit retry/cohort/completion rows remain mandatory.
         "paid-housing-detail",
         # Run 46b/47 (investigation C): the lifecycle save's own pre-activation witness row

@@ -96,6 +96,12 @@ namespace ThousandAndFirst
 			if (speaksFirst != null && speaksFirstAssessment.Reason != null)
 			{
 				speaksFirst.RequirePart<r_KingdomImprovement>().AnnouncedReason = (int)speaksFirstAssessment.Verdict;
+				// The founder hears this in the ledger; the log gets it too, or a refused climb
+				// leaves no trace at all in Player.log and no run can name why (run 49). Carried by
+				// the same AnnouncedReason gate above, so it prints once per verdict change.
+				KingdomLog.Log(KingdomUpgradeRules.RefusedLine(speaksFirstAssessment.Key,
+					speaksFirstAssessment.SuccessorKey, speaksFirstAssessment.Verdict,
+					speaksFirstAssessment.Reason));
 				MessageQueue.AddPlayerMessage("{{K|" + speaksFirstAssessment.Reason + "}}");
 				System.Ledger.Note("{{K|" + speaksFirstAssessment.Reason + "}}");
 			}

@@ -19,6 +19,7 @@ namespace ThousandAndFirst.Harness
 		internal static long BeginTurn, WaitTurn, ReturnTurn, ArrivedTurn, FirstHomeTurn = -1, ZeroTurn = -1;
 		internal static long Processed, Semantic;
 		internal static int HomeX, HomeY, OutSteps, BackSteps, PeakThirds, PeakHeavy, PeakDemand, Containers;
+		internal static int EgressSteps, EgressDone, IngressDone;
 		internal static bool DemandObserved, ReturnDemandObserved;
 		internal static int RemainingDemand = -1;
 		private const string Intent = "r_TAF_BetaTravel_v1";
@@ -56,8 +57,24 @@ namespace ThousandAndFirst.Harness
 			BeginTurn = WaitTurn = game.Turns; Processed = Book.ProcessedThroughTick; Semantic = System.LastSemanticTick;
 			State = IsAway ? Phase.Outbound : Phase.Waiting;
 			Observe();
-			if (IsAway) { Pump(out bool failed); Require(!failed, Fault); }
+			if (IsAway) { PlanEgress(zone); Pump(out bool failed); Require(!failed, Fault); }
 			return "taf-travel-began mode=" + (Away ? "away" : "present") + "; home=" + Home;
+		}
+
+		/// <summary>The rite ground is a camp open only to the south, so a founder standing on the
+		/// surveyed heart ground leaves it by real southward steps before the westward walk and
+		/// re-enters the same way on return. Nothing is cleared or moved; a blocked cell refuses.</summary>
+		private static void PlanEgress(Zone zone)
+		{
+			EgressSteps = EgressDone = IngressDone = 0;
+			if (!KingdomPlots.TrySurveyedHeart(zone, out KingdomPlotRules.PlotRect heart)) return;
+			Require(KingdomScenarioTravelRules.TryEgress(HomeX, HomeY, heart.X1, heart.Y1, heart.X2, heart.Y2,
+				out EgressSteps), "surveyed heart ground leaves no southern egress row");
+			var cells = new System.Text.StringBuilder();
+			for (int i = 1; i <= EgressSteps; i++)
+				cells.Append(i > 1 ? ";" : "").Append(HomeX).Append(',').Append(HomeY + i);
+			KingdomScenarioJournal.Append("travel-egress", true, "travel-egress=" + cells + "; steps=" + EgressSteps
+				+ "; heart=" + heart.X1 + "," + heart.Y1 + "-" + heart.X2 + "," + heart.Y2 + "; home=" + HomeX + "," + HomeY);
 		}
 
 		internal static string Return()
@@ -91,27 +108,36 @@ namespace ThousandAndFirst.Harness
 				Observe();
 				if (!Pending) return false;
 				bool west = State == Phase.Outbound;
+				Require(KingdomScenarioTravelRules.TryLeg(west, EgressSteps, EgressDone, OutSteps, BackSteps, IngressDone,
+					out KingdomScenarioTravelRules.Leg current) && current != KingdomScenarioTravelRules.Leg.Done,
+					"travel leg table refused the next step");
+				bool vertical = KingdomScenarioTravelRules.Vertical(current);
 				Require((west ? OutSteps : BackSteps) < KingdomScenarioTravelRules.MaxSteps, "route exceeds step bound");
 				string before = Player.CurrentZone.ZoneID;
 				int x = Player.CurrentCell.X, y = Player.CurrentCell.Y;
-				Require(Player.Move(west ? "W" : "E", AllowDashing: false, DoConfirmations: false),
+				Require(vertical
+					? Player.Move(current == KingdomScenarioTravelRules.Leg.Egress ? "S" : "N", AllowDashing: false, DoConfirmations: false)
+					: Player.Move(west ? "W" : "E", AllowDashing: false, DoConfirmations: false),
 					"normal walking was blocked; no clearing or teleport fallback");
 				Observe();
 				Require(KingdomScenarioTravelRules.Step(before, x, y, Player.CurrentZone.ZoneID,
-					Player.CurrentCell.X, Player.CurrentCell.Y, west), "walking changed unexpected cell/zone custody");
-				if (west) OutSteps++; else BackSteps++;
+					Player.CurrentCell.X, Player.CurrentCell.Y, west, current), "walking changed unexpected cell/zone custody");
+				if (vertical) { if (west) EgressDone++; else IngressDone++; }
+				else if (west) OutSteps++; else BackSteps++;
 				if (west && KingdomScenarioTravelRules.DifferentParasang(Home, Player.CurrentZone.ZoneID))
 				{
 					Require(!System.ClaimedZones.Contains(Player.CurrentZone.ZoneID), "destination parasang is claimed");
 					State = Phase.Waiting; WaitTurn = Game.Turns;
-					KingdomScenarioJournal.Append("travel-out-complete", true, "normal-walk=true; steps=" + OutSteps);
+					KingdomScenarioJournal.Append("travel-out-complete", true, "normal-walk=true; steps=" + OutSteps
+						+ (EgressDone > 0 ? "; egress=" + EgressDone : ""));
 				}
 				else if (!west && Player.CurrentZone.ZoneID == Home && Player.CurrentCell.X == HomeX
 					&& Player.CurrentCell.Y == HomeY)
 				{
-					Require(BackSteps == OutSteps, "return route length differs");
+					Require(BackSteps == OutSteps && IngressDone == EgressDone, "return route length differs");
 					State = Phase.Draining; ArrivedTurn = Game.Turns;
-					KingdomScenarioJournal.Append("travel-return-complete", true, "normal-walk=true; steps=" + BackSteps);
+					KingdomScenarioJournal.Append("travel-return-complete", true, "normal-walk=true; steps=" + BackSteps
+						+ (IngressDone > 0 ? "; ingress=" + IngressDone : ""));
 				}
 				// Spend remaining energy by real waits so fast actors cannot fall into unattended input.
 				for (int i = 0; i < 8 && Player.Energy != null && Player.Energy.Value >= 1000; i++) Player.PassTurn();

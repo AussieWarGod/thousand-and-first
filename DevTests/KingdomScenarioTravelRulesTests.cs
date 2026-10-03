@@ -47,6 +47,72 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 0, 12, "JoppaWorld.7.23.2.0.10", 79, 12, true));
 		}
 
+		[Test]
+		public void VerticalStepsAreLawfulOnlyWhileLeavingOrReenteringTheHeartGround()
+		{
+			var egress = KingdomScenarioTravelRules.Leg.Egress;
+			var ingress = KingdomScenarioTravelRules.Leg.Ingress;
+			var travel = KingdomScenarioTravelRules.Leg.Travel;
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 40, 13, true, egress));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.Step(Home, 40, 13, Home, 40, 12, false, ingress));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 40, 11, true, egress), "egress is south only");
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 13, Home, 40, 14, false, ingress), "ingress is north only");
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 39, 12, true, egress), "no sideways egress");
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 40, 14, true, egress), "no vertical dash");
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 24, West, 40, 0, true, egress), "no zone change");
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 40, 13, true, travel), "travel keeps the row");
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 39, 12, true, travel));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Step(Home, 40, 12, Home, 40, 13, true, KingdomScenarioTravelRules.Leg.Done));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.Vertical(egress) && KingdomScenarioTravelRules.Vertical(ingress));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Vertical(travel) || KingdomScenarioTravelRules.Vertical(KingdomScenarioTravelRules.Leg.Done));
+		}
+
+		// outbound, egress, egressDone, out, back, ingressDone, valid, leg (0 egress, 1 travel, 2 ingress, 3 done)
+		[TestCase(true, 0, 0, 0, 0, 0, true, 1)]
+		[TestCase(true, 0, 0, 40, 0, 0, true, 1)]
+		[TestCase(true, 10, 0, 0, 0, 0, true, 0)]
+		[TestCase(true, 10, 9, 0, 0, 0, true, 0)]
+		[TestCase(true, 10, 10, 0, 0, 0, true, 1)]
+		[TestCase(true, 10, 10, 121, 0, 0, true, 1)]
+		[TestCase(true, 10, 9, 1, 0, 0, false, 3)]
+		[TestCase(true, 10, 10, 1, 1, 0, false, 3)]
+		[TestCase(false, 10, 10, 121, 0, 0, true, 1)]
+		[TestCase(false, 10, 10, 121, 120, 0, true, 1)]
+		[TestCase(false, 10, 10, 121, 121, 0, true, 2)]
+		[TestCase(false, 10, 10, 121, 121, 9, true, 2)]
+		[TestCase(false, 10, 10, 121, 121, 10, true, 3)]
+		[TestCase(false, 0, 0, 121, 121, 0, true, 3)]
+		[TestCase(false, 10, 10, 121, 120, 1, false, 3)]
+		[TestCase(false, 10, 9, 121, 121, 0, false, 3)]
+		[TestCase(false, 10, 10, 121, 122, 0, false, 3)]
+		[TestCase(true, 25, 0, 0, 0, 0, false, 3)]
+		[TestCase(true, 10, 11, 0, 0, 0, false, 3)]
+		[TestCase(true, -1, 0, 0, 0, 0, false, 3)]
+		public void LegTableIsEgressThenTravelThenIngress(bool outbound, int egress, int egressDone, int outSteps,
+			int backSteps, int ingressDone, bool valid, int expected)
+		{
+			ClassicAssert.AreEqual(valid, KingdomScenarioTravelRules.TryLeg(outbound, egress, egressDone, outSteps,
+				backSteps, ingressDone, out var leg));
+			ClassicAssert.AreEqual((KingdomScenarioTravelRules.Leg)expected, leg);
+		}
+
+		// x, y, rect, valid, steps
+		[TestCase(40, 12, 31, 4, 50, 21, true, 10)]
+		[TestCase(40, 21, 31, 4, 50, 21, true, 1)]
+		[TestCase(40, 22, 31, 4, 50, 21, true, 0)]
+		[TestCase(30, 12, 31, 4, 50, 21, true, 0)]
+		[TestCase(40, 12, 38, 11, 43, 14, true, 3)]
+		[TestCase(40, 12, 31, 4, 50, 24, false, 0)]
+		[TestCase(40, 12, 50, 4, 31, 21, false, 0)]
+		[TestCase(-1, 12, 31, 4, 50, 21, false, 0)]
+		[TestCase(40, 12, 31, 4, 80, 21, false, 0)]
+		public void EgressOwesEveryRowDownToTheFirstClearOne(int x, int y, int x1, int y1, int x2, int y2,
+			bool valid, int expected)
+		{
+			ClassicAssert.AreEqual(valid, KingdomScenarioTravelRules.TryEgress(x, y, x1, y1, x2, y2, out int steps));
+			ClassicAssert.AreEqual(expected, steps);
+		}
+
 		[TestCase(10, 10, 20, true)]
 		[TestCase(10, 20, 20, true)]
 		[TestCase(-1, 10, 20, false)]
