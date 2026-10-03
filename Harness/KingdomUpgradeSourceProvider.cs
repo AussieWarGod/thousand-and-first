@@ -48,7 +48,11 @@ namespace ThousandAndFirst.Harness
 					&& !KingdomNativeRegressionContext.HasQuickstartState(game), "requires fresh active synthetic scenario ground");
 				Check(KingdomQuickstartRules.TryProfile("marsh", out var profile) && zone.ZoneID == profile.ZoneId,
 					"source requires exact stamped marsh zone");
-				Check(Options.GetOption("r_TAF_OptionLegacyImport", "No") == "No", "legacy import must be disabled at birth");
+				// The donor births a fresh non-inheriting realm; the inheritor MUST be born opted in so
+				// 0.3.1's own boot arms the reservation before its roster marker is committed.
+				Check(Options.GetOption("r_TAF_OptionLegacyImport", "No") == (verb == ReservedVerb ? "Yes" : "No"),
+					verb == ReservedVerb ? "reserved source requires legacy import enabled at birth"
+						: "donor source requires legacy import disabled at birth");
 				Check(KingdomScenarioRealizer.TryBindStampedPlan(out var plan, out _, out string failure), failure);
 				Check(plan.Key == "founding-first-city" && plan.AuthorityClass == KingdomScenarioFoundingStep.FoundingAuthority
 					&& KingdomScenarioScript.TryRead(out var script, out failure) && script.Count == 3

@@ -24,6 +24,7 @@ namespace ThousandAndFirst.Harness
 		private readonly long Turns, Actions, PlayerActions;
 		private bool Saving;
 		private int PrimaryPaths, InfoPaths;
+		private long ReservedTick = -1L;
 		private string SaveFault;
 		private const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
 		internal KingdomUpgradeSourceDriver(XRLGame game, Zone zone, string verb)
@@ -38,7 +39,12 @@ namespace ThousandAndFirst.Harness
 			foreach (string name in new[] { KingdomUpgradeSourceProvider.DonorFile, KingdomUpgradeSourceProvider.LinkFile,
 				KingdomUpgradeSnapshotCodec.SnapshotFile, KingdomUpgradeSnapshotCodec.ReceiptFile, KingdomUpgradeSnapshotCodec.FailureFile })
 				KingdomUpgradeFiles.Vacant(Path.Combine(Root, name));
-			Owner(); Pristine();
+			Owner();
+			// The Reserved inheritor is BORN with legacy import enabled, so 0.3.1's own
+			// IGameStateSingleton.Initialize has already armed the reservation before this driver
+			// exists. Demanding a pristine Empty here would require arming it afterwards, which the
+			// 0.3.1 save guard refuses outright (roster marker 0 against Inheritance multiplicity 1).
+			if (verb == KingdomUpgradeSourceProvider.ReservedVerb) Armed(); else Pristine();
 		}
 
 		internal void Owner()
@@ -77,6 +83,28 @@ namespace ThousandAndFirst.Harness
 				Check(Field(name) == null, "live inheritance authority " + name);
 			FieldInfo lease = typeof(KingdomInheritanceLeaseOwner).GetField("Lease", BindingFlags.Static | BindingFlags.NonPublic);
 			Check(lease != null && lease.GetValue(null) == null, "another process-local reservation is retained");
+		}
+		/// <summary>Live counterpart of Pristine for the born-with-import inheritor: production has
+		/// already reserved, so this proves the exact live authority instead of an Empty slate.</summary>
+		internal void Armed()
+		{
+			Owner(); Check(Inheritance != null && Inheritance.Phase == KingdomInheritancePhase.Reserved,
+				"reserved source requires the exact live boot-armed Reserved phase");
+			KingdomUpgradeState.ValidateInheritance(Inheritance, GameId);
+			Check((string)Field("FailureDetail") == "", "nonempty inheritance field FailureDetail");
+			foreach (string name in "FailureAnnounced ReleasePending RecoveryDisabled RetryAuthorized".Split(' '))
+				Check(!(bool)Field(name), "owned inheritance flag " + name);
+			Check((string)Field("LegacyText") != "" && (string)Field("ReceiptText") != "",
+				"boot-armed inheritance lacks its reserved wire");
+			Check(KingdomSealReceipt.TryParse((string)Field("ReceiptText"), out var receipt)
+				&& receipt.State == KingdomSealReceiptState.Reserved && receipt.TargetGameId == GameId
+				&& receipt.WrittenTick >= 0 && receipt.WrittenTick <= Tick,
+				"boot-armed reservation receipt does not target this source within its own clock");
+			if (ReservedTick < 0L) ReservedTick = receipt.WrittenTick;
+			Check(receipt.WrittenTick == ReservedTick, "boot-armed reservation tick changed");
+			Check(Field("ReservationLease") is KingdomSealReservationLease lease && lease.IsHeld && lease.Matches(receipt)
+				&& ReferenceEquals(KingdomInheritanceLeaseOwner.Get(GameId, receipt), lease),
+				"boot-armed Reserved state does not hold its own live process-local lease");
 		}
 		private object Field(string name)
 		{ FieldInfo f = typeof(KingdomInheritanceState).GetField(name, Private); Check(f != null, "missing old inheritance field " + name); return f.GetValue(Inheritance); }
@@ -131,21 +159,28 @@ namespace ThousandAndFirst.Harness
 			Check(KingdomUpgradeFiles.HashText(StageWire(store, donor[3])) == donor[7], "copied donor stage differs");
 			var prior = store.ReadReceipts(out int refused);
 			Check(refused == 0, "copied profile contains refused import receipts");
-			foreach (var claim in prior) Check(claim.TargetGameId != GameId, "fresh source already owns an import receipt");
-			Pristine(); Options.SetOption("r_TAF_OptionLegacyImport", "Yes"); Owner(); Pristine();
-			Check(Options.GetOption("r_TAF_OptionLegacyImport", "No") == "Yes", "legacy import opt-in did not persist");
-			Inheritance.Initialize(); Owner();
-			Check(Inheritance.Phase == KingdomInheritancePhase.Reserved && (string)Field("LegacyText") == promoted
+			KingdomSealReceipt owned = null;
+			foreach (var claim in prior)
+				if (claim.TargetGameId == GameId) { Check(owned == null, "source owns more than one import receipt"); owned = claim; }
+			Check(owned != null && owned.LegacyId == donor[4] && owned.LineageId == donor[5],
+				"0.3.1 boot did not claim the exact copied donor legacy for this source");
+			// The birth option is the ONLY opt-in. Enabling import here and calling Initialize() would
+			// add KingdomInheritanceLifecycle after the roster PlayerMutator already committed a marker
+			// without the Inheritance bit, and 0.3.1's own SaveSystems prefix then refuses the write.
+			Check(Options.GetOption("r_TAF_OptionLegacyImport", "No") == "Yes", "legacy import was not the birth option");
+			Armed();
+			string committedText = (string)Field("CommittedReceiptText");
+			Check((string)Field("LegacyText") == promoted
 				&& KingdomSealReceipt.TryParse((string)Field("ReceiptText"), out var receipt)
-				&& receipt.State == KingdomSealReceiptState.Reserved && receipt.TargetGameId == GameId
-				&& receipt.LegacyId == donor[4] && receipt.LineageId == donor[5] && receipt.WrittenTick == Tick
-				&& KingdomUpgradeFiles.Read(store.ReceiptPath(receipt.LegacyId, GameId), 262144) == receipt.Compose()
-				&& Field("ReservationLease") is KingdomSealReservationLease lease && lease.IsHeld && lease.Matches(receipt)
-				&& ReferenceEquals(KingdomInheritanceLeaseOwner.Get(GameId, receipt), lease), "actual live initialization did not reserve exact donor");
+				&& receipt.LegacyId == donor[4] && receipt.LineageId == donor[5]
+				&& KingdomUpgradeFiles.Read(store.ReceiptPath(owned.LegacyId, GameId), 262144)
+					== (committedText == "" ? receipt.Compose() : committedText)
+				&& owned.Compose() == (committedText == "" ? receipt.Compose() : committedText),
+				"actual live initialization did not reserve exact donor");
 			KingdomUpgradeState state = new KingdomUpgradeState(Game, "inheritance");
 			KingdomUpgradeSource.Arm(null);
 			Check(SourceField("Fault") == null && (bool)SourceField("Armed"), "actual source arm refused");
-			state.Exact(); Save(); state.Exact();
+			state.Exact(); Armed(); Save(); state.Exact(); Armed();
 			Check(SourceField("Fault") == null && (bool)SourceField("Completed") && !(bool)SourceField("Armed"), "actual source capture failed");
 			string snapshot = KingdomUpgradeFiles.Read(Path.Combine(Root, KingdomUpgradeSnapshotCodec.SnapshotFile), KingdomUpgradeSnapshotCodec.MaxWireChars);
 			Check(KingdomUpgradeSnapshotCodec.TryDecode(snapshot, out var saved), "source snapshot cannot decode"); state.Matches(saved);

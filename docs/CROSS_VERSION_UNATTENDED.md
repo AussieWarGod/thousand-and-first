@@ -58,20 +58,47 @@ empty-camp sealing cannot resolve canonical phenotype, so the driver uses the re
 to opt in after the real census. It does not hide diagnostics or manufacture profile/receipt fields.
 
 The second old profile receives the donor's **entire Synced history**, not only a promoted record.
-It starts a fresh ordinary test world with import disabled. After proving a pristine Empty state,
-the driver enables import and calls the unchanged production `Initialize()`. That authority
-creates the canonical Reserved receipt and real lease. The driver then arms the original native
-save observer and calls real `SaveGame("Primary")`. Donor linkage, actual snapshot, save hashes,
-receipt, game IDs, selected stage and promoted bytes must all agree.
+It starts a fresh ordinary test world **born opted in**: `r_TAF_OptionLegacyImport` is already `Yes`
+in the sealed `PlayerOptions.json`, and the driver writes no option of its own. The unchanged
+production `IGameStateSingleton.Initialize()` therefore creates the canonical Reserved receipt and
+real lease during boot. The driver proves that live boot-armed authority instead of creating it,
+then arms the original native save observer and calls real `SaveGame("Primary")`. Donor linkage,
+actual snapshot, save hashes, receipt, game IDs, selected stage and promoted bytes must all agree.
+
+Ordering is the whole point, and it is the engine's, not ours: `QudGameBootModule.BootGame` runs
+every `IGameStateSingleton.Initialize()` strictly before the `[PlayerMutator]` step where 0.3.1's
+`KingdomSaveSystemRosterNewGameLoader` commits its save-system roster marker. The earlier recipe
+opted in and called `Initialize()` after boot, so the marker had already been committed without the
+Inheritance bit while `KingdomInheritanceLifecycle` now existed, and 0.3.1 refused its own save with
+`save-system roster UnexpectedMultiplicity [Inheritance: expected 0, observed 1]`. No save was
+written, so that leg proved nothing either way. Opting in at birth is the only lawful arrangement
+that reaches a 0.3.1 save the 0.3.1 guard accepts (issue #87).
 
 This is deliberately a **live Reserved developer fixture**, not normal inherited embark or site
 installation. The old `ResumeAfterLoad` validates/reacquires its real lease without advancing a
 plain Reserved state. Current native load must prove exact raw authority before repair/normalization
 and after LoadGame, no repairs, canonical legacy, and actual retained stage readability.
 
-`detached-transition` is not safely scripted in this slice. New preparation explicitly refuses it;
-no attended fallback and no substituted Reserved test counted as detached coverage. The old initial
-foundation profile versus later enrolled census needs a separate lawful fixture design.
+Two source design questions are settled here rather than deferred (issue #82).
+
+**Old initial foundation profile versus later enrolled census.** The lawful donor is the **later
+enrolled census**, and that is what the donor driver above produces. An old realm's initial
+foundation profile has population 0, so old empty-camp sealing cannot resolve a canonical phenotype;
+a legacy promoted from it would carry no resolvable body, and an inheritor reserving it could not
+prove `KingdomSealStatus.Promoted` with `IsResolved`. The foundation profile is not left
+unexercised — it is exactly the state the current empty-camp stage-source leg below builds and the
+old reader is asked to refuse at its `profile_schema` bound.
+
+**Detached-transition source.** Still refused, deliberately, and not by omission. A lawful Detached
+fixture needs a real old return/exile leaving a populated `PolityTransition.Legacy`, and 0.3.1
+reaches that phase only through the whole exile transaction: a founded realm with settled Trade, an
+unquarantined `KingdomRealmArchive` at a phase at or past the transactional Trade boundary, exact
+published canonical and directional mirrors, a regard-gated `JudgeReturn`, and an archive whose
+`RealmId` already matches a `Detached` `PolityTransition` (`Core/KingdomSystem.z09.Exile.Dispatch.cs`,
+`Core/KingdomSystem.z11.Return.Begin.cs`). That is a separate fixture of its own size, not a variant
+of the Reserved recipe, so this slice does not script it. Preparation refuses `--case
+detached-transition` with "unattended detached-transition source is not implemented"; there is no
+attended fallback, and no substituted Reserved test is counted as detached coverage.
 
 ## Current empty camp, actual old-reader rejection/fallback
 

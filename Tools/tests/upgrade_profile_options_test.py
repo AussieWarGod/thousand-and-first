@@ -38,10 +38,15 @@ def config(mode: str, schema: str = inputs.PROFILE_V2) -> dict:
 
 def fixture(mode: str) -> tuple[bytes, bytes]:
     initial = dict(BASE)
-    if mode in ("source", "source-donor"):
+    if mode == "source":
+        # Born opted in (issue #87): 0.3.1's own boot arms the reservation before the roster
+        # marker is committed, so the reserved recipe writes no option at all.
+        initial[options.IMPORT] = "Yes"
+        birth = inputs.json_bytes(initial)
+        return birth, birth
+    if mode == "source-donor":
         initial[options.IMPORT] = "No"
-        tail = b',\n"r_TAF_OptionLegacyImport":"Yes"' if mode == "source" else (
-            b',\n"r_TAF_OptionLegacyImport":"No",\n"r_TAF_OptionSeal":"Yes"')
+        tail = b',\n"r_TAF_OptionLegacyImport":"No",\n"r_TAF_OptionSeal":"Yes"'
     else:
         tail = b',\n"r_TAF_OptionGrowth":"No",\n"r_TAF_OptionRaids":"No"'
     return inputs.json_bytes(initial), NATIVE_PREFIX + tail + b'\n}'
@@ -72,13 +77,14 @@ class UpgradeProfileOptionsTest(unittest.TestCase):
                 options.validate_options(config("stage-source"), birth, wrong)
 
     def test_no_blanket_birth_byte_acceptance_before_required_mutation(self):
-        for mode in ("source", "source-donor", "stage-source"):
+        for mode in ("source-donor", "stage-source"):
             birth, _ = fixture(mode)
             with self.subTest(mode=mode), self.assertRaises(ValueError):
                 options.validate_options(config(mode), birth, birth)
 
     def test_exact_birth_only_when_final_map_already_equal(self):
-        for mode, writes in (("source-donor", {options.IMPORT: "No", options.SEAL: "Yes"}),
+        for mode, writes in (("source", {options.IMPORT: "Yes"}),
+                             ("source-donor", {options.IMPORT: "No", options.SEAL: "Yes"}),
                              ("stage-source", {options.GROWTH: "No", options.RAIDS: "No"})):
             initial = dict(BASE, **writes)
             birth = inputs.json_bytes(initial)
@@ -105,22 +111,22 @@ class UpgradeProfileOptionsTest(unittest.TestCase):
                     options.validate_options(value, birth, native)
 
     def test_duplicate_keys_and_nonstring_values_refuse(self):
-        birth, native = fixture("source")
-        variants = [native.replace(b'\n}', b',\n"r_TAF_OptionLegacyImport":"Yes"\n}')]
+        birth, native = fixture("source-donor")
+        variants = [native.replace(b'\n}', b',\n"r_TAF_OptionSeal":"Yes"\n}')]
         for token in (b'null', b'false', b'1', b'[]', b'{}'):
-            variants.append(native.replace(b'"r_TAF_OptionLegacyImport":"Yes"', b'"r_TAF_OptionLegacyImport":' + token))
+            variants.append(native.replace(b'"r_TAF_OptionSeal":"Yes"', b'"r_TAF_OptionSeal":' + token))
         for wrong in variants:
             with self.subTest(wrong=wrong[-100:]), self.assertRaises(ValueError):
-                options.validate_options(config("source"), birth, wrong)
+                options.validate_options(config("source-donor"), birth, wrong)
 
     def test_native_framing_escaping_and_encoding_are_exact(self):
-        birth, native = fixture("source")
+        birth, native = fixture("source-donor")
         variants = (native + b'\n', native.replace(b'\n', b'\r\n'), b'\xef\xbb\xbf' + native,
                     native.replace(b'":"', b'": "'), native.replace(b'"Yes"', b'"\\u0059es"'),
                     native.replace(b'"Yes"', b'"\xff"'), native + native)
         for wrong in variants:
             with self.subTest(wrong=wrong[:50]), self.assertRaises(ValueError):
-                options.validate_options(config("source"), birth, wrong)
+                options.validate_options(config("source-donor"), birth, wrong)
 
     def test_unsafe_native_vocabulary_and_bad_birth_refuse(self):
         for value in ('quoted"', 'back\\slash', '\n', '\u00e9', '\ud800'):
@@ -131,11 +137,26 @@ class UpgradeProfileOptionsTest(unittest.TestCase):
             with self.subTest(birth=birth), self.assertRaises(ValueError):
                 options.validate_options(config("upgrade"), birth, birth)
 
-    def test_old_source_requires_import_disabled_at_birth(self):
-        birth = inputs.json_bytes(dict(BASE, **{options.IMPORT: "Yes"}))
-        for mode in ("source", "source-donor"):
+    def test_each_old_source_pins_its_own_birth_import_option(self):
+        for mode, wrong in (("source", "No"), ("source-donor", "Yes")):
+            birth = inputs.json_bytes(dict(BASE, **{options.IMPORT: wrong}))
             with self.subTest(mode=mode), self.assertRaises(ValueError):
                 options.validate_options(config(mode), birth, birth)
+
+    def test_reserved_source_permits_no_runtime_option_write(self):
+        birth, _ = fixture("source")
+        for key, value in ((options.IMPORT, "No"), (options.SEAL, "Yes"), (options.GROWTH, "No")):
+            wrong = inputs.json_bytes(dict(BASE, **{options.IMPORT: "Yes", key: value}))
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                options.validate_options(config("source"), birth, wrong)
+
+    def test_reserved_source_rejects_unchanged_map_in_native_writer_format(self):
+        birth, _ = fixture("source")
+        native = NATIVE_PREFIX + b',\n"r_TAF_OptionLegacyImport":"Yes"\n}'
+        self.assertNotEqual(birth, native)
+        self.assertEqual(options._read(birth), options._read(native))
+        with self.assertRaisesRegex(ValueError, "no operational option writes"):
+            options.validate_options(config("source"), birth, native)
 
     def test_no_input_mutation_and_bounds(self):
         value = config("source")
