@@ -228,24 +228,50 @@ namespace ThousandAndFirst.Tests
 		public void TheRiteGroundIsJudgedByProductionsOwnFoundingHeartPredicates()
 		{
 			string site = Read(Site);
-			Assert.That(site, Does.Contain("TryRite(zone, homeCell.X, homeCell.Y,"));
+			Assert.That(site, Does.Contain(
+				"if (!TryRite(System, zone, key, entry.Category, homeCell.X, homeCell.Y, out rite,"));
+			Assert.That(site, Does.Contain(
+				"string key = KingdomPlotRules.HeartKeyForRung(KingdomSecondCitySiteRules.FoundingRung);"));
+			Assert.That(site, Does.Contain("KingdomData.TryGetBuilding(key, out entry)"));
 			Assert.That(site, Does.Contain("KingdomSecondCitySiteRules.RiteOrder(PreferredX, PreferredY,"));
 			Assert.That(site, Does.Contain("new KingdomPlots.GroundGrid(Zone)"));
 			Assert.That(site, Does.Contain("Grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid"));
-			Assert.That(site, Does.Contain("KingdomRoads.Walkable(Zone.GetCell(x, y))"));
-			Assert.That(site, Does.Contain("KingdomSecondCitySiteRules.IngressEnvelope(rect)"));
-			// The production text each mirrored predicate stands for.
+			// Every predicate is actually applied to each offered rite, not merely declared.
+			Assert.That(site, Does.Contain("if (cell == null || cell.Objects.Count != 0) { occupied++; continue; }"));
+			Assert.That(site, Does.Contain("if (!KingdomSecondCitySiteRules.TryRiteHeartRect(x, y, Zone.Width, Zone.Height,"));
+			Assert.That(site, Does.Contain("if (!Dry(grid, rect)) { wet++; continue; }"));
+			Assert.That(site, Does.Contain(
+				"if (!KingdomArchitectureRuntime.TryPrepareFoundingHeart(System, Zone, rect, Key,"));
+			Assert.That(KingdomSecondCitySiteRules.FoundingRung, Is.EqualTo(1));
+			// The production founding draft these mirror, in its own words.
 			string heart = Read("Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs");
-			Assert.That(heart, Does.Contain("if (grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid) return false;"));
+			Assert.That(heart, Does.Contain("string key = KingdomPlotRules.HeartKeyForRung(1);"));
 			Assert.That(heart, Does.Contain("KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Z.Width, Z.Height,"));
 			Assert.That(heart, Does.Contain("KingdomPlotRules.HeartSizeForRung(1), out KingdomPlotRules.PlotRect rect)"));
+			Assert.That(heart, Does.Contain("if (grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid) return false;"));
+			Assert.That(Squash(heart), Does.Contain(Squash(
+				"KingdomArchitectureRuntime.TryPrepareFoundingHeart(System, Z, rect, key, entry.Category, RiteX, RiteY,")));
 			Assert.That(Read("Growth/KingdomArchitectureRuntime.FoundingHeart.cs"),
 				Does.Contain("if (basinX != RiteX || basinY != RiteY) continue;"));
-			string ingress = Read("Growth/KingdomArchitectureRuntime.RoadIngress.cs");
-			Assert.That(ingress, Does.Contain("if (!KingdomRoads.Walkable(Z.GetCell(point.X, point.Y)))"));
-			Assert.That(ingress, Does.Contain("if (!KingdomRoads.Walkable(Z.GetCell(laneX, laneY)))"));
-			Assert.That(Read("Growth/KingdomRoadRules.Entrance.cs"),
-				Does.Contain("KingdomPlotRules.RoadMargin + 1, out LaneX, out LaneY)"));
+			Assert.That(Read("Growth/KingdomArchitectureRuntime.FoundingHeart.cs"),
+				Does.Contain("if (!TryVerifyPhysicalIngressRoutes(Z, Rect, snapshot, out Failure)) return false;"));
+		}
+
+		[Test]
+		public void TheFoundingHeartTierHasOneVariantSoTheCurrentSeatResolvesTheNewSeatsLayout()
+		{
+			string civic = Read("Architecture/KingdomArchitectures-CivicFaith.xml");
+			int start = civic.IndexOf("<tier Key=\"heartbasin\" BuildKey=\"heartbasin\"");
+			Assert.That(start, Is.GreaterThan(0));
+			int end = civic.IndexOf("</tier>", start);
+			Assert.That(end, Is.GreaterThan(start));
+			string tier = civic.Substring(start, end - start);
+			int variants = 0;
+			for (int at = tier.IndexOf("<variant "); at >= 0; at = tier.IndexOf("<variant ", at + 1))
+				variants++;
+			Assert.That(variants, Is.EqualTo(1));
+			Assert.That(tier, Does.Contain("<variant Key=\"fallback\" Priority=\"0\" />"));
+			Assert.That(Read(Site), Does.Contain("the founding heart's tier has one fallback variant"));
 		}
 	}
 }

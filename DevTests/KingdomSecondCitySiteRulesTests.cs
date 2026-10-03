@@ -154,13 +154,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheFirstCitysRiteGetsTheUnslidHeartRectProductionDrafts()
+		public void TheFirstCitysRiteGetsTheCentredHeartRectProductionDrafts()
 		{
 			KingdomPlotRules.PlotRect rect;
 			Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(40, 12, MapWidth, MapHeight,
 				out rect), Is.True);
 			Assert.That(new[] { rect.X1, rect.Y1, rect.X2, rect.Y2 },
 				Is.EqualTo(new[] { 38, 11, 43, 14 }));
+			Assert.That(KingdomSecondCitySiteRules.IsCentred(rect, 40, 12), Is.True);
 			// The same rect production's founding draft computes for that rite.
 			KingdomPlotRules.PlotRect survey;
 			KingdomPlotRules.PlotRect drafted;
@@ -172,34 +173,29 @@ namespace ThousandAndFirst.Tests
 				Is.EqualTo(new[] { rect.X1, rect.Y1, rect.X2, rect.Y2 }));
 		}
 
-		[TestCase(4, 12, true)]
-		[TestCase(3, 12, false)]
-		[TestCase(74, 12, true)]
-		[TestCase(75, 12, false)]
-		[TestCase(40, 3, true)]
-		[TestCase(40, 2, false)]
-		[TestCase(40, 20, true)]
-		[TestCase(40, 21, false)]
-		[TestCase(1, 1, false)]
-		public void ARiteNearTheMapEdgeHasNoUnslidHeartRect(int X, int Y, bool Unslid)
+		[TestCase(4, 12, true, true)]
+		[TestCase(3, 12, true, false)]
+		[TestCase(2, 12, true, false)]
+		[TestCase(1, 12, false, false)]
+		[TestCase(74, 12, true, true)]
+		[TestCase(77, 12, true, false)]
+		[TestCase(78, 12, false, false)]
+		[TestCase(40, 3, true, true)]
+		[TestCase(40, 2, true, false)]
+		[TestCase(40, 1, false, false)]
+		[TestCase(40, 20, true, true)]
+		[TestCase(40, 22, true, false)]
+		[TestCase(40, 23, false, false)]
+		[TestCase(1, 1, false, false)]
+		public void ARiteTheSurveySlidTheHeartAwayFromIsNeverOffered(int X, int Y, bool Admitted,
+			bool Centred)
 		{
 			KingdomPlotRules.PlotRect rect;
 			Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(X, Y, MapWidth, MapHeight,
-				out rect), Is.EqualTo(Unslid));
-			if (!Unslid) return;
+				out rect), Is.EqualTo(Admitted));
+			if (!Admitted) return;
 			Assert.That(rect.Contains(X, Y), Is.True);
-			Assert.That(rect.X1, Is.EqualTo(X - (rect.Width - 1) / 2));
-			Assert.That(rect.Y1, Is.EqualTo(Y - (rect.Height - 1) / 2));
-		}
-
-		[Test]
-		public void TheIngressEnvelopeIsTheRectPlusTheRoadMarginAndTheLaneEndpoint()
-		{
-			KingdomPlotRules.PlotRect envelope = KingdomSecondCitySiteRules.IngressEnvelope(
-				new KingdomPlotRules.PlotRect(38, 11, 43, 14));
-			Assert.That(KingdomPlotRules.RoadMargin, Is.EqualTo(1));
-			Assert.That(new[] { envelope.X1, envelope.Y1, envelope.X2, envelope.Y2 },
-				Is.EqualTo(new[] { 36, 9, 45, 16 }));
+			Assert.That(KingdomSecondCitySiteRules.IsCentred(rect, X, Y), Is.EqualTo(Centred));
 		}
 
 		[Test]
@@ -211,11 +207,12 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheRiteOrderIsDistinctNearestFirstAndOffersOnlySeatableRites()
+		public void TheRiteOrderIsDistinctNearestFirstAndSkipsTheOuterTwoRowsAndColumns()
 		{
 			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(40, 12, MapWidth, MapHeight);
-			// Exactly the cells x 4..74, y 3..20 on an 80x25 map: 71 columns by 18 rows.
-			Assert.That(order.Count, Is.EqualTo(71 * 18));
+			// Exactly the cells x 2..77, y 2..22 on an 80x25 map: 76 columns by 21 rows. The
+			// old landing scan's first pick, row 1, is outside it.
+			Assert.That(order.Count, Is.EqualTo(76 * 21));
 			var seen = new HashSet<int>();
 			int previous = 0;
 			foreach (int packed in order)
@@ -223,6 +220,8 @@ namespace ThousandAndFirst.Tests
 				Assert.That(seen.Add(packed), Is.True, packed + " was offered twice");
 				int x = packed % MapWidth;
 				int y = packed / MapWidth;
+				Assert.That(x, Is.InRange(2, 77));
+				Assert.That(y, Is.InRange(2, 22));
 				int dx = x > 40 ? x - 40 : 40 - x;
 				int dy = y > 12 ? y - 12 : 12 - y;
 				int ring = dx > dy ? dx : dy;
@@ -231,18 +230,15 @@ namespace ThousandAndFirst.Tests
 				KingdomPlotRules.PlotRect rect;
 				Assert.That(KingdomSecondCitySiteRules.TryRiteHeartRect(x, y, MapWidth, MapHeight,
 					out rect), Is.True);
-				KingdomPlotRules.PlotRect envelope = KingdomSecondCitySiteRules.IngressEnvelope(rect);
-				Assert.That(envelope.X1 >= 0 && envelope.Y1 >= 0 && envelope.X2 < MapWidth
-					&& envelope.Y2 < MapHeight, Is.True, x + "," + y);
 			}
 		}
 
 		[Test]
-		public void ARitePreferredOnTheMapEdgeStartsAtTheNearestSeatableCell()
+		public void ARitePreferredOnTheMapEdgeStartsAtTheNearestAdmittedCell()
 		{
 			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(1, 1, MapWidth, MapHeight);
-			Assert.That(order.Count, Is.EqualTo(71 * 18));
-			Assert.That(order[0], Is.EqualTo(3 * MapWidth + 4));
+			Assert.That(order.Count, Is.EqualTo(76 * 21));
+			Assert.That(order[0], Is.EqualTo(2 * MapWidth + 2));
 		}
 
 		[Test]

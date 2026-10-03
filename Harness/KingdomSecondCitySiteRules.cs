@@ -6,11 +6,11 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Pure arithmetic for choosing a second-city site: which surface parasangs to offer, in
-	/// what order, and where on one of them the rite may be poured. Engine-free on purpose so it
-	/// carries real value tests instead of a source pin; every world fact the candidates still
-	/// need (does the zone build, does it answer to a foreign faction, what does
-	/// KingdomFounding.JudgeSite say, is the ground dry and walkable) is proved by the caller
-	/// against the live world, never guessed here.
+	/// what order, and which cells of one of them a rite could seat a heart on. Engine-free on
+	/// purpose so it carries real value tests instead of a source pin; every world fact the
+	/// candidates still need (does the zone build, does it answer to a foreign faction, what do
+	/// KingdomFounding.JudgeSite and the founding-heart preflight say, is the ground dry) is
+	/// proved by the caller against the live world, never guessed here.
 	/// <para>
 	/// The ring starts at MinRing, not 1, because ring 1 is exactly the
 	/// SecondFoundingVerdict.GroundIsTooClose band: a bordering parasang is claimed, not
@@ -109,12 +109,12 @@ namespace ThousandAndFirst.Harness
 		/// <summary>
 		/// The rung-1 heart rect production's founding draft lays around a poured rite
 		/// (KingdomPlotRules.TrySurveyedHeart, then TryHeartRect at HeartSizeForRung(1), as
-		/// TryDraftFoundingHeart calls them), accepted only when it is exactly the rect centred
-		/// on the rite. When the survey has to slide that rect, the rite is no longer where any
-		/// authored pose puts the immutable basin, and production refuses with "no authored
-		/// founding-heart pose binds its basin to the poured rite"
-		/// (Growth/KingdomArchitectureRuntime.FoundingHeart.cs): a rite poured near a map edge
-		/// can never seat a city. City one's rite has exactly this unslid geometry.
+		/// TryDraftFoundingHeart calls them), offered only when the rite stands inside it. The
+		/// immutable basin is a placement inside that rect, and production binds a pose only when
+		/// the basin lands exactly on the poured rite (Growth/KingdomArchitectureRuntime.FoundingHeart.cs),
+		/// so a rite the survey slid the rect away from - every cell of a map's outer two rows and
+		/// columns - can never seat a city. Whether a pose really binds is production's own
+		/// preflight, asked by the caller; this is only the arithmetic that rules a cell out.
 		/// </summary>
 		internal static bool TryRiteHeartRect(int RiteX, int RiteY, int Width, int Height,
 			out KingdomPlotRules.PlotRect Rect)
@@ -122,43 +122,36 @@ namespace ThousandAndFirst.Harness
 			Rect = default(KingdomPlotRules.PlotRect);
 			KingdomPlotRules.PlotRect survey;
 			KingdomPlotRules.PlotRect rect;
-			KingdomPlotRules.PlotRect centred;
 			if (!KingdomPlotRules.TrySurveyedHeart(RiteX, RiteY, Width, Height, out survey)
 				|| !KingdomPlotRules.TryHeartRect(survey, RiteX, RiteY,
-					KingdomPlotRules.HeartSizeForRung(FoundingRung), out rect))
-				return false;
-			// Bounds wide enough that TryCentred cannot slide: its answer is the pure centring.
-			if (!KingdomPlotRules.TryCentred(new KingdomPlotRules.PlotRect(RiteX - rect.Width,
-					RiteY - rect.Height, RiteX + rect.Width, RiteY + rect.Height), RiteX, RiteY,
-					rect.Width, rect.Height, out centred)
-				|| centred.X1 != rect.X1 || centred.Y1 != rect.Y1
-				|| centred.X2 != rect.X2 || centred.Y2 != rect.Y2)
+					KingdomPlotRules.HeartSizeForRung(FoundingRung), out rect)
+				|| !rect.Contains(RiteX, RiteY))
 				return false;
 			Rect = rect;
 			return true;
 		}
 
 		/// <summary>
-		/// Every cell an authored public ingress route of a heart on this rect can cross: the
-		/// rect, its KingdomPlotRules.RoadMargin, and the lane endpoint one cell beyond
-		/// (Growth/KingdomRoadRules.Entrance.cs TryAuthoredLane). Deliberately a superset: which
-		/// variant and pose production picks for the new seat is not known until it is founded,
-		/// so the caller requires every cell any of them could need to be walkable now.
+		/// Whether a drafted rect is exactly the rect centred on the rite, with no slide. City
+		/// one's rite has this geometry; reported so a run can say which kind of ground it used.
 		/// </summary>
-		internal static KingdomPlotRules.PlotRect IngressEnvelope(KingdomPlotRules.PlotRect Rect)
+		internal static bool IsCentred(KingdomPlotRules.PlotRect Rect, int RiteX, int RiteY)
 		{
-			int reach = KingdomPlotRules.RoadMargin + 1;
-			return new KingdomPlotRules.PlotRect(Rect.X1 - reach, Rect.Y1 - reach,
-				Rect.X2 + reach, Rect.Y2 + reach);
+			KingdomPlotRules.PlotRect centred;
+			// Bounds wide enough that TryCentred cannot slide: its answer is the pure centring.
+			return KingdomPlotRules.TryCentred(new KingdomPlotRules.PlotRect(RiteX - Rect.Width,
+					RiteY - Rect.Height, RiteX + Rect.Width, RiteY + Rect.Height), RiteX, RiteY,
+					Rect.Width, Rect.Height, out centred)
+				&& centred.X1 == Rect.X1 && centred.Y1 == Rect.Y1
+				&& centred.X2 == Rect.X2 && centred.Y2 == Rect.Y2;
 		}
 
 		/// <summary>
 		/// Rite cells to try on one candidate map, packed as Y * Width + X: nearest the preferred
-		/// cell first (Chebyshev rings, row-major inside a ring), keeping only cells whose rung-1
-		/// heart rect is unslid (TryRiteHeartRect) and whose whole ingress envelope lies on the
-		/// map. The caller passes city one's rite, so the first offer reproduces the geometry
-		/// production already accepted for the first founding. Empty means the map is too small
-		/// to seat a heart at all.
+		/// cell first (Chebyshev rings, row-major inside a ring), keeping only cells
+		/// TryRiteHeartRect admits. The caller passes city one's rite, so the first offer
+		/// reproduces the geometry production already accepted for the first founding. Empty
+		/// means the map is too small to survey a heart at all.
 		/// </summary>
 		internal static IList<int> RiteOrder(int PreferredX, int PreferredY, int Width, int Height)
 		{
@@ -168,19 +161,22 @@ namespace ThousandAndFirst.Harness
 				Math.Max(Math.Abs(PreferredY), Math.Abs(Height - 1 - PreferredY)));
 			for (int ring = 0; ring <= reach; ring++)
 				for (int y = PreferredY - ring; y <= PreferredY + ring; y++)
-					for (int x = PreferredX - ring; x <= PreferredX + ring; x++)
-					{
-						if (Math.Max(Math.Abs(x - PreferredX), Math.Abs(y - PreferredY)) != ring)
-							continue;
-						if (x < 0 || y < 0 || x >= Width || y >= Height) continue;
-						KingdomPlotRules.PlotRect rect;
-						if (!TryRiteHeartRect(x, y, Width, Height, out rect)) continue;
-						KingdomPlotRules.PlotRect envelope = IngressEnvelope(rect);
-						if (envelope.X1 < 0 || envelope.Y1 < 0 || envelope.X2 >= Width
-							|| envelope.Y2 >= Height) continue;
-						order.Add(y * Width + x);
-					}
+				{
+					// Only the ring's own cells: its whole top and bottom rows, and the two ends
+					// of every row between them, still row-major.
+					bool edge = y == PreferredY - ring || y == PreferredY + ring;
+					int step = edge || ring == 0 ? 1 : 2 * ring;
+					for (int x = PreferredX - ring; x <= PreferredX + ring; x += step)
+						Offer(order, x, y, Width, Height);
+				}
 			return order;
+		}
+
+		private static void Offer(List<int> Order, int X, int Y, int Width, int Height)
+		{
+			if (X < 0 || Y < 0 || X >= Width || Y >= Height) return;
+			KingdomPlotRules.PlotRect rect;
+			if (TryRiteHeartRect(X, Y, Width, Height, out rect)) Order.Add(Y * Width + X);
 		}
 	}
 }

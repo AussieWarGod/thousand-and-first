@@ -22,9 +22,11 @@
 #    Harness/KingdomScenarioVerbProvider.cs forbids a provider from showing one.
 #  - the second site is ordinary worldgen; only the START zone is born-clean. A parasang is
 #    accepted only if it builds, answers to no foreign faction and reads Allowed from
-#    KingdomFounding.JudgeSite, and only on an empty rite cell whose rung-1 heart rect is the
-#    unslid rect city one's rite has, holds no liquid, and sits in an ingress envelope every
-#    cell of which passes KingdomRoads.Walkable. Every rejected candidate is journalled.
+#    KingdomFounding.JudgeSite, and only on an empty rite cell, nearest city one's rite, whose
+#    rung-1 heart rect holds no liquid and which passes production's own read-only
+#    founding-heart preflight (KingdomArchitectureRuntime.TryPrepareFoundingHeart: the basin
+#    binds to the rite and the authored entrance is walkable). Every rejected candidate is
+#    journalled with its reason.
 #  - city two has no population, buildings, stockpile or economy, and no case spends a turn:
 #    every case re-proves Game.Turns and Game.TimeTicks are unchanged since setup.
 #

@@ -12,13 +12,14 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// A candidate parasang (KingdomSecondCitySiteRules.Candidates) must build, answer to no
 	/// foreign faction and read Allowed from KingdomFounding.JudgeSite. On it, a rite cell
-	/// (KingdomSecondCitySiteRules.RiteOrder, seeded with city one's rite) must be empty, must
-	/// give production's founding heart the unslid rung-1 rect city one's rite has, must hold no
-	/// liquid inside that rect (the FoundingHeartGroundAllows predicate, read through
-	/// KingdomPlots.GroundGrid), and every cell of the rect's ingress envelope must pass
-	/// KingdomRoads.Walkable, the predicate TryVerifyPhysicalIngressRoutes applies. These are
-	/// production's own predicates, read before anything is spent. Production may still refuse
-	/// the founding; that refusal is the evidence, and nothing here retries it.
+	/// (KingdomSecondCitySiteRules.RiteOrder, seeded with city one's rite) must be empty, must hold
+	/// no liquid inside its rung-1 heart rect (the FoundingHeartGroundAllows predicate, read
+	/// through KingdomPlots.GroundGrid), and must pass production's own read-only founding-heart
+	/// preflight, KingdomArchitectureRuntime.TryPrepareFoundingHeart: a pose binds the basin to
+	/// the rite and every authored public ingress cell is walkable. That preflight is read with
+	/// the current seat's selection context; the founding heart's tier has one fallback variant,
+	/// so the new seat resolves the same layout. Production may still refuse the founding; that
+	/// refusal is the evidence, and nothing here retries it.
 	/// </para>
 	/// </summary>
 	internal static class KingdomSecondCityNativeSite
@@ -38,6 +39,10 @@ namespace ThousandAndFirst.Harness
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);
 			Require(candidates.Count > 0,
 				"no surface parasang outside the bordering band exists for " + home);
+			string key = KingdomPlotRules.HeartKeyForRung(KingdomSecondCitySiteRules.FoundingRung);
+			KingdomRules.BuildEntry entry;
+			Require(KingdomData.TryGetBuilding(key, out entry) && entry != null,
+				"the founding heart " + key + " is missing from the catalogue");
 			List<string> tried = new List<string>();
 			int probes = 0;
 			for (int i = 0; i < candidates.Count && probes < MaxProbes; i++)
@@ -60,10 +65,11 @@ namespace ThousandAndFirst.Harness
 				{ tried.Add(id + " (" + verdict + ")"); continue; }
 				Cell rite;
 				KingdomPlotRules.PlotRect heart;
-				int offered;
-				if (!TryRite(zone, homeCell.X, homeCell.Y, out rite, out heart, out offered))
+				string refusal;
+				if (!TryRite(System, zone, key, entry.Category, homeCell.X, homeCell.Y, out rite,
+					out heart, out refusal))
 				{
-					tried.Add(id + " (no dry walkable heart ground among " + offered + " rites)");
+					tried.Add(id + " (no seatable rite: " + refusal + ")");
 					continue;
 				}
 				KingdomSecondCityNativeChecks.SiteZoneId = id;
@@ -71,7 +77,8 @@ namespace ThousandAndFirst.Harness
 				KingdomSecondCityNativeChecks.SiteCell = rite;
 				KingdomSecondCityNativeChecks.SiteHeart = heart;
 				return "site=" + id + " rite=" + rite.X + "," + rite.Y + " heart=" + Describe(heart)
-					+ " envelope=" + Describe(KingdomSecondCitySiteRules.IngressEnvelope(heart))
+					+ " centred=" + (KingdomSecondCitySiteRules.IsCentred(heart, rite.X, rite.Y)
+						? "true" : "false")
 					+ " probes=" + probes + " rejected=" + tried.Count;
 			}
 			Require(false, "no eligible second-city site: probed " + probes + " of at most "
@@ -82,36 +89,50 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>
-		/// The first rite cell, in RiteOrder, whose ground production's founding heart can take.
-		/// Offered is how many unslid rite cells this map has at all, for the refusal row.
+		/// The first rite cell, in RiteOrder, that is empty, dry under its heart rect and passes
+		/// production's founding-heart preflight. Refusal names how many cells each predicate
+		/// turned away and the last preflight sentence, so a refused map explains itself.
 		/// </summary>
-		private static bool TryRite(Zone Zone, int PreferredX, int PreferredY, out Cell Rite,
-			out KingdomPlotRules.PlotRect Heart, out int Offered)
+		private static bool TryRite(KingdomSystem System, Zone Zone, string Key, string LotType,
+			int PreferredX, int PreferredY, out Cell Rite, out KingdomPlotRules.PlotRect Heart,
+			out string Refusal)
 		{
 			Rite = null;
 			Heart = default(KingdomPlotRules.PlotRect);
 			IList<int> order = KingdomSecondCitySiteRules.RiteOrder(PreferredX, PreferredY,
 				Zone.Width, Zone.Height);
-			Offered = order.Count;
 			KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Zone);
-			// 0 unread, 1 walkable, -1 not: each cell is read once however many envelopes share it.
-			sbyte[] walkable = new sbyte[Zone.Width * Zone.Height];
+			int occupied = 0;
+			int wet = 0;
+			int refused = 0;
+			string last = null;
 			for (int i = 0; i < order.Count; i++)
 			{
 				int x = order[i] % Zone.Width;
 				int y = order[i] / Zone.Width;
 				Cell cell = Zone.GetCell(x, y);
 				KingdomPlotRules.PlotRect rect;
-				if (cell == null || cell.Objects.Count != 0
-					|| !KingdomSecondCitySiteRules.TryRiteHeartRect(x, y, Zone.Width, Zone.Height,
-						out rect)
-					|| !Dry(grid, rect)
-					|| !Walkable(Zone, walkable, KingdomSecondCitySiteRules.IngressEnvelope(rect)))
+				if (cell == null || cell.Objects.Count != 0) { occupied++; continue; }
+				if (!KingdomSecondCitySiteRules.TryRiteHeartRect(x, y, Zone.Width, Zone.Height,
+					out rect)) continue;
+				if (!Dry(grid, rect)) { wet++; continue; }
+				KingdomArchitectureIntent intent;
+				string failure;
+				if (!KingdomArchitectureRuntime.TryPrepareFoundingHeart(System, Zone, rect, Key,
+					LotType, x, y, out intent, out failure))
+				{
+					refused++;
+					last = failure;
 					continue;
+				}
 				Rite = cell;
 				Heart = rect;
+				Refusal = null;
 				return true;
 			}
+			Refusal = order.Count + " cells, " + occupied + " occupied, " + wet + " wet, "
+				+ refused + " refused by the heart preflight"
+				+ (last == null ? "" : ", last: " + last);
 			return false;
 		}
 
@@ -121,19 +142,6 @@ namespace ThousandAndFirst.Harness
 			for (int y = Rect.Y1; y <= Rect.Y2; y++)
 				for (int x = Rect.X1; x <= Rect.X2; x++)
 					if (Grid.KindAt(x, y) == KingdomPlotRules.GroundKind.Liquid) return false;
-			return true;
-		}
-
-		private static bool Walkable(Zone Zone, sbyte[] Known, KingdomPlotRules.PlotRect Envelope)
-		{
-			for (int y = Envelope.Y1; y <= Envelope.Y2; y++)
-				for (int x = Envelope.X1; x <= Envelope.X2; x++)
-				{
-					int key = y * Zone.Width + x;
-					if (Known[key] == 0)
-						Known[key] = KingdomRoads.Walkable(Zone.GetCell(x, y)) ? (sbyte)1 : (sbyte)-1;
-					if (Known[key] < 0) return false;
-				}
 			return true;
 		}
 
