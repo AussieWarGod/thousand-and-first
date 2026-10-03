@@ -32,6 +32,7 @@ namespace ThousandAndFirst.Harness
 		private sealed partial class Frame
 		{
 			private readonly List<Zone> ChainClaimed = new List<Zone>();
+			private readonly List<Zone> ChainHeld = new List<Zone>();
 			private readonly List<string> ChainClaimNotes = new List<string>();
 			private GameObject ChainCrownHall;
 			private string ChainCrownZoneId;
@@ -83,7 +84,7 @@ namespace ThousandAndFirst.Harness
 					if (neighbour == null)
 					{ ChainClaimNotes.Add(direction + ":absent"); continue; }
 					if (System.ClaimedZones.Contains(neighbour.ZoneID))
-					{ ChainClaimNotes.Add(direction + ":already-held"); continue; }
+					{ ChainClaimNotes.Add(direction + ":already-held"); ChainHeld.Add(neighbour); continue; }
 					if (!KingdomFounding.ZonesAdjacent(Zone.ZoneID, neighbour.ZoneID))
 					{ ChainClaimNotes.Add(direction + ":not-adjacent"); continue; }
 					if (!KingdomFounding.ClaimZone(neighbour))
@@ -93,9 +94,10 @@ namespace ThousandAndFirst.Harness
 					ChainClaimNotes.Add(direction + ":claimed");
 					ChainClaimed.Add(neighbour);
 				}
-				Require(ReferenceEquals(The.ZoneManager?.ActiveZone, Zone)
+				Require(ReferenceEquals(The.ZoneManager?.ActiveZone, Zone) && player != null
 					&& ReferenceEquals(The.Player, player) && player.CurrentZone == Zone
-					&& (standing == null || player.CurrentCell.X + "," + player.CurrentCell.Y == standing),
+					&& (standing == null || (player.CurrentCell != null
+						&& player.CurrentCell.X + "," + player.CurrentCell.Y == standing)),
 					"taf-camp-rung5-claim-moved-founder: claiming ground moved the founder or the "
 						+ "active zone");
 			}
@@ -106,7 +108,8 @@ namespace ThousandAndFirst.Harness
 			/// eight-by-six air-well footprints on this ground, so it stands on a claimed
 			/// neighbour. The city BOOK is what the crown is read from
 			/// (Growth/KingdomCrownDiscovery.cs:121-143), and the book spans every zone the city
-			/// holds.</summary>
+			/// holds. Candidates are the seed's own claims first, then any neighbour the claim loop
+			/// found already held; no zone is built for siting alone.</summary>
 			private void RaiseChainCrownHall()
 			{
 				Require(KingdomData.TryGetBuilding(KingdomCrownRules.CrownKey, out var entry),
@@ -114,7 +117,9 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomPlots.TryGetSpec(KingdomCrownRules.CrownKey, out var spec),
 					"authored crown hall plot spec missing");
 				string last = null;
-				foreach (Zone ground in ChainClaimed)
+				var grounds = new List<Zone>(ChainClaimed);
+				grounds.AddRange(ChainHeld);
+				foreach (Zone ground in grounds)
 				{
 					if (ChainCrownHall != null) break;
 					if (!KingdomPlotRules.TryInterior(ground.Width, ground.Height, out var interior))

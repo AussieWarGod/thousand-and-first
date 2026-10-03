@@ -106,6 +106,22 @@ namespace ThousandAndFirst.Tests
 			Assert.That(capital, Does.Contain("the capital seed advanced the real clock"));
 		}
 
+		/// <summary>Review of #264: a neighbour the city already holds is still crown-hall ground
+		/// (after the seed's own claims, and without building any zone for siting alone), and the
+		/// founder check names a lost cell instead of dereferencing it.</summary>
+		[Test]
+		public void AlreadyHeldNeighboursStaySitingGroundAndTheFounderCheckIsNullSafe()
+		{
+			string capital = Read(Capital);
+			Assert.That(capital, Does.Contain(
+				"{ ChainClaimNotes.Add(direction + \":already-held\"); ChainHeld.Add(neighbour); continue; }"));
+			Assert.That(capital, Does.Contain("var grounds = new List<Zone>(ChainClaimed);"));
+			Assert.That(capital, Does.Contain("grounds.AddRange(ChainHeld);"));
+			Assert.That(capital, Does.Contain("foreach (Zone ground in grounds)"));
+			Assert.That(capital, Does.Contain("(player.CurrentCell != null"));
+			Assert.That(capital, Does.Contain("ReferenceEquals(The.ZoneManager?.ActiveZone, Zone) && player != null"));
+		}
+
 		[Test]
 		public void TheArcologyBillIsPricedAsACompositeAndNothingBelowItIs()
 		{
