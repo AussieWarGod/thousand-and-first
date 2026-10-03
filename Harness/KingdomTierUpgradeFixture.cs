@@ -17,6 +17,15 @@ namespace ThousandAndFirst.Harness
 	/// <c>Growth/KingdomArchitectureStamper.UpgradePreflight.cs:82</c>), and a fixture that
 	/// stamped those by hand would be proving its own arithmetic rather than production's.
 	/// </para>
+	/// <para>
+	/// THE SHORTAGE IS HELD FROM SETUP. The store is minted with the tent's own canvas bill plus
+	/// the upgrade's canvas bill less <see cref="UpgradeShortBy"/>. The commission pays the tent
+	/// out of that store, so from the first settlement pass the upgrade is exactly one unit short
+	/// and no real pass can begin it, however early the tent completes. A pass may begin the
+	/// improvement in the same pass the tent completes (the commission job is terminal by then),
+	/// so an idle standing tent between two passes is only guaranteed this way. Nothing is
+	/// withheld across turns; the missing unit is minted only by the shortfall leg.
+	/// </para>
 	/// </summary>
 	internal static partial class KingdomTierUpgradeChecks
 	{
@@ -27,22 +36,24 @@ namespace ThousandAndFirst.Harness
 		/// improvement, and the three days of drinking the reserve holds back.</summary>
 		internal const int DedicatedDrams = 400;
 
-		/// <summary>Residents enrolled so the improvement's one free hand is really free.</summary>
-		internal const int ResidentCount = 4;
+		/// <summary>Residents enrolled, the count the natively-run camp-heart fixture uses:
+		/// fixture bodies can leave the zone or die during the first ordinary day (camp-heart
+		/// native run ea2bf92d kept two of six in the zone), and the raising gang wants two.
+		/// </summary>
+		internal const int ResidentCount = 6;
 
-		internal const int MintedBrushUnits = 24;
+		/// <summary>Canvas units the upgrade bill is left short by once the tent is paid.</summary>
+		internal const int UpgradeShortBy = 1;
+
 		internal const int MintedTimberUnits = 4;
 		internal const string FixtureOrigin = "tier upgrade fixture";
 
 		private sealed partial class Frame
 		{
-			private readonly List<GameObject> Owned = new List<GameObject>();
-			private readonly List<string> MintedBrushIds = new List<string>();
 			internal GameObject Heart, Store;
 
-			/// <summary>Fixture-owned brush units withdrawn from the store to make the material
-			/// shortage exact. Disclosed; every one of these is a minted fixture body.</summary>
-			private readonly List<GameObject> Withheld = new List<GameObject>();
+			/// <summary>Canvas units minted at setup, derived from the production bills.</summary>
+			internal int MintedBrushUnits;
 
 			internal void Start()
 			{
@@ -50,12 +61,13 @@ namespace ThousandAndFirst.Harness
 				Require(System.ClaimedZones.Contains(Zone.ZoneID),
 					"the real founding did not claim this ground");
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,
-					Owned.Add, Require);
+					Ignore, Require);
 				BindHeartAndStore();
 				EnrollResidents();
 				MintStoreContents();
 				SuppressFirstNotice();
 				CommissionTent();
+				RequireExactShortfall();
 				Armed = true;
 				Phase = 1;
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
@@ -64,8 +76,11 @@ namespace ThousandAndFirst.Harness
 					.Append("; population=").Append(System.Population)
 					.Append("; stored-water=").Append(KingdomGrowth.CountStoredWater(Zone))
 					.Append("; minted-brush=").Append(MintedBrushUnits)
-					.Append("; minted-timber=").Append(MintedTimberUnits);
+					.Append("; minted-timber=").Append(MintedTimberUnits)
+					.Append("; upgrade-short-by=").Append(UpgradeShortBy);
 			}
+
+			private static void Ignore(GameObject Vessel) { }
 
 			/// <summary>The standing founding heart through the production survey, and its
 			/// authored stockpile through the production anchored-component resolver.</summary>
@@ -133,13 +148,22 @@ namespace ThousandAndFirst.Harness
 					"the enrolled residents are not counted by the settlement");
 			}
 
+			/// <summary>The tent's canvas bill plus the upgrade's, less the exact shortage, read
+			/// from the production registry so a catalogue edit cannot desynchronise the boundary.
+			/// </summary>
 			private void MintStoreContents()
 			{
-				Mint(KingdomMaterial.Brush, MintedBrushUnits, MintedBrushIds);
-				Mint(KingdomMaterial.Timber, MintedTimberUnits, null);
+				int tentBrush = KingdomMaterials.CostFor(FromKey).Get(KingdomMaterial.Brush);
+				int upgradeBrush = KingdomMaterials.UpgradeCostFor(FromKey)
+					.Get(KingdomMaterial.Brush);
+				Require(tentBrush > 0 && upgradeBrush > UpgradeShortBy,
+					"the catalogue bills leave no exact canvas shortage to hold");
+				MintedBrushUnits = tentBrush + upgradeBrush - UpgradeShortBy;
+				Mint(KingdomMaterial.Brush, MintedBrushUnits);
+				Mint(KingdomMaterial.Timber, MintedTimberUnits);
 			}
 
-			private void Mint(KingdomMaterial Material, int Units, List<string> Ids)
+			private void Mint(KingdomMaterial Material, int Units)
 			{
 				string blueprint = KingdomMaterials.BlueprintFor(Material);
 				Require(!string.IsNullOrEmpty(blueprint),
@@ -154,15 +178,15 @@ namespace ThousandAndFirst.Harness
 						Silent: true, NoStack: true);
 					Require(ReferenceEquals(accepted, unit),
 						"a minted unit did not land as its own physical unit in the camp store");
-					if (Ids != null) Ids.Add(id);
 				}
 			}
 
-			/// <summary>Pre-marks the once-per-game modal first notice as given. DISCLOSED
-			/// synthetic input: <c>Growth/KingdomUpgrade.13.Resolve.cs:90</c> returns without
-			/// beginning anything while <c>GiveFirstNotice</c> can still fire, and that helper
-			/// shows a <c>Popup</c> a sealed script cannot answer. This buys the first ready pass
-			/// the right to begin; it asserts nothing about production behaviour.</summary>
+			/// <summary>Pre-marks the once-per-game first notice as given. DISCLOSED synthetic
+			/// input. Under the sealed script the runner's <c>Popup.Suppress</c> auto-acknowledges
+			/// the modal, but <c>GiveFirstNotice</c> still returns true and
+			/// <c>Growth/KingdomUpgrade.13.Resolve.cs:90</c> returns before <c>Begin</c>, so the
+			/// first ready pass would only tell. Pre-marking keeps the begin on that pass; it
+			/// asserts nothing about production behaviour.</summary>
 			private void SuppressFirstNotice()
 			{
 				Game.SetIntGameState(KingdomUpgrade.NoticedState, 1);
@@ -195,9 +219,25 @@ namespace ThousandAndFirst.Harness
 				Require(found != null && found.Route == KingdomConstructionRoute.PlotCommission
 					&& KingdomConstruction.Owns(System, Zone, found),
 					"the tent commission published no owned plot-commission job");
+				TentJobId = found.Id;
 				Evidence.Append("\ncommissioned tent job=").Append(found.Id)
 					.Append("; route=").Append(found.Route)
 					.Append("; due=").Append(found.DueTick);
+			}
+
+			/// <summary>The commission paid its bill out of this store, and what is left is the
+			/// upgrade bill less exactly <see cref="UpgradeShortBy"/> canvas units.</summary>
+			private void RequireExactShortfall()
+			{
+				string missing;
+				Require(!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out missing),
+					"the upgrade bill is already covered after the tent commission");
+				int left = KingdomMaterials.Stock(Zone).Tally.Get(KingdomMaterial.Brush);
+				Require(left == KingdomMaterials.UpgradeCostFor(FromKey).Get(KingdomMaterial.Brush)
+					- UpgradeShortBy, "the commission did not leave the upgrade exactly "
+						+ UpgradeShortBy + " canvas short: " + left + " left");
+				Evidence.Append("\nstore-brush-after-commission=").Append(left)
+					.Append("; missing=").Append(KingdomScenarioRules.Bounded(missing));
 			}
 
 			private GameObject Create(string Blueprint)
@@ -207,7 +247,6 @@ namespace ThousandAndFirst.Harness
 					&& created.Count == 1 && created.CurrentCell == null
 					&& created.InInventory == null, Blueprint + " produced no fresh custody");
 				created.SetIntProperty("NoLoot", 1);
-				Owned.Add(created);
 				return created;
 			}
 		}

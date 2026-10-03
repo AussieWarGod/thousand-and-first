@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -20,9 +21,10 @@ namespace ThousandAndFirst.Harness
 
 		private sealed partial class Frame
 		{
-			/// <summary>Phase 2: the production-built tent is a standing settlement work the
-			/// improvement pass can see, and the registry's quote is exactly the frozen one.
-			/// </summary>
+			/// <summary>First check, after leg one: the tent is the completed output of the real
+			/// commission, a standing settlement work the improvement pass enumerates, and the
+			/// real passes began nothing on it while its bill was short. The registry's quote is
+			/// exactly the frozen one.</summary>
 			private void StandingTent()
 			{
 				GameObject tent = Standing(FromKey);
@@ -36,12 +38,22 @@ namespace ThousandAndFirst.Harness
 				PredecessorId = tent.IDIfAssigned;
 				Require(!string.IsNullOrEmpty(PredecessorId),
 					"the standing tent has no assigned identity");
-				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
-				Require(survey != null, "the settlement could not be surveyed");
-				bool listed = false;
-				for (int i = 0; i < survey.Built.Count; i++)
-					if (ReferenceEquals(survey.Built[i], tent)) listed = true;
-				Require(listed, "the standing tent is not in the survey the pass enumerates");
+				KingdomConstructionJob commission;
+				Require(KingdomConstruction.TryFind(TentJobId, out commission)
+					&& commission != null
+					&& commission.Phase == KingdomConstructionPhase.Complete
+					&& commission.OutputId == PredecessorId
+					&& tent.GetStringProperty(KingdomConstruction.ReceiptProperty) == TentJobId,
+					"the standing tent is not the completed output of the real commission, or "
+						+ "another job is bound to it");
+				var held = tent.GetPart<r_KingdomImprovement>();
+				Require(held == null || !held.Working,
+					"an improvement began on the tent while its bill was short");
+				string missing;
+				Require(!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out missing),
+					"the upgrade bill became payable before the shortfall leg supplied it");
+				Require(OnLocalSurvey(survey => Lists(survey.Built, tent)),
+					"the standing tent is not in the survey the pass enumerates");
 				KingdomUpgradeRules.UpgradeChain chain;
 				Require(KingdomUpgrade.TryGetChain(FromKey, out chain) && chain != null
 					&& chain.SuccessorKey == ToKey,
@@ -57,19 +69,22 @@ namespace ThousandAndFirst.Harness
 				}
 				Evidence.Append("\nstanding tent=").Append(PredecessorId)
 					.Append("; design=").Append(KingdomUpgrade.DesignKeyOf(tent))
+					.Append("; commission=").Append(TentJobId)
 					.Append("; successor-key=").Append(chain.SuccessorKey)
-					.Append("; bill-brush=").Append(bill.Get(KingdomMaterial.Brush));
+					.Append("; bill-brush=").Append(bill.Get(KingdomMaterial.Brush))
+					.Append("; pass-announced=").Append(held == null ? "none"
+						: ((KingdomUpgradeRules.UpgradeVerdict)held.AnnouncedReason).ToString());
 			}
 
-			/// <summary>Phase 4: the settlement pass paid for and began the improvement. The
-			/// physical debit is measured against the frozen quote, not merely reported.</summary>
+			/// <summary>Second check, after leg two: the settlement pass paid for and began the
+			/// improvement. The physical debit is measured against the frozen quote.</summary>
 			private void PaidAndBegun()
 			{
 				GameObject tent = Exact(PredecessorId);
 				Require(tent != null, "the predecessor tent left its exact identity before work");
 				ImprovementJobId = tent.GetStringProperty(KingdomConstruction.ReceiptProperty);
-				Require(!string.IsNullOrEmpty(ImprovementJobId),
-					"the settlement pass bound no construction receipt to the tent");
+				Require(!string.IsNullOrEmpty(ImprovementJobId) && ImprovementJobId != TentJobId,
+					"the settlement pass bound no improvement receipt to the tent");
 				KingdomConstructionJob job;
 				Require(KingdomConstruction.TryFind(ImprovementJobId, out job) && job != null
 					&& job.Route == KingdomConstructionRoute.Improvement
@@ -99,9 +114,15 @@ namespace ThousandAndFirst.Harness
 					.Append("; scaffold=").Append(scaffold.IDIfAssigned);
 			}
 
-			/// <summary>Phase 5: the successor stands, its predecessor is provably gone, and the
-			/// paid receipt is closed. The predecessor's absence is proved by the typed physical
-			/// lookup, not by a census of what happens to be alive.</summary>
+			/// <summary>Final check, after leg three: the successor stands, its predecessor is
+			/// provably gone, and the paid receipt is closed and settled. The receipt passes
+			/// FinalRemoved when the predecessor's absence is committed
+			/// (<c>Growth/KingdomUpgrade.25.HandoverRemoval.cs</c>) and the completion telling
+			/// then settles it at EffectsSettled in the same recovery
+			/// (<c>Growth/KingdomScaffold.CompletionAndLegacy.cs</c>, <c>TellCompletion</c>), the
+			/// terminal state every natively-run improvement witness reads
+			/// (<c>Harness/KingdomPaidHousingWitness.cs</c>). The predecessor's absence is proved
+			/// by the typed physical lookup, not by a census of what happens to be alive.</summary>
 			private void HandedOverAndRetired()
 			{
 				GameObject successor = Standing(ToKey);
@@ -124,11 +145,13 @@ namespace ThousandAndFirst.Harness
 					== KingdomPhysicalLookupState.Absent && absent == null,
 					"the retired predecessor is still physically present");
 				KingdomConstructionJob job;
-				Require(KingdomConstruction.TryFind(ImprovementJobId, out job) && job != null
-					&& job.Phase == KingdomConstructionPhase.Complete
-					&& job.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved
-					&& job.OutputId == SuccessorId,
-					"the improvement receipt did not close on its exact successor");
+				Require(KingdomConstruction.TryFind(ImprovementJobId, out job) && job != null,
+					"the improvement receipt is absent");
+				Require(job.Phase == KingdomConstructionPhase.Complete
+					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled
+					&& job.SubjectId == PredecessorId && job.OutputId == SuccessorId,
+					"the improvement receipt did not close and settle on its exact endpoints: "
+						+ job.Phase + "/" + job.PhysicalPhase);
 				var improvement = successor.GetPart<r_KingdomImprovement>();
 				Require(improvement == null || (!improvement.HandoverQuarantined
 					&& string.IsNullOrEmpty(improvement.HandoverFailure)),
@@ -159,6 +182,13 @@ namespace ThousandAndFirst.Harness
 					found = item;
 				}
 				return found;
+			}
+
+			private static bool Lists(List<GameObject> Rows,
+				GameObject Item)
+			{
+				for (int i = 0; i < Rows.Count; i++) if (ReferenceEquals(Rows[i], Item)) return true;
+				return false;
 			}
 
 			private GameObject Exact(string Id)

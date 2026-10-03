@@ -7,10 +7,12 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Machine witness for the ordinary (non-heart) building tier upgrade, behaviour-coverage
-	/// row 8. Five phases over one real settlement: a production-commissioned tent stands; the
-	/// registry's quote for tent -&gt; tentrow is what production computes; the improvement is
-	/// refused BY ITS NAMED REASON while the canvas is short; the real settlement pass then pays
-	/// and begins it; and the successor stands with its predecessor exactly and provably gone.
+	/// row 8. Five phases over one real settlement: a production-commissioned tent stands while
+	/// the real passes begin nothing on it with its canvas one unit short; the registry's quote
+	/// for tent -&gt; tentrow is what production computes; the improvement is refused BY ITS
+	/// NAMED REASON while the canvas is short and admitted by exactly the missing unit; the real
+	/// settlement pass then pays and begins it; and the successor stands with its predecessor
+	/// exactly and provably gone.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED - see <see cref="KingdomTierUpgradeProvider"/>. Nothing here
 	/// drives the upgrade: the phases only read what the settlement pass did between advances.
@@ -76,6 +78,10 @@ namespace ThousandAndFirst.Harness
 			internal readonly Zone Zone;
 			internal KingdomSystem System;
 
+			/// <summary>Id of the real plot commission that raised the tent, captured at setup.
+			/// </summary>
+			internal string TentJobId;
+
 			/// <summary>Object id of the production-built tent, captured while it still stands.
 			/// </summary>
 			internal string PredecessorId;
@@ -83,8 +89,8 @@ namespace ThousandAndFirst.Harness
 			/// <summary>Object id of the tent-row the settlement raised in its place.</summary>
 			internal string SuccessorId;
 
-			/// <summary>Id of the improvement job the settlement pass funded, captured at
-			/// phase 4 from the predecessor's own construction receipt.</summary>
+			/// <summary>Id of the improvement job the settlement pass funded, captured at the
+			/// second check from the predecessor's own construction receipt.</summary>
 			internal string ImprovementJobId;
 
 			internal bool Armed, Done;

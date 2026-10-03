@@ -27,6 +27,15 @@ namespace ThousandAndFirst.Tests
 				.Split('\n').Single(line => line.StartsWith("SCRIPT=", StringComparison.Ordinal))
 				.Substring(7).Split(';');
 
+		/// <summary>True when <paramref name="Later"/> follows <paramref name="First"/> within
+		/// <paramref name="Window"/> characters of <paramref name="Text"/>.</summary>
+		private static bool Follows(string Text, string First, string Later, int Window)
+		{
+			int at = Text.IndexOf(First, StringComparison.Ordinal);
+			int next = at < 0 ? -1 : Text.IndexOf(Later, at, StringComparison.Ordinal);
+			return at >= 0 && next > at && next - at <= Window;
+		}
+
 		/// <summary>
 		/// The persona and the provider seal the SAME script, word for word, and no one-character
 		/// edit, deletion or addition survives the comparison.
@@ -47,6 +56,39 @@ namespace ThousandAndFirst.Tests
 				Assert.That(KingdomTierUpgradeScript.Matches(
 					sealed_.Where((_, at) => at != i).ToArray()), Is.False, "cut at " + i);
 			}
+		}
+
+		/// <summary>
+		/// The legs are counted in daily settlement passes. Receipt-bearing work advances only
+		/// inside the pass, the pass runs once per 1200-tick day, and a freshly staked or
+		/// projected raising's first interval is priced at zero because no crew witness exists
+		/// until a pass stamps it. So leg one needs three passes (zero, the priced 900-tick tent,
+		/// a spare), leg two exactly two (the begin and the improvement's zero-priced first
+		/// interval, so the job is still Working when read), and leg three three (the priced
+		/// 900-tick improvement and two spares). A production drift in any of these facts, or a
+		/// shortened leg, breaks this pin rather than a costly native run.
+		/// </summary>
+		[Test]
+		public void TheLegsCountSettlementPassesWithAZeroPricedFirstInterval()
+		{
+			string[] script = Script("tier-upgrade-native-check");
+			Assert.That(script[2], Is.EqualTo("advance 3600"), "leg one");
+			Assert.That(script[5], Is.EqualTo("advance 2400"), "leg two");
+			Assert.That(script[7], Is.EqualTo("advance 3600"), "leg three");
+			Assert.That(Read("Simulation/City/KingdomSemanticClockRules.cs"), Does.Contain(
+				"public const long CadenceTicks = KingdomRules.TicksPerDay;"));
+			Assert.That(Read("Core/KingdomRules.Economy.cs"), Does.Contain(
+				"public const long TicksPerDay = 1200L;"));
+			Assert.That(Read("Growth/KingdomScaffold.cs"), Does.Contain(
+				"Receipt-bearing work advances only from KingdomConstruction.OnSettlementPass."));
+			Assert.That(Read("Growth/KingdomPlot2.26.Labour.cs"), Does.Contain(
+				"witnessed ? prior.LabourPercent : 0,"));
+			Assert.That(Read("Growth/KingdomScaffold.LabourWindow.cs"), Does.Contain(
+				"else if (witnessed) pricedEffectiveness = prior.EffectivenessPercent;"));
+			foreach (string window in new[] { "Growth/KingdomPlot2.26b.LabourWindow.cs",
+				"Growth/KingdomScaffold.LabourWindow.cs" })
+				Assert.That(Follows(Read(window), "!= KingdomConstructionPresenceRules.Schema)",
+					"effectiveness = 0;", 80), Is.True, window);
 		}
 
 		/// <summary>The provider is registered, names its three verbs, seals the script through
@@ -125,8 +167,32 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Read(Checks), Does.Contain("internal const string ToKey = \"tentrow\";"));
 		}
 
+		/// <summary>
+		/// The shortage is HELD FROM SETUP, so no real pass can begin the climb while it stands:
+		/// the store is minted one canvas unit short of the tent's bill plus the upgrade's, the
+		/// shortfall is proved exact right after the commission pays, the first check proves the
+		/// tent still carries only its commission receipt, and nothing is withheld across turns.
+		/// </summary>
+		[Test]
+		public void TheShortageIsHeldFromSetupAndNothingBeginsWhileShort()
+		{
+			string fixture = Read(Fixture);
+			Assert.That(fixture, Does.Contain("internal const int UpgradeShortBy = 1;"));
+			Assert.That(fixture, Does.Contain(
+				"MintedBrushUnits = tentBrush + upgradeBrush - UpgradeShortBy;"));
+			Assert.That(Follows(fixture, "CommissionTent();", "RequireExactShortfall();", 40),
+				Is.True, "the exact shortfall is proved right after the commission pays");
+			string phases = Read(Phases);
+			Assert.That(phases, Does.Contain(
+				"tent.GetStringProperty(KingdomConstruction.ReceiptProperty) == TentJobId"));
+			Assert.That(phases, Does.Contain(
+				"\"an improvement began on the tent while its bill was short\""));
+			foreach (string path in new[] { Fixture, Phases, Shortfall })
+				Assert.That(Read(path), Does.Not.Contain("RemoveFromContext"), path);
+		}
+
 		/// <summary>The negative leg asserts the NAMED reason and a zero debit, not merely that
-		/// something refused.</summary>
+		/// something refused, and exactly the missing unit admits the bill.</summary>
 		[Test]
 		public void TheNegativeLegBindsTheNamedMaterialRefusal()
 		{
@@ -137,12 +203,15 @@ namespace ThousandAndFirst.Tests
 			Assert.That(shortfall, Does.Contain("shortAssessment.Reason == expected"));
 			Assert.That(shortfall, Does.Contain(
 				"\"the refused assessment moved stored water\""));
+			Assert.That(shortfall, Does.Contain("supplied == UpgradeShortBy"));
 			Assert.That(shortfall, Does.Contain("KingdomUpgradeRules.UpgradeVerdict.Ready"));
 		}
 
 		/// <summary>The completion proof is ordered: the predecessor's identity is captured while
 		/// it still stands, and its absence is proved by the typed physical lookup rather than by
-		/// a census of what happens to be alive.</summary>
+		/// a census of what happens to be alive. The receipt is read where production settles
+		/// it: TellCompletion moves FinalRemoved to EffectsSettled inside the same recovery, the
+		/// terminal state the natively-run paid-housing witness reads.</summary>
 		[Test]
 		public void RemovalProofIsBoundToTheCapturedPredecessorIdentity()
 		{
@@ -158,7 +227,15 @@ namespace ThousandAndFirst.Tests
 				"the removal proof must be compared against the captured predecessor identity");
 			Assert.That(phases, Does.Contain("KingdomConstruction.FindExactId(Zone, PredecessorId, out absent)"));
 			Assert.That(phases, Does.Contain("== KingdomPhysicalLookupState.Absent"));
-			Assert.That(phases, Does.Contain("job.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved"));
+			Assert.That(phases, Does.Contain("job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled"));
+			Assert.That(phases, Does.Contain("job.SubjectId == PredecessorId && job.OutputId == SuccessorId"));
+			Assert.That(phases, Does.Not.Contain("KingdomPhysicalPhase.FinalRemoved"));
+			Assert.That(Read("Growth/KingdomUpgrade.25.HandoverRemoval.cs"), Does.Contain(
+				"if (!r_KingdomScaffold.TellCompletion(System, Successor, Job))"));
+			Assert.That(Read("Growth/KingdomScaffold.CompletionAndLegacy.cs"), Does.Contain(
+				"KingdomPhysicalPhase.EffectsSettled, telling.PhysicalIndex,"));
+			Assert.That(Read("Harness/KingdomPaidHousingWitness.cs"), Does.Contain(
+				"job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled"));
 		}
 
 		/// <summary>The persona brackets the exact phases, and every synthetic input is named in
@@ -170,9 +247,9 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("REQUEST=founding-first-city"));
 			Assert.That(persona, Does.Contain(
 				"VERBS=tier-upgrade-setup,tier-upgrade-check,tier-upgrade-short"));
-			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;tier-upgrade-setup;advance 1200;"
-				+ "tier-upgrade-check;tier-upgrade-short;advance 1200;tier-upgrade-check;"
-				+ "advance 1200;tier-upgrade-check;stagedigest"));
+			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;tier-upgrade-setup;advance 3600;"
+				+ "tier-upgrade-check;tier-upgrade-short;advance 2400;tier-upgrade-check;"
+				+ "advance 3600;tier-upgrade-check;stagedigest"));
 			Assert.That(persona, Does.Contain("EXPECT=stagedigest:OK~founded=false,"
 				+ "tier-upgrade-setup:OK~native-tier-upgrade phase=1,advance:OK,"
 				+ "tier-upgrade-check:OK~native-tier-upgrade phase=2,"

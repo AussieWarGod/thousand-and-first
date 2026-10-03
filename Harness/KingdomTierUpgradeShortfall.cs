@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using XRL.World;
 
 namespace ThousandAndFirst.Harness
@@ -8,10 +8,12 @@ namespace ThousandAndFirst.Harness
 	/// assessment refuses the ordinary tier climb by its named reason, debits nothing, and then
 	/// admits it again the moment the exact bill is on the shelf.
 	/// <para>
-	/// The shortage is made exact by WITHHOLDING fixture-minted brush units from the camp store -
-	/// a disclosed synthetic input, and never a unit the settlement or the founder placed. The
-	/// units are returned in full before the positive leg runs, so the improvement pass pays the
-	/// real bill out of the real store.
+	/// The shortage was made at setup and held across every real pass of leg one (see
+	/// <see cref="UpgradeShortBy"/>): the store was minted one canvas unit short of the tent's
+	/// bill plus the upgrade's, so the settlement pass could begin nothing on the standing tent.
+	/// This leg mints only the missing unit - a disclosed synthetic input, never a unit the
+	/// settlement or the founder placed - and requires that exactly
+	/// <see cref="UpgradeShortBy"/> unit admits the bill, which proves the boundary both ways.
 	/// </para>
 	/// <para>
 	/// The strength of this leg is the LADDER POSITION, not the refusal alone.
@@ -31,10 +33,9 @@ namespace ThousandAndFirst.Harness
 				GameObject tent = Standing(FromKey);
 				Require(tent != null && tent.IDIfAssigned == PredecessorId,
 					"the shortfall leg lost the exact standing tent");
-				int withdrawn = WithholdBrush();
 				string failure;
 				Require(!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure),
-					"the stores still cover the upgrade bill after the shortage was made exact");
+					"the stores already cover the upgrade bill before the shortfall leg");
 				int water = KingdomGrowth.CountStoredWater(Zone);
 				KingdomMaterialTally before = KingdomMaterials.Stock(Zone).Tally.Copy();
 				KingdomUpgrade.Assessment shortAssessment = Assess(tent);
@@ -60,9 +61,11 @@ namespace ThousandAndFirst.Harness
 				for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 					Require(after.Get((KingdomMaterial)i) == before.Get((KingdomMaterial)i),
 						"the refused assessment moved material: " + (KingdomMaterial)i);
-				RestoreBrush(withdrawn);
+				int supplied = SupplyMissingBrush();
+				Require(supplied == UpgradeShortBy, "the upgrade shortage was not exactly "
+					+ UpgradeShortBy + " canvas unit(s): supplied " + supplied);
 				Require(KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure),
-					"the restored stores still do not cover the upgrade bill: " + failure);
+					"the supplied stores still do not cover the upgrade bill: " + failure);
 				KingdomUpgrade.Assessment ready = Assess(tent);
 				Require(ready.Valid
 					&& ready.Verdict == KingdomUpgradeRules.UpgradeVerdict.Ready
@@ -74,7 +77,7 @@ namespace ThousandAndFirst.Harness
 					&& ready.StageNeeded == GrowthStage.Camp,
 					"the ready quote is not the frozen 2 drams / 1 hand / 900 ticks / Camp");
 				Evidence.Append("\nshort verdict=NotEnoughMaterial")
-					.Append("; withheld-brush=").Append(withdrawn)
+					.Append("; supplied-brush=").Append(supplied)
 					.Append("; reason=").Append(KingdomScenarioRules.Bounded(expected))
 					.Append("; ready-drams=").Append(ready.CostDrams)
 					.Append("; ready-ticks=").Append(ready.BuildTicks)
@@ -82,70 +85,56 @@ namespace ThousandAndFirst.Harness
 					.Append("; ready-stage=").Append(ready.StageNeeded);
 			}
 
-			/// <summary>Production's own assessment, on a bound local operation, with the free
-			/// hands the settlement pass itself computes
-			/// (<c>Growth/KingdomUpgrade.13.Resolve.cs:23-27</c>) and no competing work.
-			/// Non-mutating: <c>KingdomUpgrade.Assess</c> only reads.</summary>
+			/// <summary>Production's own assessment with the free hands the settlement pass
+			/// itself computes (<c>Growth/KingdomUpgrade.13.Resolve.cs:23-27</c>) and no
+			/// competing work. Non-mutating: <c>KingdomUpgrade.Assess</c> only reads.</summary>
 			private KingdomUpgrade.Assessment Assess(GameObject Work)
 			{
-				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
-				Require(survey != null, "the settlement could not be surveyed to assess");
 				int hands = System.Population - System.AssignedCrew;
 				if (hands < 0) hands = 0;
 				Require(hands >= QuoteCrew,
 					"the fixture settlement has no free hand for an improvement");
+				return OnLocalSurvey(survey =>
+					KingdomUpgrade.Assess(System, Zone, Work, survey, hands, false));
+			}
+
+			/// <summary>Runs one read against the production local-operation survey, bound for
+			/// exactly that read and proved released afterwards. Occupant classification reads
+			/// the BOUND survey (<c>Growth/KingdomPlot2.26e.EnvelopeClearance.cs</c>), so an
+			/// unbound assessment could not see a resident as movable.</summary>
+			private T OnLocalSurvey<T>(Func<KingdomSurvey, T> Read)
+			{
+				Require(!KingdomSurvey.HasBoundPass, "a local survey read found a pass bound");
 				string failure;
 				KingdomSurvey.PassScope scope;
 				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out scope, out failure),
-					failure);
+					failure ?? "the local survey could not bind");
+				T result;
 				using (scope)
 				{
-					return KingdomUpgrade.Assess(System, Zone, Work, survey, hands, false);
+					KingdomSurvey survey = KingdomSurvey.ActiveFor(Zone);
+					Require(survey != null, "the bound local survey is absent");
+					result = Read(survey);
 				}
+				Require(!KingdomSurvey.HasBoundPass, "the local survey read left its pass bound");
+				return result;
 			}
 
-			/// <summary>Removes fixture-minted brush units from the camp store until production
-			/// says the upgrade bill cannot be paid. Only bodies this fixture minted are touched;
-			/// the count is disclosed.</summary>
-			private int WithholdBrush()
+			/// <summary>Mints canvas into the camp store one unit at a time until production
+			/// says the upgrade bill can be paid. Bounded by the bill itself.</summary>
+			private int SupplyMissingBrush()
 			{
-				Require(Withheld.Count == 0, "brush was already withheld once");
+				int bill = KingdomMaterials.UpgradeCostFor(FromKey).Get(KingdomMaterial.Brush);
+				int supplied = 0;
 				string failure;
-				for (int i = 0; i < MintedBrushIds.Count; i++)
+				while (!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure))
 				{
-					if (!KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure)) break;
-					GameObject unit = MintedUnit(MintedBrushIds[i]);
-					if (unit == null) continue;
-					unit.RemoveFromContext();
-					Require(unit.InInventory == null && unit.CurrentCell == null,
-						"a withheld brush unit kept a custody");
-					Withheld.Add(unit);
+					Require(supplied < bill,
+						"the whole canvas bill was supplied and still did not cover: " + failure);
+					Mint(KingdomMaterial.Brush, 1);
+					supplied++;
 				}
-				Require(Withheld.Count > 0,
-					"the store already could not pay the upgrade bill before any withdrawal");
-				return Withheld.Count;
-			}
-
-			private void RestoreBrush(int Expected)
-			{
-				Require(Withheld.Count == Expected, "the withheld brush count drifted");
-				for (int i = 0; i < Withheld.Count; i++)
-				{
-					GameObject unit = Withheld[i];
-					Require(ReferenceEquals(Store.Inventory.AddObject(unit, null, Silent: true,
-						NoStack: true), unit), "a withheld brush unit refused its return");
-				}
-				Withheld.Clear();
-			}
-
-			/// <summary>The still-live minted unit with this exact identity, or null.</summary>
-			private GameObject MintedUnit(string Id)
-			{
-				List<GameObject> held = Store.Inventory.Objects;
-				for (int i = 0; i < held.Count; i++)
-					if (GameObject.Validate(held[i]) && held[i].IDIfAssigned == Id)
-						return held[i];
-				return null;
+				return supplied;
 			}
 		}
 	}

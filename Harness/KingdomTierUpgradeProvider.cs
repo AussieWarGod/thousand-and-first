@@ -21,9 +21,12 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED. The camp is founded by the harness through its own founding
 	/// step; the water store, the residents (and their born provenance) and the raw material
-	/// units are fixture inputs; the once-per-game modal first notice
-	/// (<c>Growth/KingdomUpgrade.09.RegistryAndIdentity.cs:111-120</c>) is pre-marked as given so
-	/// a sealed script is not stalled by a popup. The TENT ITSELF IS NOT SYNTHETIC: it is
+	/// units are fixture inputs, the canvas minted one unit short of the tent's bill plus the
+	/// upgrade's; the once-per-game first notice
+	/// (<c>Growth/KingdomUpgrade.13.Resolve.cs:117-126</c>) is pre-marked as given. Under the
+	/// sealed script the runner's <c>Popup.Suppress</c> auto-acknowledges that modal, but an
+	/// unmarked first ready pass would still only tell and begin nothing
+	/// (<c>Growth/KingdomUpgrade.13.Resolve.cs:90</c>). The TENT ITSELF IS NOT SYNTHETIC: it is
 	/// commissioned through <c>KingdomPlots.Commission</c> and built by production, because the
 	/// authored upgrade lane needs frozen lot receipts no fixture may invent. No claim is made
 	/// about reachability through ordinary play, about a rendered Charter, or about save/load.
