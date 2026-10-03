@@ -21,7 +21,9 @@ namespace ThousandAndFirst.Harness
 			Require(Game != null && ReferenceEquals(The.Game, Game) && Zone != null
 				&& ReferenceEquals(The.ZoneManager?.ActiveZone, Zone) && !KingdomSurvey.HasBoundPass,
 				"higher-heart capture requires its active game/zone and an unbound survey");
-			var frame = new Frame(Game, Zone) { System = Game.GetSystem<KingdomSystem>() };
+			// The paid chain is sealed as a rung-2 camp-heart ladder (SealedTargetRung); this
+			// observation-only frame reads the moot or court and no rung-conditional fixture accessor.
+			var frame = new Frame(Game, Zone, TargetRung: 2) { System = Game.GetSystem<KingdomSystem>() };
 			Require(frame.System != null && frame.System.Founded && frame.System.ClaimedZones.Contains(Zone.ZoneID),
 				"higher-heart capture has no founded city claiming this zone");
 			long turns = Game.Turns, ticks = Game.TimeTicks;

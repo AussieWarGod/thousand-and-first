@@ -29,7 +29,18 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Frame
 		{
+			/// <summary>The third check of either sealed ladder. A rung-2 run spends one more
+			/// ordinary day and asks whether the settlement is still alive on the raised ground
+			/// (issue #162); a rung-3 run spends the moot yard's own labour window and reads the
+			/// second consecutive climb (issue #159, <c>ClimbRung3</c>). Which ladder this is was
+			/// sealed by the script at setup and never chosen here.</summary>
 			private void Phase3()
+			{
+				if (TargetRung >= 3) { ClimbRung3(); return; }
+				AfterRaise();
+			}
+
+			private void AfterRaise()
 			{
 				RecordJobProgress();
 				GameObject standing = StandingHeart();
