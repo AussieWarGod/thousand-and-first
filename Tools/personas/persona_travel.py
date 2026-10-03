@@ -10,6 +10,10 @@ KEYS = {"mode", "seed", "home", "observed-tick", "wait-turns", "travel-turns", "
 ECONOMIC_KEYS = {"pause-disabled", "pause-resumed", "paused-ticks", "resume-arrival", "resume-applications",
                  "pause-local-start", "pause-prior", "arrival-interval", "stress-initial-thirds",
                  "stress-residents", "synthetic-fixture"}
+# Harness/KingdomScenarioTravelRules.cs WaitTurns. Its return gate (ReturnReady) accepts the
+# requested wait or one turn more: the engine completes an advance on the next player action
+# opportunity (docs/DEVELOPMENT.md), so either count can reach beta-check as wait-turns.
+WAIT_TURNS = 1200
 
 
 def witness(rows):
@@ -40,7 +44,10 @@ def witness(rows):
         result[key] = int(result[key])
         if result[key] > 9223372036854775807:
             raise ValueError("travel number exceeds engine Int64")
-    if (result["wait-turns"] != 1200 or result["envelope"] != 252 or result["containers"] > 252
+    if not WAIT_TURNS <= result["wait-turns"] <= WAIT_TURNS + 1:
+        raise ValueError(f"travel wait requires {WAIT_TURNS} or {WAIT_TURNS + 1} completed advance turns;"
+                         f" observed {result['wait-turns']}")
+    if (result["envelope"] != 252 or result["containers"] > 252
             or result["drain-turns"] > 39 or result["peak-thirds"] > 24 or result["peak-heavy"] > 4
             or result["measured-demand"] > 936 or result["processed"] != result["growth-mirror"]
             or max(result["processed"], result["semantic"]) > result["observed-tick"]
@@ -156,13 +163,16 @@ def compare(present, away):
         if errors:
             raise ValueError("; ".join(errors))
     left, right = witness(present), witness(away)
-    for key in ("seed", "home", "wait-turns"):
+    # Each leg's wait was already held to WAIT_TURNS or one more by assess(); the two legs
+    # complete independently, so their counts may differ by that one turn and both are reported.
+    for key in ("seed", "home"):
         if left[key] != right[key]:
             raise ValueError("presence pair is not matched: " + key)
     if left["pause-effects-proved"] != right["pause-effects-proved"]:
         raise ValueError("presence pair mixes economic and continuity-only evidence")
     return {"scope": "developer-presence-pair", "seed": left["seed"], "home": left["home"],
-            "waitTurns": left["wait-turns"], "awayTravelTurns": right["travel-turns"],
+            "presentWaitTurns": left["wait-turns"], "awayWaitTurns": right["wait-turns"],
+            "awayTravelTurns": right["travel-turns"],
             "deltas": {key: right[key] - left[key] for key in ("containers", "drain-turns", "peak-thirds", "peak-heavy", "measured-demand")},
             "equalTotalElapsedClaimed": False, "fullEnvelopeStress": left["full-envelope-stress"] == "true",
             "residentStress": False, "releaseAcceptance": False}
