@@ -129,8 +129,11 @@ the startup/save/reload proof is an automated-driver `results.json` artifact (ev
 PASS, its process cleanly stopped) bound by hash in `docs/RELEASE_EVIDENCE.json`, never a
 human tester's unverifiable word. Credential entry and legal/marketing approval remain human.
 
-Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
-claiming compatibility with another build.
+Supported target: Caves of Qud v1.0.5, core build 2.0.211.56. The 2026-09-25 Steam update replaced
+core build 2.0.211.51, the target of public 0.3.7; the compile gate and both licensed suites were
+re-run on 2.0.211.56 and the published 0.3.7 candidate record keeps its original target. Native
+release checks on 2.0.211.56 remain owed. Re-run all licensed checks before claiming
+compatibility with another build.
 
 ## Two public package lanes
 
@@ -273,6 +276,19 @@ Upload that exact folder to the private item with **Upload hidden files** enable
 remove local copies, subscribe through Steam, and launch fresh. Confirm Steam-installed manifest
 version, exact inventory/receipt, loader, new game, save → desktop → reload, representative Alpha
 flow, and redacted `Player.log`. A local duplicate invalidates this proof.
+
+The save and reload check must include an **ordinary unfounded start**. A Kingdom Quickstart
+founds before its first save, so a Quickstart reload pair alone never proves that a world
+without a founded realm saves (#271, #272). The check is automated, never manual: run
+`Tools/run-personas.sh unfounded-save-native-check unfounded-reload` on the candidate's
+identical production and harness bytes and retain both PASS verdicts with the candidate's
+native evidence. The first proves a real engine save of an unfounded world with the
+SaveGameError witness armed and the growth-free dormant lifecycle frame; the second saves an
+unfounded world, stops it, cold-loads that exact save in a fresh descendant profile, founds
+the first city through production and saves again, with both journals, Player.logs and save
+artifacts checked by `Tools/check-unfounded-results.py`. A refused or missing verdict blocks
+the candidate. Neither run drives the Roleplay checkpoint or a starting-pet Quickstart
+(#274, #276); record that gap rather than claiming those routes.
 
 Copy the frozen package receipt byte-for-byte into the repository and commit it:
 
@@ -837,7 +853,8 @@ remains deferred until Beta. Verify the checkout before starting the release win
 Preconditions on the gaming PC, all already proved by the 0.3.1 releases: a Windows desktop session
 for the account that owns items `3794797472` and `3796495680`; the Steam client running and signed
 in under that **same** Windows account; licensed Caves of Qud at
-`F:\SteamLibrary\steamapps\common\Caves of Qud` at core build 2.0.211.51 with DLLs matching
+`F:\SteamLibrary\steamapps\common\Caves of Qud` at core build 2.0.211.56 (the 0.3.1 proofs ran on
+2.0.211.51, which the 2026-09-25 Steam update replaced) with DLLs matching
 `Tools/WorkshopSteam/sdk.lock.json`; .NET SDK 9.0.306 on the Windows PATH as `dotnet.exe`; a WSL2
 Ubuntu default distro under that same Windows account holding the gate toolchain; the registry root
 `C:\taf-workshop-state.dRBivM`; and both Workshop items subscribed on this client, because

@@ -17,6 +17,9 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
+    <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
+    <Compile Include="KingdomFreshUnfoundedSaveTests.cs" />
     <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
     <Compile Include="KingdomRetainedTransitionTests.cs" />
     <Compile Include="KingdomRoomEnclosureBoundsTests.cs" />
@@ -28,6 +31,7 @@
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUnfoundedSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
@@ -473,8 +477,10 @@
     <Compile Include="..\Core\KingdomRules.Districts.cs" />
     <Compile Include="..\Core\KingdomRules.Scarcity.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
+    <Compile Include="..\Experience\KingdomGrowthEnvelopeRefusalRules.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
+    <Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleRules.cs" />
     <Compile Include="..\Growth\KingdomPlotGroundRules.cs" />

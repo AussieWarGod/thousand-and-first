@@ -1,12 +1,52 @@
 # Changelog
 
-Current 3106-file census is line-cap green: 440,880 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
-The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
+Current 3108-file census is line-cap green: 440,963 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`.
+The cold-install inventory contains 3141 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
+
+## [0.3.8] — 2026-10-04 (Alpha)
+
+Alpha hotfix candidate: a game whose kingdom has not been founded can now be saved. Private
+candidate; not yet uploaded or accepted. Public Alpha remains 0.3.7.
+
+- Save a game before its kingdom is founded (#271, #272). Since 0.3.0, every save made before
+  the first city was founded failed with "growth envelope is not bounded and writable": the
+  Roleplay or Wander checkpoint on entering Joppa, Classic or Kingdom autosaves and manual saves,
+  and a Kingdom Quickstart that stopped before founding. It reproduces with this mod alone. A
+  not-yet-founded lifecycle book whose state is entirely default (or a canonical empty
+  quarantine) is now written in the earlier growth-free lifecycle record, which the unchanged
+  lifecycle reader parses back into the same founding-ready book. Founded saves are
+  byte-for-byte unchanged. Any other unwritable state is still refused, never truncated, and the
+  error now names the failing check.
+- Fix the second failure behind the same saves. Once the lifecycle record could be written, they
+  failed on the kingdom's polity record instead: a fresh, not-yet-founded polity ledger started
+  with a non-canonical option value ("Invalid polity authority: unobserved presentation option is
+  noncanonical"). Releases 0.3.0 to 0.3.7 never reached it because the lifecycle record failed
+  first. A fresh ledger now starts in the canonical state that loading and founding already
+  produced (the development line's fix from PR #250). Founded saves load exactly as before.
+- No save-format change. Loading a newer save with older mod code remains unsupported
+  (PLAYTESTING.md): to roll back, restore the backed-up save together with its matching package.
+  Only the unfounded lifecycle and polity records have been checked against 0.3.7's readers (the
+  lifecycle record also against 0.3.0's), engine-free; no whole 0.3.8 save has been loaded, nor a
+  kingdom founded in game, with older mod code. Releases 0.3.0 to 0.3.7 still cannot save a game
+  before its kingdom is founded.
+- Target Caves of Qud core build 2.0.211.56 (Steam build 25520692, installed by Steam on
+  2026-09-25; marketing version 1.0.5, save format 409). 0.3.7 was built for core build
+  2.0.211.51, which that update replaced. Gameplay is otherwise unchanged from 0.3.7.
+
+Source tests save a fresh lifecycle book, cold-load it, re-save it byte-identically and found a
+first city from it, and write and check, from an explicit list, the durable books a fresh,
+unfounded KingdomSystem (the kingdom's main save record) is constructed with. Only the native
+unfounded save writes every serialized field and the mod's other save records through the
+engine; docs/RELEASING.md requires that automated unfounded save and reload check for every
+release. Native checks of an unfounded save and its cold reload, with founded-save regressions,
+are required before publication; docs/STATUS.md records their status.
+Not covered in game: the exact Roleplay checkpoint trigger and a Quickstart stopped by a starting
+pet (#274, #276).
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 

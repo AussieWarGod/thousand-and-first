@@ -25,10 +25,20 @@ AUTHOR = "AussieWarGod"
 TAGS = ("Building", "Faction", "Settlement", "World", "Script", "Lore")
 PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
-GAME_CORE_BUILD = "2.0.211.51"
+GAME_CORE_BUILD = "2.0.211.56"
 RELEASE_EVIDENCE_SCHEMA = 6
 ALPHA_CANDIDATE_SCHEMA = 2
 LEGACY_ALPHA_CANDIDATE_SCHEMA = 1
+# A published public Alpha record keeps the exact Qud target it was bound to. The 2026-09-25
+# Steam update replaced core 2.0.211.51, so public 0.3.7 is listed here by version, commit and
+# private receipt; every other candidate must bind the current target above.
+PUBLISHED_ALPHA_GAME_TARGETS = {
+    (
+        "0.3.7",
+        "d9411b59810c56da105196b5cdb2a23b86ac926e",
+        "3b9d26fd0dfe8920af4737197a6bd32407ff7d8216192d2e3fa8a01a778c6c80",
+    ): ("1.0.5", "2.0.211.51"),
+}
 FIRST_ALPHA_RELEASE_VERSION = "0.3.0"
 ALPHA_RELEASE_VERSION_PATTERN = re.compile(r"^0\.3\.(?:0|[1-9][0-9]*)$")
 ALPHA_RELEASE_CHANNEL = "v0.3 Alpha"
@@ -789,12 +799,20 @@ def _validated_alpha_record(record_path: Path) -> dict:
         or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
     ):
         errors.append("Alpha candidateCommit must be a lowercase full Git commit")
-    if record.get("gameMarketingVersion") != GAME_MARKETING_VERSION:
-        errors.append(
-            f"Alpha candidate gameMarketingVersion must be {GAME_MARKETING_VERSION}"
-        )
-    if record.get("gameCoreBuild") != GAME_CORE_BUILD:
-        errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
+    published = tuple(
+        record.get(field)
+        for field in ("releaseVersion", "candidateCommit", "privatePackageReceiptSha256")
+    )
+    current = (GAME_MARKETING_VERSION, GAME_CORE_BUILD)
+    marketing, core = (
+        PUBLISHED_ALPHA_GAME_TARGETS.get(published, current)
+        if all(isinstance(value, str) for value in published)
+        else current
+    )
+    if record.get("gameMarketingVersion") != marketing:
+        errors.append(f"Alpha candidate gameMarketingVersion must be {marketing}")
+    if record.get("gameCoreBuild") != core:
+        errors.append(f"Alpha candidate gameCoreBuild must be {core}")
     id_fields = (
         ("workshopId", "privateWorkshopId")
         if schema == ALPHA_CANDIDATE_SCHEMA
