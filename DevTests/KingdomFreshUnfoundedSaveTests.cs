@@ -62,8 +62,8 @@ namespace ThousandAndFirst.Tests
 
 		// Production Write(SerializationWriter) bodies, whitespace and comments removed, each
 		// compared whole: the engine's named-field writer (emulated by Walk), or a writer this
-		// fixture runs engine-free. KingdomSystem.Write itself runs only the three projections
-		// checked below.
+		// fixture runs engine-free. KingdomSystem.Write itself runs only the projections pinned
+		// below.
 		private static readonly string[][] Writers =
 		{
 			new[] { "Core/KingdomSystem.z19a.Serialization.cs", "KingdomSystem", "SerializationVersion="
@@ -100,6 +100,25 @@ namespace ThousandAndFirst.Tests
 			new[] { "Growth/KingdomResidentAdmissionOperation.cs", "KingdomResidentAdmissionOperation", Named },
 			new[] { "Core/KingdomNamedCookReceipt.cs", "KingdomNamedCookReceipt", Named },
 			new[] { "Core/KingdomAssentingMootReceipt.cs", "KingdomAssentingMootReceipt", Named }
+		};
+
+		// The three projections KingdomSystem.Write refreshes before its named fields, and the
+		// legacy manifest snapshot they call, as whole compacted bodies. In a fresh game all three
+		// stay null: both topologies are empty and the Trade book has no manifest.
+		private static readonly string[][] Projections =
+		{
+			new[] { "Core/KingdomSystem.z08.SettlementTopology.cs", "private void SynchronizeLegacySettlementProjection()",
+				"#pragmawarningdisable618Away=SettlementTopology?.Get(0);#pragmawarningrestore618" },
+			new[] { "Core/KingdomSystem.z08.SettlementTopology.cs", "private void SynchronizeLegacyExiledProjection()",
+				"#pragmawarningdisable618ExiledAway=ExiledSettlementTopology?.Get(0);#pragmawarningrestore618" },
+			new[] { "Core/KingdomSystem.z26.TradeNormalization.cs", "internal void SynchronizeLegacyManifestProjection()",
+				"#pragmawarningdisable618Manifest=KingdomTrade.LegacyManifestSnapshot(TradeBook?.Manifest);"
+				+ "#pragmawarningrestore618" },
+			new[] { "Trade/KingdomTrade.cs",
+				"internal static KingdomManifest LegacyManifestSnapshot(KingdomTradeManifestState Manifest)",
+				"if(Manifest==null)returnnull;returnnewKingdomManifest{OriginName=Manifest.OriginName,"
+				+ "DestinationName=Manifest.DestinationName,Drams=Manifest.EscrowDrams,LoadedTick="
+				+ "Manifest.LoadedTick,DeadlineTick=Manifest.DeadlineTick,TurnedBack=Manifest.TurnedBack};" }
 		};
 
 		[Test]
@@ -163,14 +182,16 @@ namespace ThousandAndFirst.Tests
 			foreach (string[] row in Writers)
 				ClassicAssert.AreEqual(row[2].Replace("{0}", row[1]), Compact(WriteBody(row[0], row[1])),
 					row[1] + " writer changed: review this fixture");
-			StringAssert.Contains("Away = SettlementTopology?.Get(0);",
-				TestMain.ReadRepositoryText("Core/KingdomSystem.z08.SettlementTopology.cs"));
-			StringAssert.Contains("ExiledAway = ExiledSettlementTopology?.Get(0);",
-				TestMain.ReadRepositoryText("Core/KingdomSystem.z08.SettlementTopology.cs"));
-			StringAssert.Contains("Manifest = KingdomTrade.LegacyManifestSnapshot(TradeBook?.Manifest);",
-				TestMain.ReadRepositoryText("Core/KingdomSystem.z26.TradeNormalization.cs"));
-			StringAssert.Contains("KingdomTradeManifestState Manifest)\n\t\t{\n\t\t\tif (Manifest == null) return null;",
-				TestMain.ReadRepositoryText("Trade/KingdomTrade.cs"));
+			foreach (string[] row in Projections)
+			{
+				string[] lines = Lines(row[0]);
+				List<int> found = new List<int>();
+				for (int i = 0; i < lines.Length; i++)
+					if (Compact(Regex.Replace(lines[i], "//.*$", "")).Length > 0
+						&& Compact(Code(lines, i, Compact(row[1]).Length)) == Compact(row[1])) found.Add(i);
+				ClassicAssert.AreEqual(1, found.Count, row[1] + " is not declared once in " + row[0]);
+				ClassicAssert.AreEqual(row[2], Compact(Body(lines, found[0])), row[1] + " changed: review this fixture");
+			}
 		}
 
 		/// <summary>Serialized KingdomSystem fields (type, name, initializer) in declaration order:
@@ -230,12 +251,36 @@ namespace ThousandAndFirst.Tests
 
 		private static string WriteBody(string path, string type)
 		{
-			string[] lines = TestMain.ReadRepositoryText(path).Replace("\r\n", "\n").Split('\n');
+			string[] lines = Lines(path);
 			int i = Array.FindIndex(lines, line => Regex.IsMatch(line, @"\bclass " + type + @"\b"));
 			while (i >= 0 && !Regex.IsMatch(lines[i], @"public (override )?void Write\(SerializationWriter Writer\)")) i++;
+			return Body(lines, i);
+		}
+
+		private static string[] Lines(string path)
+		{
+			return TestMain.ReadRepositoryText(path).Replace("\r\n", "\n").Split('\n');
+		}
+
+		/// <summary>Lines from <paramref name="start"/> on, comments removed, until at least
+		/// <paramref name="length"/> non-blank characters are read: a declaration may span lines.</summary>
+		private static string Code(string[] lines, int start, int length)
+		{
+			StringBuilder text = new StringBuilder();
+			for (int i = start; i < lines.Length && Compact(text.ToString()).Length < length; i++)
+				text.Append(Regex.Replace(lines[i], "//.*$", "")).Append('\n');
+			return text.ToString();
+		}
+
+		/// <summary>The body of the member declared at <paramref name="declaration"/>: from its
+		/// opening brace line to the closing brace at the same indentation, comments removed.</summary>
+		private static string Body(string[] lines, int declaration)
+		{
+			int i = declaration;
+			while (lines[i].Trim() != "{") i++;
 			string indent = lines[i].Substring(0, lines[i].Length - lines[i].TrimStart().Length);
 			StringBuilder body = new StringBuilder();
-			for (i += 2; lines[i] != indent + "}"; i++) body.Append(Regex.Replace(lines[i], "//.*$", "")).Append('\n');
+			for (i++; lines[i] != indent + "}"; i++) body.Append(Regex.Replace(lines[i], "//.*$", "")).Append('\n');
 			return body.ToString();
 		}
 
