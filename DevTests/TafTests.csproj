@@ -405,6 +405,7 @@
     <Compile Include="..\Polity\KingdomPolityFactionTransitions.cs" />
     <Compile Include="..\Polity\KingdomPolityNpcRules.cs" />
     <Compile Include="..\Polity\KingdomPolityEndpointObservationRules.cs" />
+    <Compile Include="..\Polity\KingdomPolityEndpointFactRules.cs" />
     <Compile Include="..\Polity\KingdomPolityRules.Options.cs" />
     <Compile Include="..\Polity\KingdomPolityDirectRecordPresentationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityArrivalPresentationRules.cs" />
@@ -1946,6 +1947,7 @@
 	<Compile Include="KingdomPolityWave3Tests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Intents.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomPolityWindowReading.cs" />
 	<Compile Include="KingdomPolityWindowWitnessTests.cs" />

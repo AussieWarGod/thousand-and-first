@@ -5,8 +5,9 @@ namespace ThousandAndFirst
 		/// <summary>Realm due-window receipt; contains no zone, actor, or old-realm identity.</summary>
 		public KingdomPolityDispatchState PolityDispatch = new KingdomPolityDispatchState();
 
-		/// <summary>Process-local diagnostics dedupe: one plus the dispatch window whose fact drift
-		/// was last reported. Never persisted and never read by authority.</summary>
+		/// <summary>Instance-local diagnostics dedupe, reset on every load; never persisted and
+		/// never read by authority: one plus the dispatch window whose fact drift was last
+		/// reported by this loaded game.</summary>
 		[System.NonSerialized]
 		private ulong PolityDriftNotedWindow;
 

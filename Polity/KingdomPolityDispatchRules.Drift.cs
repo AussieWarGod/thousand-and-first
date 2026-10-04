@@ -59,6 +59,22 @@ namespace ThousandAndFirst
 				+ " withdrawn: " + Reason;
 		}
 
+		/// <summary>The scheduler's log lines for one successful window reconciliation, in order:
+		/// one per committed withdrawal, then the drift line when <paramref name="NoteDrift"/> (the
+		/// facts drifted and this loaded game has not yet reported this window). Never refusal
+		/// wording.</summary>
+		internal static List<string> DispatchNotes(ulong Window, IList<string> Withdrawn,
+			bool NoteDrift)
+		{
+			List<string> lines = new List<string>();
+			for (int i = 0; i < Withdrawn.Count; i++) lines.Add("polity: " + Withdrawn[i]);
+			if (NoteDrift) lines.Add("polity: dispatch window "
+				+ Window.ToString(CultureInfo.InvariantCulture)
+				+ " continues with endpoint facts changed since it opened; no new dispatch until window "
+				+ (Window + 1UL).ToString(CultureInfo.InvariantCulture));
+			return lines;
+		}
+
 		private static KingdomPolityEndpointFacts FindEndpoint(
 			IList<KingdomPolityEndpointFacts> Endpoints, string SettlementId)
 		{
