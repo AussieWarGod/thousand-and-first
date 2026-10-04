@@ -250,8 +250,8 @@ namespace ThousandAndFirst.Tests
 
 		// Mirrors SerializationWriter.WriteObject (decompiled 2.0.211.56
 		// XRL/World/SerializationWriter.cs:715-1232) for what a fresh book holds: engine-native
-		// values, collections of them and named-field composites, recursively. A book with its own
-		// writer is run by its validator; any other object would reach the BinaryFormatter fallback.
+		// values, collections of them and named-field composites, recursively. Any other object
+		// would reach the engine's BinaryFormatter fallback, so it fails here.
 		private static string Walk(object value, string path, int depth, StringBuilder image)
 		{
 			if (value == null || value is string || value is Enum || value.GetType().IsPrimitive)
@@ -276,7 +276,8 @@ namespace ThousandAndFirst.Tests
 			}
 			string[] writer = Array.Find(Writers, row => row[1] == value.GetType().Name);
 			if (writer == null) return path + " (" + value.GetType().Name + ") has no engine-free writer";
-			if (writer[2] != Named) return null;
+			// A book with its own writer is exercised only at top level, by its validator.
+			if (writer[2] != Named) return depth == 0 ? null : path + " nests a book with its own writer";
 			// SerializationWriter.WriteNamedFields selects public instance fields that are not
 			// static, literal or NotSerialized (decompiled XRL/World/SerializationWriter.cs:2981-3006).
 			foreach (FieldInfo field in value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
