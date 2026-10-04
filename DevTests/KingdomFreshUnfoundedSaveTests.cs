@@ -59,11 +59,13 @@ namespace ThousandAndFirst.Tests
 		private const string Named = "Writer.WriteNamedFields(this,typeof({0}));";
 		private const string Envelope = "byte[]envelope={0}.EncodeEnvelope(this);"
 			+ "Writer.Write(envelope.Length);Writer.Write(envelope,0,envelope.Length);";
+		private const string Composite = "#if!TAF_TESTS:IComposite#endif";
 
 		// Production Write(SerializationWriter) bodies, whitespace and comments removed, each
 		// compared whole: the engine's named-field writer (emulated by Walk), or a writer this
-		// fixture runs engine-free. KingdomSystem.Write itself runs only the projections pinned
-		// below.
+		// fixture runs engine-free. Every class keeps field reflection off, and every book declares
+		// IComposite (in the file given last when another partial declares it), so the engine runs
+		// exactly this body. KingdomSystem.Write itself runs only the projections pinned below.
 		private static readonly string[][] Writers =
 		{
 			new[] { "Core/KingdomSystem.z19a.Serialization.cs", "KingdomSystem", "SerializationVersion="
@@ -75,7 +77,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomLifecycleWireCodec.WriteLifecycle(Writer,this);" },
 			new[] { "Simulation/City/KingdomCityBook.03.CompositeAndCounts.cs", "KingdomCityBook",
 				"if(SubsidenceReadFailed)thrownewSystem.IO.InvalidDataException("
-				+ "\"Citysubsidencestoragedidnotfinishloading.\");" + Named },
+				+ "\"Citysubsidencestoragedidnotfinishloading.\");" + Named, "Simulation/City/KingdomCityBook.cs" },
 			new[] { "Simulation/City/KingdomBindingRegistry.cs", "KingdomBindingRegistry", Named },
 			new[] { "Simulation/City/KingdomJobRegistry.z10.RegistryFields.cs", "KingdomJobRegistry", Named },
 			new[] { "Trade/KingdomTradeState.cs", "KingdomTradeBook", Envelope.Replace("{0}", "KingdomTradeCodec") },
@@ -180,8 +182,26 @@ namespace ThousandAndFirst.Tests
 				StringAssert.IsMatch(@"\benum " + row[0].Substring(row[0].LastIndexOf('.') + 1) + @"\b",
 					TestMain.ReadRepositoryText(row[1]), row[0]);
 			foreach (string[] row in Writers)
-				ClassicAssert.AreEqual(row[2].Replace("{0}", row[1]), Compact(WriteBody(row[0], row[1])),
+			{
+				string[] lines = Lines(row[0]);
+				int type = Array.FindIndex(lines, line => Regex.IsMatch(line, @"\bclass " + row[1] + @"\b"));
+				int write = Find(lines, Math.Max(type, 0), @"public (override )?void Write\(SerializationWriter Writer\)");
+				int reflection = Find(lines, Math.Max(type, 0), @"\bbool WantFieldReflection\b");
+				ClassicAssert.IsTrue(type >= 0 && write > reflection && reflection > type, row[1] + " writer not found");
+				ClassicAssert.AreEqual((row[1] == "KingdomSystem" ? "publicoverride" : "public")
+					+ "boolWantFieldReflection=>false;", Compact(lines[reflection]), row[1] + " reflects fields");
+				ClassicAssert.AreEqual(row[2].Replace("{0}", row[1]), Compact(Body(lines, write)),
 					row[1] + " writer changed: review this fixture");
+				// KingdomSystem is an IComposite through IGameSystem (decompiled 2.0.211.56
+				// XRL/IGameSystem.cs:12). The engine runs a book's own writer only for an IComposite
+				// (XRL/World/SerializationWriter.cs:1084-1088, 2756-2769); any other object falls
+				// through to its BinaryFormatter fallback (:1220-1225).
+				if (row[1] == "KingdomSystem") continue;
+				string[] declaring = Lines(row.Length > 3 ? row[3] : row[0]);
+				int header = Array.FindIndex(declaring, line => Regex.IsMatch(line, @"\bclass " + row[1] + @"\b"));
+				ClassicAssert.AreEqual(Composite, header < 0 || header + 3 >= declaring.Length ? "absent"
+					: Compact(declaring[header + 1] + declaring[header + 2] + declaring[header + 3]), row[1] + " is not an IComposite");
+			}
 			foreach (string[] row in Projections)
 			{
 				string[] lines = Lines(row[0]);
@@ -310,17 +330,14 @@ namespace ThousandAndFirst.Tests
 			return code;
 		}
 
-		private static string WriteBody(string path, string type)
-		{
-			string[] lines = Lines(path);
-			int i = Array.FindIndex(lines, line => Regex.IsMatch(line, @"\bclass " + type + @"\b"));
-			while (i >= 0 && !Regex.IsMatch(lines[i], @"public (override )?void Write\(SerializationWriter Writer\)")) i++;
-			return Body(lines, i);
-		}
-
 		private static string[] Lines(string path)
 		{
 			return TestMain.ReadRepositoryText(path).Replace("\r\n", "\n").Split('\n');
+		}
+
+		private static int Find(string[] lines, int start, string pattern)
+		{
+			return Array.FindIndex(lines, start, line => Regex.IsMatch(line, pattern));
 		}
 
 		/// <summary>Lines from <paramref name="start"/> on, comments removed, until at least
