@@ -60,9 +60,10 @@ namespace ThousandAndFirst.Tests
 		private const string Envelope = "byte[]envelope={0}.EncodeEnvelope(this);"
 			+ "Writer.Write(envelope.Length);Writer.Write(envelope,0,envelope.Length);";
 
-		// Production Write(SerializationWriter) bodies, whitespace and comments removed ("..." marks
-		// a prefix): the engine's named-field writer (emulated by Walk), or a writer this fixture
-		// runs engine-free. KingdomSystem.Write itself runs only the three projections checked below.
+		// Production Write(SerializationWriter) bodies, whitespace and comments removed, each
+		// compared whole: the engine's named-field writer (emulated by Walk), or a writer this
+		// fixture runs engine-free. KingdomSystem.Write itself runs only the three projections
+		// checked below.
 		private static readonly string[][] Writers =
 		{
 			new[] { "Core/KingdomSystem.z19a.Serialization.cs", "KingdomSystem", "SerializationVersion="
@@ -88,7 +89,12 @@ namespace ThousandAndFirst.Tests
 				+ "opaque.Count||settlements.Count>KingdomSettlementTopologyRules.MaxNonSeatSettlements)"
 				+ "thrownewInvalidDataException(\"Settlementtopologyexceedsitsbound.\");Writer.Write("
 				+ "Magic);Writer.Write(CurrentVersion);Writer.Write(settlements.Count);for(inti=0;i<"
-				+ "settlements.Count;i++){..." },
+				+ "settlements.Count;i++){byte[]payload=opaque[i];if(payload==null&&!KingdomArchived"
+				+ "SettlementCodec.TryEncode(settlements[i],outpayload,outstringfailure))thrownew"
+				+ "InvalidDataException(failure);if(payload==null||payload.Length<8||payload.Length>"
+				+ "KingdomArchivedSettlementCodec.MaxPayloadBytes)thrownewInvalidDataException(\"Settlement"
+				+ "topologypayloadexceedsitsbound.\");Writer.Write(payload.Length);Writer.Write(payload,0,"
+				+ "payload.Length);}" },
 			new[] { "Experience/KingdomCarryBook.cs", "KingdomCarryBook", "KingdomLifecycleWireCodec.WriteCarry(Writer,this);" },
 			new[] { "Growth/KingdomResidentDepartureOperation.cs", "KingdomResidentDepartureOperation", Named },
 			new[] { "Growth/KingdomResidentAdmissionOperation.cs", "KingdomResidentAdmissionOperation", Named },
@@ -155,12 +161,8 @@ namespace ThousandAndFirst.Tests
 				StringAssert.IsMatch(@"\benum " + row[0].Substring(row[0].LastIndexOf('.') + 1) + @"\b",
 					TestMain.ReadRepositoryText(row[1]), row[0]);
 			foreach (string[] row in Writers)
-			{
-				string body = Compact(WriteBody(row[0], row[1])), expected = row[2].Replace("{0}", row[1]);
-				if (expected.EndsWith("...", StringComparison.Ordinal))
-					StringAssert.StartsWith(expected.Substring(0, expected.Length - 3), body, row[1]);
-				else ClassicAssert.AreEqual(expected, body, row[1] + " writer changed: review this fixture");
-			}
+				ClassicAssert.AreEqual(row[2].Replace("{0}", row[1]), Compact(WriteBody(row[0], row[1])),
+					row[1] + " writer changed: review this fixture");
 			StringAssert.Contains("Away = SettlementTopology?.Get(0);",
 				TestMain.ReadRepositoryText("Core/KingdomSystem.z08.SettlementTopology.cs"));
 			StringAssert.Contains("ExiledAway = ExiledSettlementTopology?.Get(0);",
@@ -337,7 +339,8 @@ namespace ThousandAndFirst.Tests
 
 		private static string Topology(KingdomSettlementTopology topology)
 		{
-			// An empty topology writes only its marker, version and a zero count.
+			// An empty, canonical topology passes the writer's bound check and writes only its
+			// marker, version and a zero count; the per-settlement loop never runs.
 			return topology.Count == 0 && !topology.HasOpaqueEvidence
 				&& topology.NormalizeCurrent(out string failure) ? null : "topology is not empty and canonical";
 		}
