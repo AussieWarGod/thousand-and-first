@@ -190,8 +190,8 @@ namespace ThousandAndFirst.Tests
 				+ "\t\t/// <summary>Probe.</summary>\n\t\t" + Probe + "\n\t}\n}\n", "" },
 			new[] { "same-line declaration consumes a pending attribute", Open + "\t\t[NonSerialized]\n"
 				+ "\t\t[Obsolete(\"x\")] private bool ProbeReadFailed;\n\t\t" + Probe + "\n\t}\n}\n", Kept },
-			new[] { "attribute text is not an attribute name", Open + "\t\t[Obsolete(\"was NonSerialized\")]\n\t\t"
-				+ Probe + "\n\t}\n}\n", Kept },
+			new[] { "attribute text is not attribute syntax", Open + "\t\t[Obsolete(\"was \\\"[NonSerialized]\\\"\")]\n"
+				+ "\t\t" + Probe + "\n\t}\n}\n", Kept },
 			new[] { "same-line attributed public member", Open + "\t\t[Obsolete(\"x\")] " + Probe + "\n\t}\n}\n",
 				"UNPARSED [Obsolete(\"x\")] " + Probe },
 			new[] { "unreadable attribute line", Open + "\t\t[Obsolete(\"x\",\n\t\t\tfalse)]\n\t\t" + Probe + "\n\t}\n}\n",
@@ -269,11 +269,12 @@ namespace ThousandAndFirst.Tests
 				}
 				if (code.StartsWith("[", StringComparison.Ordinal))
 				{
-					Match attribute = Regex.Match(code, @"^(?<sections>(?:\[[^\[\]]*\]\s*)+)(?<rest>.*)$");
+					// String literals are blanked first, so their text is never read as attribute syntax.
+					Match attribute = Regex.Match(Regex.Replace(code, "\"(?:[^\"\\\\]|\\\\.)*\"", "\"\""),
+						@"^(?<sections>(?:\[[^\[\]]*\]\s*)+)(?<rest>.*)$");
 					string rest = attribute.Success ? attribute.Groups["rest"].Value : null;
 					if (rest != null && (rest.Length == 0 || rest.StartsWith("//", StringComparison.Ordinal)))
-						skip |= Regex.IsMatch(Regex.Replace(attribute.Groups["sections"].Value, "\"[^\"]*\"", "\"\""),
-							@"[\[,]\s*(field\s*:\s*)?(global::)?(System\.)?NonSerialized(Attribute)?\s*[\](,]");
+						skip |= Regex.IsMatch(attribute.Groups["sections"].Value, @"\bNonSerialized(Attribute)?\b");
 					else
 					{
 						// The declaration on this line consumes every pending attribute.
