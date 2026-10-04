@@ -134,7 +134,11 @@ namespace ThousandAndFirst.Harness
 	internal static class KingdomQuickstartSaveErrorWitness
 	{
 		[HarmonyPrefix]
-		internal static void Prefix(XRLGame __instance) { KingdomQuickstartSaveTest.NoteSaveError(__instance); }
+		internal static void Prefix(XRLGame __instance)
+		{
+			KingdomQuickstartSaveTest.NoteSaveError(__instance);
+			KingdomUnfoundedSave.NoteSaveError(__instance);
+		}
 	}
 
 	[HarmonyPatch(typeof(XRLGame), "GetCacheDirectory", new Type[] { typeof(string) })]

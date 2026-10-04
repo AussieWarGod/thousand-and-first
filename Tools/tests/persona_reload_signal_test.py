@@ -291,6 +291,10 @@ class RunPersonasTermForwardingTest(unittest.TestCase):
             "REQUEST=founding-first-city\n"
             "SCRIPT=reload-descendant quickstart marsh yes\n"
             "EXPECT=RELOAD-COMPLETE\n", encoding="utf-8")
+        (self.tools / "personas" / "unfounded.persona").write_text(
+            "REQUEST=founding-first-city\n"
+            "SCRIPT=reload-descendant unfounded 8.22@40,12\n"
+            "EXPECT=RELOAD-COMPLETE\n", encoding="utf-8")
         self.started = self.base / "stub.started"
         self.handled = self.base / "stub.handled"
         stub_lines = [
@@ -326,8 +330,16 @@ class RunPersonasTermForwardingTest(unittest.TestCase):
         return False
 
     def test_term_forwards_to_the_reload_stub_and_reports_truthfully(self):
+        self.assert_term_forwarded("reload")
+
+    def test_unfounded_reload_persona_takes_the_same_owned_reload_host(self):
+        """#272: the unfounded cold-load route is dispatched by the real run-personas.sh to the
+        same reload host, with the same TERM forwarding and truthful reporting."""
+        self.assert_term_forwarded("unfounded")
+
+    def assert_term_forwarded(self, persona):
         process = subprocess.Popen(
-            ["bash", str(self.tools / "run-personas.sh"), "reload"],
+            ["bash", str(self.tools / "run-personas.sh"), persona],
             env=self.env, cwd=self.base, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True)
         try:
