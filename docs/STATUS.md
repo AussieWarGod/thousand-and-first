@@ -975,9 +975,10 @@ codec evidence, not loaded-game acceptance. Fresh native court validation remain
 Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
 PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
 candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+
 ## PR #219 review fixes - 2026-10-04 (no native run yet)
 
-Review of `afa55a53` found two defects in the court-save branch that no host gate could see.
+Reviews of `afa55a53` found three defects in the court-save branch that no host gate could see.
 The survey-bound completion check and the higher-heart capture each called `StandingHeart()`
 inside their own bound local-operation survey. Its unbound census refuses while any pass is
 bound, so the first rung-three completion check, the save, and every preactivation, activation
@@ -986,6 +987,15 @@ stopped before that check. The completion check is restored to the unbound form 
 passed (byte-identical to `a6e23f74`), and the capture reads the heart from its own pass. A new
 engine-free source contract fails on `afa55a53` (four bound regions) and rejects any bound
 region that reaches the unbound census or an unbound-only helper.
+
+The cold-load continuation compared the original resident bodies with `RequireSameBodies`,
+which also requires each body to be held by the camp store. Residents stand on city ground, so
+activation would have stopped with `taf-camp-store-foreign-holder` on the first resident, right
+after paying the loaded fire and before its 3600-turn wait; completion would have failed the same
+way. Residents are now compared by reference only; the capture already proves each body's exact
+ground custody. A second engine-free source contract requires every `RequireSameBodies` call to
+search store bodies that its own method read through `ContentUnits`. It fails on `94dce38a` at
+that one call.
 
 The seventeen-row layout, the spare-lot candidate and supply exclusions and the early next-job
 preflight had also changed the unsaved `camp-heart-chain` persona. They now apply only to the
@@ -1012,6 +1022,9 @@ available. This is observation only; it does not move occupants or relax product
 PR #207's gameplay branch is being validated separately with its original eighteen-home
 paid-chain persona. PR #219's extended cold-load fixture remains a separate Beta coverage
 step. Neither the fixture changes nor this failed run establish ordinary population balance.
+(Later note, 2026-10-04: #207 merged on 2026-09-14, so its unsaved eighteen-home
+`camp-heart-chain` persona is on dev. #219 leaves that fixture unchanged; only the save variant
+uses seventeen homes.)
 
 ## Native22 closed; distinguish a hint from reserved ground
 

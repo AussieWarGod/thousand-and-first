@@ -11,6 +11,12 @@ executed. The completion check is again the unbound form Native30 passed; the ca
 heart from its own pass. A source contract rejects any bound region that reaches the unbound
 census or an unbound-only helper, directly or through other frame methods.
 
+A later review of the same head found that the cold-load continuation compared original
+residents with `RequireSameBodies`, which also requires camp-store custody. Residents stand on
+city ground, so activation would have stopped with `taf-camp-store-foreign-holder` right after
+paying the loaded fire. Residents are now compared by reference only, and a second source
+contract limits `RequireSameBodies` to store bodies its own method read through `ContentUnits`.
+
 The seventeen-row layout, the spare-lot candidate and supply exclusions and the early next-job
 preflight now apply only to the save variant. The unsaved `camp-heart-chain` persona keeps its
 eighteen-row fixture and completion check. No native run has exercised these fixes.
@@ -164,4 +170,5 @@ The spare-site proof passed at `ded5e3fe`. The first higher upgrade then refused
 ground at `42,13`, before payment or save. STATUS.md records the closed failed archive.
 Failure context now records the exact cell objects without changing them. The original
 paid-chain release validation runs separately on #207; this extended persistence coverage
-remains #219. No source or loaded court has yet been accepted.
+remains #219. No source or loaded court has yet been accepted. (#207 merged on 2026-09-14;
+its unsaved eighteen-home persona is on dev, and #219 leaves that fixture unchanged.)
