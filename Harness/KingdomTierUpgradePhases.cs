@@ -154,9 +154,11 @@ namespace ThousandAndFirst.Harness
 			/// <summary>Why the ready-looking begin never happened (docs/DEVELOPMENT.md readiness
 			/// rule), journaled before the refusal: a fresh bound production assessment with its
 			/// verdict and reason, the pass inputs it was asked with, the tent's last announced
-			/// verdict and the ledger tail. Begin's zoning, contents and outstanding-funding
-			/// outcomes reach only the in-memory ledger (<c>Growth/KingdomUpgrade.14.Begin.cs</c>),
-			/// never Player.log, so this row is the one place they can surface.</summary>
+			/// verdict and the ledger tail. Begin's zoning and contents waits return before any
+			/// receipt is bound and reach only the in-memory ledger
+			/// (<c>Growth/KingdomUpgrade.14.Begin.cs</c>), never Player.log, so this row is the one
+			/// place they can surface. An outstanding-funding wait binds its receipt first, so the
+			/// ledger scan journaled with <c>RecordBound</c> reads that one instead.</summary>
 			private void RecordUnbegun(GameObject Tent)
 			{
 				string context;

@@ -67,8 +67,8 @@ namespace ThousandAndFirst.Tests
 		/// inputs, and asks Begin's read-only zoning gate before the long leg rather than after
 		/// it. When the ready-looking begin never happens, the second check journals a fresh
 		/// verdict and reason, the inputs, the tent's announced verdict and the ledger tail
-		/// before it refuses: Begin's zoning and outstanding-funding outcomes reach only the
-		/// in-memory ledger, never Player.log.
+		/// before it refuses: Begin's zoning and contents waits return before any receipt is bound
+		/// and reach only the in-memory ledger, never Player.log.
 		/// </summary>
 		[Test]
 		public void TheReadinessObservationUsesProductionInputsAndKeepsTheReason()
