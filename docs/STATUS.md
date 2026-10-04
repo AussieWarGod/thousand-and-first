@@ -77,24 +77,33 @@ reloads through its production load path; and the empty settlement topologies pa
 model of their write gate (16 books in the main suite, 11 in the portable kernel). The list, and
 whether it treats each book type as a named-field book or as a book with its own writer, are the
 fixture's own: neither is derived from `KingdomSystem`'s fields or checked against the
-production writers, so the fixture does not check a field added without extending the list. The
-native `unfounded-save-native-check` persona performs a real engine save of every serialized
-field and is the complete check for a release build; docs/RELEASING.md requires that automated
-unfounded save and reload check for every release. An in-game reflection census of the
-serialized fields is follow-up #281. With only the polity initializer reverted on a scratch copy
-of this candidate, the pin fails on the polity ledger alone, with the native message, and the
-other 15 books pass (10 in the portable kernel). Mutations that revert the lifecycle writer
-change, add a field the engine cannot write to the city book or the ledger, make the city book's
-load path refuse a fresh book, nest a book with its own writer (the carry book or the city book)
-in the ledger, set the fresh experience option floor to 0 or lower the carry book's format
-version each turn it red. Not covered engine-free, because both test projects compile them out:
-each book's `Write` and `Read` wrappers and its `IComposite` and `WantFieldReflection`
-declarations (and so which writer kind each listed book actually uses), the topology writer, and
-`KingdomSystem.Write` itself, with its header and the legacy projections it refreshes before
-writing. The fixture also does not cover the engine's save hooks around `KingdomSystem.Write`
+production writers, so the fixture does not check a field added without extending the list.
+With only the polity initializer reverted on a scratch copy of this candidate, the pin fails on
+the polity ledger alone, with the native message, and the other 15 books pass (10 in the
+portable kernel). Mutations that revert the lifecycle writer change, add a field the engine
+cannot write to the city book or the ledger, make the city book's load path refuse a fresh book,
+nest a book with its own writer (the carry book or the city book) in the ledger, set the fresh
+experience option floor to 0 or lower the carry book's format version each turn it red. Not
+covered engine-free, because both test projects compile them out: each book's `Write` and `Read`
+wrappers and its `IComposite` and `WantFieldReflection` declarations (and so which writer kind
+each listed book actually uses), the topology writer, and `KingdomSystem`'s own `Write` and
+`Read`. The fixture also does not cover the engine's save hooks around `KingdomSystem.Write`
 (`BeforeSave`, the save-roster patch), state changed by events before the first save, or the
-mod's other save records (seal, civic memory, succession, object parts). Only the native
-unfounded save exercises those.
+mod's other save records (seal, civic memory, succession, object parts).
+
+Native checks of an unfounded save divide by side. The write side (each book's `Write` wrapper,
+its `IComposite` and `WantFieldReflection` declarations and so the writer kind it uses, the
+topology writer, `KingdomSystem.Write` with its header and the legacy projections it refreshes,
+the save hooks and the other records' writers) runs in the real engine save that
+`unfounded-save-native-check` performs and `unfounded-reload` repeats as its first leg. That save
+writes every serialized field, so for a release build it is the complete census of the fields an
+unfounded save writes, but it loads nothing (`unfounded-save-native-check` reports
+`cold-load=false`). The read side (each book's `Read` wrapper, `KingdomSystem.Read` with
+`RequireReadableSubsidenceStorage` and `NormalizeState`, the `AfterLoad` hooks, the save-roster
+load patches and the other records' readers) runs natively only in `unfounded-reload`'s cold
+load. docs/RELEASING.md requires both verdicts for every release. Each persona exercises only the
+state its own world holds when it saves. An in-game reflection census of the serialized fields
+is follow-up #281.
 
 Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
 engine save of an unfounded world with the SaveGameError witness armed; a run on the harness

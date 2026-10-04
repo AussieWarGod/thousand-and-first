@@ -20,16 +20,21 @@ namespace ThousandAndFirst.Tests
 	/// the fixture's model of their write gate. The list, and the writer kind it assigns each book
 	/// type (below), are this fixture's own: neither is derived from KingdomSystem's fields or
 	/// checked against the production writers, so a field added without extending the list is not
-	/// checked here. The native unfounded-save persona performs a real engine save of every
-	/// serialized field and is the complete check for a release build: docs/RELEASING.md requires
-	/// that automated unfounded save and reload check for every release, and an in-game reflection
-	/// census is #281. Compiled out of both test projects, and so exercised only by the native
-	/// unfounded save: each book's Write and Read wrappers and its IComposite and
-	/// WantFieldReflection declarations, which writer kind each listed book actually uses, the
-	/// topology writer, and KingdomSystem.Write itself, with its header and the legacy projections
-	/// it refreshes. Also not covered here: the engine's save hooks around KingdomSystem.Write
-	/// (BeforeSave, the save-roster patch), state changed by events before the first save, and the
-	/// mod's other save records (seal, civic memory, succession, object parts).</summary>
+	/// checked here. Compiled out of both test projects, and so not run here: each book's Write and
+	/// Read wrappers and its IComposite and WantFieldReflection declarations, which writer kind each
+	/// listed book actually uses, the topology writer, and KingdomSystem's own Write and Read. Also
+	/// not covered here: the engine's save hooks around KingdomSystem.Write (BeforeSave, the
+	/// save-roster patch), state changed by events before the first save, and the mod's other save
+	/// records (seal, civic memory, succession, object parts). On an unfounded save the write side
+	/// (the Write wrappers and declarations, the writer kinds, the topology writer, and
+	/// KingdomSystem.Write with its header and the legacy projections it refreshes) runs natively
+	/// in the real engine save of unfounded-save-native-check, repeated as unfounded-reload's first
+	/// leg. That save writes every serialized field, so for a release build it is the complete
+	/// census of the fields an unfounded save writes, but it loads nothing (cold-load=false). The
+	/// read side (each book's Read wrapper, and KingdomSystem.Read with
+	/// RequireReadableSubsidenceStorage and NormalizeState) runs natively only in unfounded-reload's
+	/// cold load. docs/RELEASING.md requires both verdicts for every release; an in-game reflection
+	/// census is #281.</summary>
 	public class KingdomFreshUnfoundedSaveTests
 	{
 		// How each book type Walk accepts is written, from an explicit list that is not checked
