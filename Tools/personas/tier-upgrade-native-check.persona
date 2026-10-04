@@ -1,8 +1,16 @@
 # Ordinary (non-heart) building tier upgrade: a real settlement raises its own paid tent
-# into a staked tent-row through the real settlement pass. Behaviour-coverage row 8.
-# Synthetic: the camp founding, the dedicated water, six enrolled residents and their born
-# provenance, the minted canvas and timber units, and the pre-marked once-per-game first
-# notice. The tent itself is NOT synthetic: it is commissioned and built by production.
+# into a staked tent-row through the real settlement pass. Behaviour-coverage row 8, scoped
+# to this one chain: the catalogue's other ordinary chains are not exercised here.
+# Synthetic: the camp founding; the rung-one founding heart's completion through the shared
+# completed-heart helper (the founder's westward walk off the heart's footprint by ordinary
+# movement, and the explicit future calendar frontier it hands the production labour driver);
+# the dedicated water, six enrolled residents and their born provenance, the minted canvas
+# and timber units, and the pre-marked once-per-game first notice. The tent itself is NOT
+# synthetic: it is commissioned and built by production.
+# LOG_FORBID lists lines production writes to Player.log through KingdomLog.Log on this
+# path: a funded begin refused or left waiting for its scaffold, an unstaged seal, and a
+# founding-heart recovery halt. The outstanding-funding and zoning waits reach only the
+# in-memory ledger, so the checks journal its tail when a ready-looking begin never starts.
 # The canvas is minted one unit short of the tent's bill plus the upgrade's, so the real passes
 # can begin nothing on the standing tent; the shortfall verb mints only the missing unit.
 # Legs count daily settlement passes (1200 ticks each). A freshly staked raising's first
@@ -16,6 +24,6 @@ START=8.22@40,12
 SCRIPT=stagedigest;tier-upgrade-setup;advance 3600;tier-upgrade-check;tier-upgrade-short;advance 2400;tier-upgrade-check;advance 3600;tier-upgrade-check;stagedigest
 VERBS=tier-upgrade-setup,tier-upgrade-check,tier-upgrade-short
 EXPECT=stagedigest:OK~founded=false,tier-upgrade-setup:OK~native-tier-upgrade phase=1,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=2,tier-upgrade-short:OK~native-tier-upgrade phase=3,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
-LOG_FORBID=["architecture: improvement refused before debit:","The improvement receipt remains outstanding.","ordinary plot-envelope growth cannot claim founding-heart authority"]
+LOG_FORBID=["improvement refused cleanly:","construction: improvement projection waits:","seal: settlement pass was not staged","construction: founding heart recovery requires inspection"]
 SET=tier-upgrade,native-regression,test-only
 TIMEOUT=3600

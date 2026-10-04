@@ -83,8 +83,9 @@ namespace ThousandAndFirst.Harness
 				GameObject tent = Exact(PredecessorId);
 				Require(tent != null, "the predecessor tent left its exact identity before work");
 				ImprovementJobId = tent.GetStringProperty(KingdomConstruction.ReceiptProperty);
-				Require(!string.IsNullOrEmpty(ImprovementJobId) && ImprovementJobId != TentJobId,
-					"the settlement pass bound no improvement receipt to the tent");
+				bool bound = !string.IsNullOrEmpty(ImprovementJobId) && ImprovementJobId != TentJobId;
+				if (!bound) RecordUnbegun(tent);
+				Require(bound, "the settlement pass bound no improvement receipt to the tent");
 				KingdomConstructionJob job;
 				Require(KingdomConstruction.TryFind(ImprovementJobId, out job) && job != null
 					&& job.Route == KingdomConstructionRoute.Improvement
@@ -112,6 +113,21 @@ namespace ThousandAndFirst.Harness
 					.Append("; brush=").Append(QuoteBrush)
 					.Append("; due=").Append(job.DueTick)
 					.Append("; scaffold=").Append(scaffold.IDIfAssigned);
+			}
+
+			/// <summary>Why the ready-looking begin never happened (docs/DEVELOPMENT.md readiness
+			/// rule), journaled before the refusal: a fresh bound production assessment with its
+			/// verdict and reason, the pass inputs it was asked with, the tent's last announced
+			/// verdict and the ledger tail. Begin's zoning, contents and outstanding-funding
+			/// outcomes reach only the in-memory ledger (<c>Growth/KingdomUpgrade.14.Begin.cs</c>),
+			/// never Player.log, so this row is the one place they can surface.</summary>
+			private void RecordUnbegun(GameObject Tent)
+			{
+				string context;
+				KingdomUpgrade.Assessment fresh = Assess(Tent, out context);
+				Evidence.Append("\nunbegun verdict=").Append(fresh.Verdict)
+					.Append("; reason=").Append(KingdomScenarioRules.Bounded(fresh.Reason))
+					.Append("; ").Append(context).Append(LedgerTail());
 			}
 
 			/// <summary>Final check, after leg three: the successor stands, its predecessor is

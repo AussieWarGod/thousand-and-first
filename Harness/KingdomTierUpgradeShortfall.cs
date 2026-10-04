@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Harness
 {
@@ -23,9 +26,22 @@ namespace ThousandAndFirst.Harness
 	/// earlier gate - ownership, style, stage, craft, free hands, contents, water - was already
 	/// satisfied when the materials refused.
 	/// </para>
+	/// <para>
+	/// READINESS IS ASKED WITH PRODUCTION'S OWN INPUTS (docs/DEVELOPMENT.md). Every assessment
+	/// here uses the free hands and the competing-work flag the settlement pass itself computes
+	/// (<c>Growth/KingdomUpgrade.13.Resolve.cs</c>), never an assumed empty queue, and the
+	/// journal keeps those inputs, the last announced verdict, the switches, the zoning
+	/// judgement and the refusal reason beside every verdict, so a ready-looking quote the pass
+	/// later declines can be told from one it began.
+	/// </para>
 	/// </summary>
 	internal static partial class KingdomTierUpgradeChecks
 	{
+		/// <summary>Ledger notes journaled from the tail. The ledger keeps at most twelve until the
+		/// founder's homecoming (<c>Core/KingdomLedger.cs</c>), so their count is journaled too:
+		/// a full ledger silently drops every later note.</summary>
+		internal const int LedgerTailNotes = 4;
+
 		private sealed partial class Frame
 		{
 			private void NamedMaterialRefusal()
@@ -38,12 +54,14 @@ namespace ThousandAndFirst.Harness
 					"the stores already cover the upgrade bill before the shortfall leg");
 				int water = KingdomGrowth.CountStoredWater(Zone);
 				KingdomMaterialTally before = KingdomMaterials.Stock(Zone).Tally.Copy();
-				KingdomUpgrade.Assessment shortAssessment = Assess(tent);
+				string shortContext;
+				KingdomUpgrade.Assessment shortAssessment = Assess(tent, out shortContext);
+				Evidence.Append("\nshort-inputs ").Append(shortContext);
 				Require(shortAssessment.Valid, "the short assessment was not valid at all");
 				Require(shortAssessment.Verdict
 					== KingdomUpgradeRules.UpgradeVerdict.NotEnoughMaterial,
-					"the short assessment did not refuse for material: "
-						+ shortAssessment.Verdict);
+					"the short assessment did not refuse for material: " + shortAssessment.Verdict
+						+ " / " + KingdomScenarioRules.Bounded(shortAssessment.Reason));
 				Require(KingdomUpgradeRules.IsBlocked(shortAssessment.Verdict),
 					"a material refusal must speak rather than drop silently");
 				string expected = KingdomUpgradeRules.ReasonLine(
@@ -66,12 +84,14 @@ namespace ThousandAndFirst.Harness
 					+ UpgradeShortBy + " canvas unit(s): supplied " + supplied);
 				Require(KingdomMaterials.CanPayUpgrade(Zone, FromKey, out failure),
 					"the supplied stores still do not cover the upgrade bill: " + failure);
-				KingdomUpgrade.Assessment ready = Assess(tent);
+				string readyContext;
+				KingdomUpgrade.Assessment ready = Assess(tent, out readyContext);
+				Evidence.Append("\nready-inputs ").Append(readyContext).Append(LedgerTail());
 				Require(ready.Valid
 					&& ready.Verdict == KingdomUpgradeRules.UpgradeVerdict.Ready
 					&& ready.SuccessorKey == ToKey && ready.Transition == null,
 					"the supplied assessment is not an ordinary ready tier climb: "
-						+ ready.Verdict);
+						+ ready.Verdict + " / " + KingdomScenarioRules.Bounded(ready.Reason));
 				Require(ready.CostDrams == QuoteDrams && ready.CrewNeeded == QuoteCrew
 					&& ready.BuildTicks == QuoteTicks
 					&& ready.StageNeeded == GrowthStage.Camp,
@@ -85,17 +105,60 @@ namespace ThousandAndFirst.Harness
 					.Append("; ready-stage=").Append(ready.StageNeeded);
 			}
 
-			/// <summary>Production's own assessment with the free hands the settlement pass
-			/// itself computes (<c>Growth/KingdomUpgrade.13.Resolve.cs:23-27</c>) and no
-			/// competing work. Non-mutating: <c>KingdomUpgrade.Assess</c> only reads.</summary>
-			private KingdomUpgrade.Assessment Assess(GameObject Work)
+			/// <summary>Production's own assessment, asked with the inputs the settlement pass
+			/// computes in <c>Growth/KingdomUpgrade.13.Resolve.cs</c>: free hands from the
+			/// population less the assigned crew, and competing work from every working
+			/// improvement plus every surveyed built work whose receipt still blocks
+			/// (<c>KingdomConstruction.ReceiptBlocksCurrent</c>, which Resolve's
+			/// <c>HasActiveConstruction</c> asks), read the way
+			/// <c>Harness/KingdomCampHeartChainPayment.cs</c> reads them. Non-mutating:
+			/// <c>KingdomUpgrade.Assess</c> only reads. <paramref name="Context"/> receives those
+			/// inputs, the work's last announced verdict, the switches and the zoning judgement
+			/// Begin asks again (<c>Growth/KingdomUpgrade.14.Begin.cs</c>).</summary>
+			private KingdomUpgrade.Assessment Assess(GameObject Work, out string Context)
 			{
-				int hands = System.Population - System.AssignedCrew;
-				if (hands < 0) hands = 0;
-				Require(hands >= QuoteCrew,
-					"the fixture settlement has no free hand for an improvement");
-				return OnLocalSurvey(survey =>
-					KingdomUpgrade.Assess(System, Zone, Work, survey, hands, false));
+				string context = null;
+				KingdomUpgrade.Assessment result = OnLocalSurvey(survey =>
+				{
+					var competing = new List<string>();
+					foreach (GameObject root in survey.Improvements)
+						if (root.GetPart<r_KingdomImprovement>()?.Working == true)
+							competing.Add("working:" + root.IDIfAssigned + ":" + root.Blueprint);
+					foreach (GameObject root in survey.Built)
+						if (KingdomConstruction.ReceiptBlocksCurrent(root))
+							competing.Add("receipt:" + root.IDIfAssigned + ":" + root.Blueprint);
+					int free = Math.Max(0, System.Population - System.AssignedCrew);
+					KingdomUpgrade.Assessment assessment = KingdomUpgrade.Assess(System, Zone, Work,
+						survey, free, competing.Count > 0);
+					var part = Work.GetPart<r_KingdomImprovement>();
+					context = "population=" + System.Population + "; assigned=" + System.AssignedCrew
+						+ "; free=" + free + "; needed=" + assessment.CrewNeeded
+						+ "; competing=" + (competing.Count == 0 ? "none" : string.Join(",", competing))
+						+ "; announced=" + (part == null ? "absent"
+							: ((KingdomUpgradeRules.UpgradeVerdict)part.AnnouncedReason).ToString())
+						+ "; enabled=" + KingdomUpgrade.Enabled
+						+ "; automatic-work=" + KingdomMaster.AutomaticWorkAllowed(System)
+						+ "; zoning=" + (assessment.Successor == null ? "no-successor"
+							: KingdomZoning.Judge(System, Zone.ZoneID, assessment.Successor)
+								.Verdict.ToString());
+					return assessment;
+				});
+				Context = context;
+				return result;
+			}
+
+			/// <summary>The newest production ledger notes, bounded, after their count. Begin's
+			/// zoning, contents and outstanding-funding outcomes are written only here
+			/// (<c>Core/KingdomLedger.cs</c> keeps them in memory; they never reach Player.log).
+			/// </summary>
+			private string LedgerTail()
+			{
+				List<string> notes = System.Ledger?.Notes;
+				if (notes == null) return "; ledger=absent";
+				var text = new StringBuilder("; ledger-notes=").Append(notes.Count);
+				for (int i = Math.Max(0, notes.Count - LedgerTailNotes); i < notes.Count; i++)
+					text.Append("; ledger=").Append(KingdomScenarioRules.Bounded(notes[i]));
+				return text.ToString();
 			}
 
 			/// <summary>Runs one read against the production local-operation survey, bound for

@@ -10,9 +10,10 @@ namespace ThousandAndFirst.Tests
 	/// Wiring tripwires for the ordinary tier-upgrade seam (behaviour-coverage row 8). The
 	/// persona supplies the actual native evidence; these pins only prove the seam is registered,
 	/// that it drives nothing itself, that the persona and the provider seal the same script, and
-	/// that every synthetic input is disclosed in the report the run publishes.
+	/// that every synthetic input is disclosed in the report the run publishes. The production
+	/// contract preflight pins live in the <c>.Preflight</c> partial.
 	/// </summary>
-	public class KingdomTierUpgradeNativeSourceTests
+	public partial class KingdomTierUpgradeNativeSourceTests
 	{
 		private const string Provider = "Harness/KingdomTierUpgradeProvider.cs";
 		private const string Checks = "Harness/KingdomTierUpgradeChecks.cs";
@@ -115,7 +116,9 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The seam OBSERVES. Behaviour-coverage row 8 is about what the real settlement pass
 		/// does, so a shard that called the upgrade or funding entry points itself would be
-		/// proving its own arithmetic. None of them may appear anywhere in the seam.
+		/// proving its own arithmetic. None of them may appear anywhere in the seam's own shards;
+		/// the setup's rung-one heart completion goes through the shared, disclosed
+		/// completed-heart helper and never reaches the tent (pinned in the preflight partial).
 		/// </summary>
 		[Test]
 		public void TheSeamNeverDrivesTheUpgradeItself()
@@ -134,7 +137,8 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>The ordinary lane never reaches for heart machinery: an ordinary climb that
 		/// settled a rung would be a defect, and a seam that called the rung settler itself could
-		/// not notice.</summary>
+		/// not notice. Setup completes rung one only through the shared completed-heart helper;
+		/// no rung is climbed or settled by the seam.</summary>
 		[Test]
 		public void TheSeamNeverTouchesHeartRungMachinery()
 		{
@@ -257,18 +261,31 @@ namespace ThousandAndFirst.Tests
 				+ "tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,"
 				+ "tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,"
 				+ "stagedigest:OK~founded=true,COMPLETE"));
-			Assert.That(persona, Does.Contain("LOG_FORBID=[\"architecture: improvement refused "
-				+ "before debit:\",\"The improvement receipt remains outstanding.\","
-				+ "\"ordinary plot-envelope growth cannot claim founding-heart authority\"]"));
+			Assert.That(persona, Does.Contain("LOG_FORBID=[\"improvement refused cleanly:\","
+				+ "\"construction: improvement projection waits:\","
+				+ "\"seal: settlement pass was not staged\","
+				+ "\"construction: founding heart recovery requires inspection\"]"));
 			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain("synthetic-camp=true; synthetic-residents=true; "
 				+ "synthetic-drams=true"));
+			Assert.That(checks, Does.Contain("synthetic-heart-calendar=true; "
+				+ "synthetic-founder-walk=true"));
 			Assert.That(checks, Does.Contain("synthetic-born-provenance=true; "
 				+ "synthetic-store-contents=true"));
 			Assert.That(checks, Does.Contain("synthetic-first-notice=true; synthetic-tent=false"));
 			Assert.That(checks, Does.Contain("ordinary-reachability=untested; charter=untested; "
 				+ "save-load=untested"));
+			// The rung-one completion's two synthetic parts - the explicit future calendar
+			// frontier the shared completed-heart helper hands the production labour driver, and
+			// the founder's westward walk - are disclosed wherever the run is described.
+			foreach (string path in new[] { Persona, Provider, Fixture,
+				"Tools/coverage/matrix.json" })
+			{
+				string text = Read(path);
+				Assert.That(text, Does.Contain("explicit future calendar frontier"), path);
+				Assert.That(text, Does.Contain("westward walk"), path);
+			}
 		}
 	}
 }

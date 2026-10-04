@@ -1,14 +1,28 @@
 using System.Collections.Generic;
+using XRL;
 using XRL.World;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
-	/// Setup-only helpers for <see cref="KingdomTierUpgradeChecks"/>: a real founding, a real
-	/// water dedication, real resident enrollment, minted raw units in the founding heart's own
-	/// authored stockpile, and a REAL production commission of one tent. No assertion about what
-	/// the improvement pass later did lives here.
+	/// Setup-only helpers for <see cref="KingdomTierUpgradeChecks"/>: a real founding, the real
+	/// rung-one completion of its founding heart, a real water dedication, real resident
+	/// enrollment, minted raw units in the founding heart's own authored stockpile, and a REAL
+	/// production commission of one tent. No assertion about what the improvement pass later did
+	/// lives here.
+	/// <para>
+	/// THE HEART IS COMPLETED BEFORE ANYTHING BINDS IT. Straight after the founding transaction
+	/// the founding heart is only a Staked works without <c>KingdomBuilt</c>, so the survey
+	/// lists it as no built work (<c>Growth/KingdomSurvey.01.Capture.cs</c>), and its authored
+	/// <c>fixture:storage</c> stockpile exists only on the final layout
+	/// (<c>Growth/KingdomPlot2.27.FinalBuilding.cs</c>). Setup therefore completes rung one
+	/// through the shared <see cref="KingdomScenarioCompletedHeart"/> helper, as the
+	/// natively-run camp-heart fixture does. DISCLOSED synthetic parts of that helper: the
+	/// founder's westward walk off the heart's footprint by ordinary movement, and the
+	/// explicit future calendar frontier it hands the production labour driver for the
+	/// heart's own works. No rung state is stamped by hand and the tent is never advanced.
+	/// </para>
 	/// <para>
 	/// The tent is commissioned rather than fabricated on purpose: the authored upgrade lane
 	/// needs the frozen lot receipts (<c>r_TAF_ArchitectureSchema</c>,
@@ -60,6 +74,11 @@ namespace ThousandAndFirst.Harness
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
 				Require(System.ClaimedZones.Contains(Zone.ZoneID),
 					"the real founding did not claim this ground");
+				// Real rung-one completion through the production plot works; see the class
+				// summary for why it comes first and for its two disclosed synthetic parts.
+				KingdomScenarioCompletedHeart.Complete(Game, System, Zone);
+				Require(KingdomPlots.HeartRung(Zone) == 1,
+					"the completed rite ground does not stand at rung one");
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,
 					Ignore, Require);
 				BindHeartAndStore();
@@ -70,8 +89,13 @@ namespace ThousandAndFirst.Harness
 				RequireExactShortfall();
 				Armed = true;
 				Phase = 1;
+				Cell founder = The.Player?.CurrentCell;
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
 					.Append("; zone=").Append(Zone.ZoneID)
+					.Append("; heart=").Append(Heart.IDIfAssigned)
+					.Append("; heart-rung=").Append(KingdomPlots.HeartRung(Zone))
+					.Append("; founder-cell=").Append(founder == null ? "absent"
+						: founder.X + "," + founder.Y)
 					.Append("; store=").Append(Store.IDIfAssigned)
 					.Append("; population=").Append(System.Population)
 					.Append("; stored-water=").Append(KingdomGrowth.CountStoredWater(Zone))
@@ -82,8 +106,9 @@ namespace ThousandAndFirst.Harness
 
 			private static void Ignore(GameObject Vessel) { }
 
-			/// <summary>The standing founding heart through the production survey, and its
-			/// authored stockpile through the production anchored-component resolver.</summary>
+			/// <summary>The standing (completed) founding heart through the production survey,
+			/// confirmed by its production design key, and its authored stockpile through the
+			/// production anchored-component resolver.</summary>
 			private void BindHeartAndStore()
 			{
 				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
@@ -97,6 +122,8 @@ namespace ThousandAndFirst.Harness
 					Heart = item;
 				}
 				Require(Heart != null, "no standing heart plot was surveyed");
+				Require(KingdomUpgrade.DesignKeyOf(Heart) == FoundingHeartKey,
+					"the standing heart is not the authored first rung");
 				GameObject store;
 				string failure;
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(Heart, Zone,

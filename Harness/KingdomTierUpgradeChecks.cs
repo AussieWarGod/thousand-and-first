@@ -26,6 +26,10 @@ namespace ThousandAndFirst.Harness
 		/// <summary>The ordinary successor it grows into.</summary>
 		internal const string ToKey = "tentrow";
 
+		/// <summary>The founding heart's first rung, completed at setup before anything binds it.
+		/// </summary>
+		internal const string FoundingHeartKey = "heartbasin";
+
 		private static Frame Retained;
 
 		internal static bool Vacant { get { return Retained == null; } }
@@ -53,6 +57,7 @@ namespace ThousandAndFirst.Harness
 			return (Complete ? "native-tier-upgrade cases=1 passed=1 failed=0"
 				: "native-tier-upgrade phase=" + Retained.Phase)
 				+ "; synthetic-camp=true; synthetic-residents=true; synthetic-drams=true"
+				+ "; synthetic-heart-calendar=true; synthetic-founder-walk=true"
 				+ "; synthetic-born-provenance=true; synthetic-store-contents=true"
 				+ "; synthetic-first-notice=true; synthetic-tent=false"
 				+ "; ordinary-reachability=untested; charter=untested; save-load=untested"

@@ -9,10 +9,11 @@ namespace ThousandAndFirst.Harness
 	/// Native-check seam for the ORDINARY (non-heart) building tier upgrade: a real settlement
 	/// raises its own paid tent into a staked tent-row. Behaviour-coverage row 8.
 	/// <para>
-	/// THE UPGRADE IS DRIVEN BY THE REAL SETTLEMENT PASS. This seam never calls
+	/// THE UPGRADE IS DRIVEN BY THE REAL SETTLEMENT PASS. No shard of this seam calls
 	/// <c>KingdomUpgrade.Begin</c>, <c>BeginPrepared</c>, <c>BeginPreparedPlanChange</c>,
 	/// <c>TryApplyUpgrade</c>, <c>KingdomPlots.Advance</c> or
-	/// <c>KingdomConstruction.TryFundNew</c>. Ordinary turn advance runs
+	/// <c>KingdomConstruction.TryFundNew</c>, and nothing at all advances the tent or the
+	/// tent-row. Ordinary turn advance runs
 	/// <c>KingdomSystem.AttendSeatedSemantics</c>'s "improvement" step
 	/// (<c>Core/KingdomSystem.z21.SemanticPass.cs:112-115</c>), which is what assesses, begins,
 	/// builds, hands over and retires the predecessor. The verbs only observe, with the single
@@ -20,9 +21,14 @@ namespace ThousandAndFirst.Harness
 	/// </para>
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED. The camp is founded by the harness through its own founding
-	/// step; the water store, the residents (and their born provenance) and the raw material
-	/// units are fixture inputs, the canvas minted one unit short of the tent's bill plus the
-	/// upgrade's; the once-per-game first notice
+	/// step, and its rung-one founding heart is then completed through the shared
+	/// <c>Harness/KingdomScenarioCompletedHeart.cs</c> helper, exactly as the natively-run
+	/// camp-heart fixture does it: the founder's westward walk off the heart's footprint by
+	/// ordinary movement, and the explicit future calendar frontier the helper hands the
+	/// production labour driver for the heart's own works, are the synthetic parts (no rung
+	/// state is stamped by hand). The water store, the residents (and their born provenance)
+	/// and the raw material units are fixture inputs, the canvas minted one unit short of the
+	/// tent's bill plus the upgrade's; the once-per-game first notice
 	/// (<c>Growth/KingdomUpgrade.13.Resolve.cs:117-126</c>) is pre-marked as given. Under the
 	/// sealed script the runner's <c>Popup.Suppress</c> auto-acknowledges that modal, but an
 	/// unmarked first ready pass would still only tell and begin nothing
