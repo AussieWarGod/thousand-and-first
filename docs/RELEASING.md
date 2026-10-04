@@ -277,6 +277,19 @@ remove local copies, subscribe through Steam, and launch fresh. Confirm Steam-in
 version, exact inventory/receipt, loader, new game, save → desktop → reload, representative Alpha
 flow, and redacted `Player.log`. A local duplicate invalidates this proof.
 
+The save and reload check must include an **ordinary unfounded start**. A Kingdom Quickstart
+founds before its first save, so a Quickstart reload pair alone never proves that a world
+without a founded realm saves (#271, #272). The check is automated, never manual: run
+`Tools/run-personas.sh unfounded-save-native-check unfounded-reload` on the candidate's
+identical production and harness bytes and retain both PASS verdicts with the candidate's
+native evidence. The first proves a real engine save of an unfounded world with the
+SaveGameError witness armed and the growth-free dormant lifecycle frame; the second saves an
+unfounded world, stops it, cold-loads that exact save in a fresh descendant profile, founds
+the first city through production and saves again, with both journals, Player.logs and save
+artifacts checked by `Tools/check-unfounded-results.py`. A refused or missing verdict blocks
+the candidate. Neither run drives the Roleplay checkpoint or a starting-pet Quickstart
+(#274, #276); record that gap rather than claiming those routes.
+
 Copy the frozen package receipt byte-for-byte into the repository and commit it:
 
 ```bash

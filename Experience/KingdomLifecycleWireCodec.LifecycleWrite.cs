@@ -7,10 +7,20 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomLifecycleWireCodec
 	{
+		/// <summary>An identity-unbound dormant book carries no growth authority. Its exact state is
+		/// written in the growth-free lifecycle v5 frame, which every reader since v0.3.0
+		/// reconstructs as the same pristine (or canonically quarantined) book (#272, #271). This is
+		/// the one production use of a historical lifecycle frame; DormantLifecycleWireExact admits
+		/// only state that frame carries losslessly. Every other book keeps the current frame and the
+		/// strict growth envelope gate. Retiring the v5 reader would break new unfounded saves.</summary>
 		public static void WriteLifecycle(BinaryWriter Writer, KingdomLifecycleBook Book)
 		{
-			WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.CurrentFormatVersion,
-				IncludeGrowth: true);
+			if (KingdomLifecycleRules.DormantLifecycleWireExact(Book))
+				WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.LegacyLifecycleFormatVersion,
+					IncludeGrowth: false);
+			else
+				WriteLifecycleCore(Writer, Book, KingdomLifecycleRules.CurrentFormatVersion,
+					IncludeGrowth: true);
 		}
 
 		#if TAF_TESTS

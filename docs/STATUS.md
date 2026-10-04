@@ -1,5 +1,111 @@
 # Current implementation and release evidence
 
+## Unfounded saves - source fix, native proof owed (#271, #272)
+
+Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
+identity-unbound growth book, and the strict growth writer gate had no branch for it, so every
+save before founding threw "growth envelope is not bounded and writable". The same code shipped
+in every 0.3.x release. `WriteLifecycle` now chooses the frame before writing any byte: a book
+that `DormantLifecycleWireExact` admits (identity-unbound, pristine growth, no lane operations,
+resources or proofs, a constructor-default raid ledger, and the pristine shape or the canonical
+unbound quarantine) is written in the growth-free lifecycle v5 frame that every reader since
+v0.3.0 rebuilds into the same book. Every other book keeps the current frame and the unchanged
+strict gate. Refusals keep their message as the exact prefix and gain the failing check
+(`identity-unbound`, `identity-proof`, `root-shape`, ...). The production writer now depends
+permanently on the lifecycle v5 read branch. No format bump: the dormant record is the historical
+v5 lifecycle record, which every 0.3.x lifecycle reader parses back into the same book
+(engine-free). Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
+refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
+hotfix built from main.
+
+Engine-free evidence only. `KingdomLifecycleDormantSaveTests` (35 cases, registered in both
+suites) pins the exact 139-byte dormant image, equal to the historical v5 fixture writer; cold
+load, byte-identical re-save and first founding with the founded book back on frame 10;
+field-for-field round trips of the admitted quarantine states, including non-default counters,
+options and a 4096-character fault; current-frame retention for an unbound quarantine carrying
+quarantined or staged growth; a frozen reflective census of the lifecycle, growth and
+raid-ledger fields; and every refusal reason except `aggregate-cap`. Refusal by both the
+predicate and the strict writer is pinned for the listed non-dormant unbound states: absent
+parts; growth, option and lane-operation state; a genuine future raid ledger on both arms;
+raid-ledger state, identity remnants, a broken lane counter, an unknown option, a negative tick
+and an overlong fault on the unbound quarantine, whose v5 image would drop the ledger or fail to
+load; and valid resource and proof rows there, which the v5 frame would carry but the dormant
+frame excludes. A reflective pin makes the predicate refuse a non-default value of every growth
+and raid-ledger field.
+
+On a scratch copy with the writer and the two messages reverted, 21 of the 35 cases fail (the
+writer cases with the #272 message, and the message pins); the 14 refusal, current-frame, census
+and absent-growth pins pass. On scratch copies, this fixture kills 39 of 50 mutants of the
+predicate, its raid-ledger check, seven `PristineGrowthBook` clauses, the writer and the refusal
+reasons. Ten survivors are equivalent: dropping the WireRejected, FormatVersion, IdentityBound or
+lane-operation checks (both arms, with the pristine-growth check, already refuse those states;
+an operation always carries a settlement identity an unbound book lacks), or dropping alone the
+ledger's Version, payload, ActiveIncidentId, either count or legacy-value check (`ValidLedger`,
+which both arms apply, ties each to a check that remains). The eleventh survivor drops the
+`aggregate-cap` reason, which no pin reaches.
+
+`KingdomFreshUnfoundedSaveTests` (1 case, both suites), ported from hotfix PR #278, writes and
+checks the durable books a fresh, unfounded `KingdomSystem` is constructed with, from an explicit
+list (16 books in the main suite, 11 in the portable kernel), each built as its field initializer
+builds it: the envelope codecs (lifecycle, polity, trade, experience, carry) round-trip
+byte-identically and reload valid; the named-field books hold only values the engine's
+named-field writer serializes itself; the load normalization that the ledger, binding, job,
+founder-history and realm-transition books run in their own `Read`, called directly here,
+settles, and the normalized realm transition validates (the dispatch-state and resident-operation
+`Read`s normalize nothing); and the two fresh settlement topologies (main suite only) are checked
+to be empty, carry no opaque evidence and pass `NormalizeCurrent`, the load-time check whose
+ragged/bound predicate matches their write gate today; that gate is in their `Write`, which
+neither test project compiles, so the pin cannot run it (measured below). On dev the
+city book carries schema 5 (the residence column), so here its fields are also walked behind its
+load guard, and its written fields reload through the production load path (residence and
+subsidence migration, then validated normalization) to the identical field image. No listed book
+fails on this head. With only the writer change reverted on a scratch copy, the pin fails on the
+lifecycle book alone, with the #272 message, and the other 15 books pass (10 in the portable
+kernel). With only the polity ledger's `FutureCauseFloorTick` initializer reverted, it fails on
+the polity ledger alone with "unobserved presentation option is noncanonical", the second defect
+the hotfix's first native unfounded save hit; dev has carried that initializer since PR #250.
+Each of these mutations turns it red: the city book's residence column left null, its schema
+version set to 4, a non-native field added to it, its residence load check inverted or off by
+one, a book with its own writer nested inside the city book or inside a listed named-field book,
+and a realm-transition normalization that throws on a fresh transition, never settles, or leaves
+it invalid.
+
+The pin is not a field census. It reads no production source and calls no book's
+`Write(SerializationWriter)`, so a new `KingdomSystem` field, a changed city `Write` body and a
+changed settlement-topology write gate (its ragged/bound check inverted, so that `Write` refuses
+every consistent topology, including the two empty ones a fresh game saves) each leave it green
+(all three measured on scratch copies); it walks the named-field books and the city
+book with an emulation of the engine's named-field writer, and it does not run `KingdomSystem`'s
+own load normalization, which needs the engine. The native unfounded-save persona performs a real
+engine save of every serialized field and is the complete census for a release build;
+`docs/RELEASING.md` requires that automated unfounded save and reload check for every release. An
+in-game reflection census is follow-up #281.
+
+Also not covered by this pin: the other save systems a new game creates (`KingdomSeal` and
+`KingdomCivicMemorySystem`, both mandatory, and the optional `KingdomSuccession` and
+`KingdomInheritanceLifecycle`), whose save blocks need the engine and are compiled into neither
+test project, and state that play writes before the first save (for example a remembered water
+ritual or the end-turn pump). They rely on the owed native unfounded save (#275).
+
+Native acceptance on this head is owed, not claimed: `unfounded-save-native-check` (a real engine
+save of an unfounded world with the SaveGameError witness armed; a run on a writer without the
+fix must refuse and is retained as detection evidence), `unfounded-reload` (unfounded save,
+owned stop, fresh descendant cold load, production founding and a second real save, strictly
+checked by `Tools/check-unfounded-results.py`), and the founded regressions `quickstart-reload`
+and one founded real-save persona. The reload host and checker are covered by fake-effect and
+synthetic-fixture tests only.
+
+Disclosed gaps: the exact #271 route (the Roleplay engine checkpoint save on entering Joppa) and
+a Kingdom Quickstart stopped by a starting pet (#274) are not driven natively, because the
+harness can drive neither (#276). The fix is state-based, so the unfounded save covers both once
+it passes natively. A reporter re-test on #271 is welcome but is never a release gate. Save-time
+robustness for other writers is tracked separately (#275).
+
+Current census: 3123 staged C# files; 441,887 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3157 files.
+Inventory SHA-256: `7b968cde76cea0979cec5857ee97f1cf6763bd625878c6f0dcfa3c092632ffc7`.
+Engine gate passes for 3123 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Qud build 25520692 re-pin: compile and licensed gates pass
 
 Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. Steam's
