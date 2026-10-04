@@ -43,7 +43,7 @@ ledger's Version, payload, ActiveIncidentId, either count or legacy-value check 
 which both arms apply, ties each to a check that remains). The eleventh survivor drops the
 `aggregate-cap` reason, which no pin reaches.
 
-`KingdomFreshUnfoundedSaveTests` (2 cases, both suites), ported from hotfix PR #278, checks every
+`KingdomFreshUnfoundedSaveTests` (3 cases, both suites), ported from hotfix PR #278, checks every
 durable book a fresh, unfounded `KingdomSystem` holds, built exactly as its field initializer
 builds it: the envelope codecs (lifecycle, polity, trade, experience, carry) round-trip
 byte-identically and reload valid; the named-field books hold only values the engine's
@@ -63,6 +63,24 @@ the hotfix's first native unfounded save hit; dev has carried that initializer s
 Mutations that break the city book's residence column, schema version, writer body, field types
 or load path, or the census, each turn it red; four of them (a non-native and a nested-codec city
 field, two residence-load mutants) stayed green before the city adaptation.
+
+The census parser fails closed. Review of `f17105cc` showed that a one-line attributed
+declaration (`[NonSerialized] private bool X;`) hid the next public field from the census: a new
+durable book compiled clean and both full suites stayed green. Now only an attribute alone on its
+line that names `NonSerialized` skips a declaration, and a declaration on the attribute's line
+consumes it. An unreadable attribute line, a public member outside the two-tab layout, another
+`KingdomSystem` declaration form or a lambda-initialized field fails the census as UNPARSED. A
+self-test pins the parser on nine synthetic partials. On scratch copies, the review's three probes
+(the one-line form in a new partial and in an existing one, and the two-line control) each turn
+the census red; the previous parser fails seven of the nine rows; and each of eleven single-guard
+mutants fails its row. The parser still reads the same 204 serialized fields as the compiled
+assembly, in order.
+
+Not covered by this pin: the other save systems a new game creates (`KingdomSeal` and
+`KingdomCivicMemorySystem`, both mandatory, and the optional `KingdomSuccession` and
+`KingdomInheritanceLifecycle`), whose save blocks need the engine and are compiled into neither
+test project, and state that play writes before the first save (for example a remembered water
+ritual or the end-turn pump). They rely on the owed native unfounded save (#275).
 
 Native acceptance on this head is owed, not claimed: `unfounded-save-native-check` (a real engine
 save of an unfounded world with the SaveGameError witness armed; a run on a writer without the
