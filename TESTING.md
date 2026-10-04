@@ -205,8 +205,8 @@ This source proof is not private package delivery acceptance; broader ecology re
 
 ## Current source inventory (unreleased)
 
-The engine gate runs across 3106 production C# sources (3102 baseline);
-the cold-install inventory contains 3139 files. Inventory `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The engine gate runs across 3108 production C# sources (3104 baseline);
+the cold-install inventory contains 3141 files. Inventory `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
