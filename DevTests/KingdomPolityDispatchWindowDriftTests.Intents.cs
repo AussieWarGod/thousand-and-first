@@ -68,6 +68,24 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
+		public void OwnedTopologyAloneWithdrawsAMigrantIntentWhoseSourceIsUnchanged()
+		{
+			Site a = CityA(), b = CityB();
+			KingdomPolityDispatchState state = OpenIntents(Realm(Period * 69L, a, b),
+				out List<KingdomPolityDueWork> first, Migrant, Guard);
+			// C sorts after B, so A's migrant source stays B: only the owned topology changed.
+			ClassicAssert.IsTrue(Open(state, Realm(Period * 69L + 600L, a, b, CityC()),
+				out List<KingdomPolityDueWork> work, out bool drifted, out List<string> withdrawn,
+				out string failure), failure);
+			ClassicAssert.IsTrue(drifted);
+			ClassicAssert.AreEqual(1, work.Count);
+			ClassicAssert.AreEqual(first[1].CohortId, work[0].CohortId);
+			CollectionAssert.AreEqual(new[] { "window 69 Migrant intent for "
+				+ KingdomPolityTestData.Settlement + Changed }, withdrawn);
+			ClassicAssert.AreEqual(1, state.CompletedMask);
+		}
+
+		[Test]
 		public void CourierIntentIsWithdrawnWhenOnlyItsSourceCityRaisedADeed()
 		{
 			Site a = CityA(), b = CityB();
