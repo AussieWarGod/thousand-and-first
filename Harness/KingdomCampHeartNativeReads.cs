@@ -17,7 +17,9 @@ namespace ThousandAndFirst.Harness
 	/// standing, how much water is stored) come from the production unbound-recovery observation:
 	/// it builds the ordinary physical index WITHOUT legacy migration, citizenship publication,
 	/// ledger work or economic simulation, is refused outright while a settlement pass holds a
-	/// bound survey, and refuses a PARTIAL index rather than under-reporting the ground.
+	/// bound survey, and refuses a PARTIAL index rather than under-reporting the ground. Code that
+	/// runs inside its own bound pass reads the standing heart from that pass's survey instead,
+	/// through <c>StandingHeart(KingdomSurvey)</c>.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
