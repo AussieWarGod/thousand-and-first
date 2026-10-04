@@ -163,6 +163,24 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-renovation-cleared",
 )
 
+# The unfounded cold-load route (#272, #271): the save leg seals exactly this script and verb
+# (Harness/KingdomUnfoundedSave.cs) on the requested start; the host then cold-loads the save in a
+# fresh descendant profile (Tools/persona_reload.py). The start is the canonical
+# <wx>.<wy>@<x>,<y> spelling of Tools/scenario_profile.py parse_start, bounded the same way.
+UNFOUNDED_RELOAD_SCRIPT = ("stagedigest", "unfounded-save", "stagedigest")
+UNFOUNDED_RELOAD_VERB = "unfounded-save"
+RELOAD_START = re.compile(r"(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)@(0|[1-9][0-9]?),(0|[1-9][0-9]?)\Z")
+RELOAD_START_BOUNDS = (80, 25, 80, 25)
+
+
+def reload_start(value: str) -> bool:
+    """True only for a canonical, on-map `<wx>.<wy>@<x>,<y>` unfounded reload start."""
+    found = RELOAD_START.match(value)
+    return bool(found) and all(
+        int(part) < bound for part, bound in zip(found.groups(), RELOAD_START_BOUNDS)
+    )
+
+
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
 # exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
@@ -269,7 +287,14 @@ def parse_manifest(text: str, name: str) -> dict:
     found["VERBS"] = ",".join(extra)
     if found["SCRIPT"].startswith("reload-descendant "):
         parts = found["SCRIPT"].split()
-        if (
+        unfounded = parts[1:2] == ["unfounded"]
+        if unfounded:
+            if len(parts) != 3 or not reload_start(parts[2]):
+                fail(
+                    name
+                    + " reload requires exactly: reload-descendant unfounded <wx>.<wy>@<x>,<y>"
+                )
+        elif (
             len(parts) != 4
             or parts[:2] != ["reload-descendant", "quickstart"]
             or parts[2] not in ("marsh", "canyon", "dunes")
@@ -291,8 +316,15 @@ def parse_manifest(text: str, name: str) -> dict:
                 name
                 + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides"
             )
-        found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
-        found["RELOAD"] = "quickstart"
+        if unfounded:
+            # The save leg's exact sealed recipe; the host prepares from these normalized fields.
+            found["SCRIPT_WORDS"] = " ".join(UNFOUNDED_RELOAD_SCRIPT)
+            found["START"] = parts[2]
+            found["VERBS"] = UNFOUNDED_RELOAD_VERB
+            found["RELOAD"] = "unfounded"
+        else:
+            found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
+            found["RELOAD"] = "quickstart"
         found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
         found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
         return found
@@ -712,7 +744,7 @@ def home_damage(rows: list[tuple[str, str, str]]) -> list[str]:
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
     if manifest.get("RELOAD"):
         return [
-            "reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"
+            "reload requires both strict phase checks and receipt-owned process workflow; journal alone is insufficient"
         ]
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)

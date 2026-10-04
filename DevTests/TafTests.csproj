@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Include="TestMain.cs" />
     <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
+    <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
     <Compile Include="..\Simulation\City\KingdomResidence.cs" />
     <Compile Include="..\Simulation\City\KingdomResidenceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomResidentRow.Residence.cs" />
@@ -45,6 +46,7 @@
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUnfoundedSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
