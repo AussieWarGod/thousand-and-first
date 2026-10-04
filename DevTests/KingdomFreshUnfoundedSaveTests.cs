@@ -237,8 +237,7 @@ namespace ThousandAndFirst.Tests
 
 		// Whole source files read by ReadSystemFields, with the rows they must yield
 		// (type|name|initializer, ';'-separated), or UNPARSED when at least one UNPARSED row must
-		// result. The earlier line-based census silently dropped the field in the first three and
-		// in "field after a body on the same line".
+		// result. The earlier line-based census silently dropped the field in each of the first five.
 		private static readonly string[][] ParserProbes =
 		{
 			new[] { "one-line partial", "namespace N { public partial class KingdomSystem { public KingdomRealmArchive A"
