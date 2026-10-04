@@ -6,7 +6,9 @@ was produced while authoring this patch. Preparation, source pins and synthetic 
 not native acceptance; the root must run the integrated candidate's real engine legs.
 
 Old runtime is fixed at `v0.3.1`, commit
-`a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`; engine is `2.0.211.51`, save format 408.
+`a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`; engine is `2.0.211.56`, save format 409. The
+2026-09-25 Steam update replaced engine `2.0.211.51` (format 408); evidence from that engine
+does not meet this pin.
 All current runtime, recipes and overlay inputs come from one full immutable candidate commit.
 Recipes use the existing persona grammar under `Tools/personas/cross-version/`, outside ordinary
 matrix discovery: they require these dedicated sealed inputs and must not run through generic

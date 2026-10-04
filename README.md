@@ -41,8 +41,11 @@ Hearthpyre compatibility work is deferred until Beta.
 
 ## Supported environment
 
-The release target is Caves of Qud **v1.0.5, core build 2.0.211.51**. Newer game builds are
-unverified until licensed integration checks pass again. There are no required mod dependencies.
+The release target is Caves of Qud **v1.0.5, core build 2.0.211.56**, the build Steam installed on
+2026-09-25. Public 0.3.7 was built and checked on core build 2.0.211.51, which that update
+replaced. The compile gate and licensed source suites pass on 2.0.211.56; native in-game checks on
+that build are still owed. Newer game builds are unverified until licensed integration checks pass
+again. There are no required mod dependencies.
 
 Hearthpyre **2.2.3** is an optional, exact-version integration when it loads first. Other
 Hearthpyre versions leave core behavior unchanged. Qud Industry 0.3 has no typed integration in
