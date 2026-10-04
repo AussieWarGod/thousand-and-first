@@ -3,7 +3,11 @@
 This guide is for tagged release packages and the public `0.3.0` Alpha on
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). A repository
 working tree may contain later changes and is not itself a release package. Supported target:
-Caves of Qud v1.0.5, core build 2.0.211.51.
+Caves of Qud v1.0.5, core build 2.0.211.56, installed by Steam on 2026-09-25. Public 0.3.7 was
+checked on core build 2.0.211.51, which that update replaced. On 2.0.211.56 a 2026-10-04
+developer smoke of the 0.3.7 source and of development code (Quickstart new game, first save, cold
+reload) passed in game; native acceptance checks on that build are still owed. Steam's opt-in
+beta and legacy branches carry other builds, which are unverified.
 
 ## Before installing
 

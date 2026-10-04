@@ -17,7 +17,7 @@ body:
     id: qud_core_build
     attributes:
       label: Caves of Qud core build
-      placeholder: "2.0.211.51"
+      placeholder: "2.0.211.56"
     validations:
       required: true
   - type: input

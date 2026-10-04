@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ReferenceEquals(current[i], References[i])", state);
 			StringAssert.Contains("legacy.Compose() == shape.LegacyText", state);
 			StringAssert.Contains("TryValidateRealmTransition", state);
-			StringAssert.Contains("\"2.0.211.51\"", state);
+			StringAssert.Contains("\"2.0.211.56\"", state);
 			StringAssert.Contains("new KingdomSealStore(path).ReadStage(origin)", state);
 			StringAssert.Contains("seal-stage-readable=true", state);
 		}
