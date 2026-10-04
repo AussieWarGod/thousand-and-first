@@ -487,6 +487,7 @@
     <Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
+    <Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleRules.cs" />
     <Compile Include="..\Growth\KingdomPlotGroundRules.cs" />
