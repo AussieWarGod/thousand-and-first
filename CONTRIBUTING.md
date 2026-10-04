@@ -98,9 +98,13 @@ inside Qud. They use the locked NUnit package and .NET 9. When licensed installe
 the full suite's ten and portable suite's four installed-data-only cases must match their exact
 workflow skip allowlists; an extra or missing skip fails, as does an explicitly configured
 incomplete `TAF_QUD_BASE` or `TAF_QUD_DECOMPILED`. Never replace them
-with guessed base content. A release run accepts no skips: `DevTests/test.ps1` sets the zero-skip
-policy, and `Tools/release-check.sh` supplies the exact base. Licensed runtime checks still require
-a local Caves of Qud installation:
+with guessed base content. The two decompile-backed cases read an ILSpy decompile of exactly the
+pinned core (`GAME_CORE_BUILD` in `Tools/workshop_metadata.py`): `TAF_QUD_DECOMPILED`, or by
+default `~/coq/qud_helper/game_base/decompiled/<core>-ilspy9.1`. A decompile whose
+`Properties/AssemblyInfo.cs` declares another version, or a `TAF_QUD_BASE` install of another core,
+fails them; a missing default is a skip. A release run accepts no skips: `DevTests/test.ps1` sets
+the zero-skip policy, and `Tools/release-check.sh` supplies the exact base. Licensed runtime checks
+still require a local Caves of Qud installation:
 
 ```powershell
 dotnet run --project DevTests/TafTests.csproj -v q --nologo

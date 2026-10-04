@@ -7,10 +7,14 @@ a visual sign-off. Regenerate the ledger after any architecture edit.
 ## What “good” means here
 
 The primary reference is the installed Caves of Qud **2.0.211.56** corpus. The retained ledger
-verified the earlier 2.0.211.51 assembly, population tables, object-blueprint corpus, and ten
-named settlement or institutional maps against `Tools/architecture-quality-reference.json`.
-After the 2026-09-25 Steam update the reference names the 2.0.211.56 assembly; its population
-tables, object blueprints and all ten maps hash identically on both builds.
+verified the earlier 2.0.211.51 assembly, `PopulationTables.xml`, the root `ObjectBlueprints.xml`
+and ten named settlement or institutional maps against `Tools/architecture-quality-reference.json`.
+After the 2026-09-25 Steam update the reference names the 2.0.211.56 assembly. Its other twelve
+pinned files hash identically on both builds: `PopulationTables.xml`, the ten `.rpm` maps and the
+root `ObjectBlueprints.xml`, which is an empty 67-byte merge root, so its match says nothing about
+blueprint content. The update modified files the reference does not pin, including
+`ObjectBlueprints/ZoneTerrain.xml` and `Options.xml` (both dated 2026-09-25), so this match does
+not carry blueprint-dependent 2.0.211.51 evidence over to 2.0.211.56.
 
 Vanilla supplies the minimum architectural grammar, not an aesthetic to copy:
 
