@@ -161,7 +161,7 @@ class WorkshopMetadataTests(unittest.TestCase):
             "It never carries items, liquids, charge, or old actor identity.",
             "Expect bugs, rough edges, balance changes, and incomplete visual or compatibility coverage.",
             "This listing stays Alpha; Beta and Release will be separate Workshop items.",
-            "Built for Caves of Qud v1.0.5, core build 2.0.211.51.",
+            "Built for Caves of Qud v1.0.5, core build 2.0.211.56.",
             "Later game builds are unverified. No dependency is required.",
             "Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; "
             "native compatibility remains unverified.",
@@ -588,6 +588,52 @@ class WorkshopMetadataTests(unittest.TestCase):
                     METADATA.validate_alpha_candidate(
                         manifest, preview, workshop, record, readme, changelog
                     )
+
+    def test_only_the_exact_published_alpha_record_keeps_its_replaced_core_build(self) -> None:
+        # The 2026-09-25 Steam update replaced core 2.0.211.51. Published 0.3.7 keeps that true
+        # target; any other record, or that record rewritten, must bind the installed build.
+        self.assertEqual(METADATA.GAME_CORE_BUILD, "2.0.211.56")
+        self.assertEqual(len(METADATA.PUBLISHED_ALPHA_GAME_TARGETS), 1)
+        (version, commit, receipt), (marketing, core) = next(
+            iter(METADATA.PUBLISHED_ALPHA_GAME_TARGETS.items())
+        )
+        self.assertEqual((version, marketing, core), ("0.3.7", "1.0.5", "2.0.211.51"))
+        record = self.root / "ALPHA_CANDIDATE.json"
+        published = {
+            "schemaVersion": METADATA.ALPHA_CANDIDATE_SCHEMA,
+            "releaseChannel": METADATA.ALPHA_RELEASE_CHANNEL,
+            "releaseVersion": version,
+            "candidateCommit": commit,
+            "gameMarketingVersion": marketing,
+            "gameCoreBuild": core,
+            "workshopId": 3794797472,
+            "privateWorkshopId": 3796495680,
+            "previewSha256": "c" * 64,
+            "privatePackageReceiptSha256": receipt,
+        }
+        record.write_text(json.dumps(published), encoding="utf-8")
+        self.assertEqual(METADATA._validated_alpha_record(record)["gameCoreBuild"], core)
+        refused = (
+            (dict(published, gameCoreBuild=METADATA.GAME_CORE_BUILD), "gameCoreBuild must be 2.0.211.51"),
+            (dict(published, candidateCommit="e" * 40), "gameCoreBuild must be 2.0.211.56"),
+            (dict(published, releaseVersion="0.3.8"), "gameCoreBuild must be 2.0.211.56"),
+            (dict(published, privatePackageReceiptSha256="f" * 64), "gameCoreBuild must be 2.0.211.56"),
+            (dict(published, privatePackageReceiptSha256=[receipt]), "gameCoreBuild must be 2.0.211.56"),
+        )
+        for index, (payload, message) in enumerate(refused):
+            with self.subTest(refused=index):
+                record.write_text(json.dumps(payload), encoding="utf-8")
+                with self.assertRaisesRegex(METADATA.ValidationError, message):
+                    METADATA._validated_alpha_record(record)
+        for field, value in (("candidateCommit", "e" * 40), ("releaseVersion", "0.3.8")):
+            with self.subTest(current=field):
+                payload = dict(published, gameCoreBuild=METADATA.GAME_CORE_BUILD)
+                payload[field] = value
+                record.write_text(json.dumps(payload), encoding="utf-8")
+                self.assertEqual(
+                    METADATA._validated_alpha_record(record)["gameCoreBuild"],
+                    METADATA.GAME_CORE_BUILD,
+                )
 
     def test_alpha_workshop_binding_proves_two_distinct_items_and_preserves_every_input(self) -> None:
         paths = self.write_alpha_binding_fixture()

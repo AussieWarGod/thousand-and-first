@@ -142,8 +142,8 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Engine()
 		{
-			Check(typeof(XRLGame).Assembly.GetName().Version.ToString() == "2.0.211.51",
-				"upgrade observation requires pinned engine 2.0.211.51");
+			Check(typeof(XRLGame).Assembly.GetName().Version.ToString() == "2.0.211.56",
+				"upgrade observation requires pinned engine 2.0.211.56");
 		}
 
 		internal static void ValidateInheritance(KingdomInheritanceState state, string gameId)

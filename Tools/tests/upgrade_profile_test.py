@@ -144,13 +144,13 @@ class UpgradeProfileStateTest(unittest.TestCase):
             state.validate_state([dict(path="Synced/ThousandAndFirst/Receipts/.claims.lock", size=1)],
                                  ["Synced", "Synced/Saves"])
 
-    def fixture(self, root):
+    def fixture(self, root, identity=(409, "2.0.211.56")):
         config = inputs.configuration("source", inputs.OLD_PIN, CURRENT, "inheritance", "#123",
                                       schema=inputs.PROFILE_V1)
         save = root / "Synced/Saves" / GAME
         save.mkdir(parents=True)
         payloads = {"Primary.sav.gz": b"synthetic-not-a-native-save", "Cache.db": b"post-quit-cache",
-                    "Primary.json": json.dumps(dict(ID=GAME, SaveVersion=408, GameVersion="2.0.211.51",
+                    "Primary.json": json.dumps(dict(ID=GAME, SaveVersion=identity[0], GameVersion=identity[1],
                                                     ModsEnabled=["r_ThousandAndFirst"])).encode()}
         for leaf, data in payloads.items():
             (save / leaf).write_bytes(data)
@@ -182,6 +182,15 @@ class UpgradeProfileStateTest(unittest.TestCase):
             (root / "upgrade-save-failure.txt").write_bytes(b"failed")
             with self.assertRaisesRegex(ValueError, "observer refused"):
                 state.capture(root, config, frozen)
+
+    def test_replaced_engine_or_save_format_refuses(self):
+        # The 2026-09-25 Steam update replaced core 2.0.211.51 and its save format 408.
+        for identity in ((408, "2.0.211.56"), (409, "2.0.211.51"), (408, "2.0.211.51")):
+            with self.subTest(identity=identity), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                config, frozen, _ = self.fixture(root, identity)
+                with self.assertRaisesRegex(ValueError, "wrong engine"):
+                    state.capture(root, config, frozen)
 
     def test_plan_contract_has_fixed_keys_and_no_skip_flag(self):
         plan = state.native_plan(Path("/mnt/c/taf-scenario.Source"), None, ["Synced"], [], ["Synced"])

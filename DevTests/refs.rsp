@@ -20,7 +20,6 @@
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\LaundryBear.Utilities.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Microsoft.CodeAnalysis.CSharp.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Microsoft.CodeAnalysis.dll"
--r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Microsoft.Contracts.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Mono.Data.Sqlite.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Mono.Posix.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\Mono.Security.dll"
@@ -188,5 +187,4 @@
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\UnityEngine.WindModule.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\UnityEngine.XR.LegacyInputHelpers.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\UnityEngine.XRModule.dll"
--r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\UnityMultiSelectDropdown.dll"
 -r:"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ_Data\Managed\ZString.dll"

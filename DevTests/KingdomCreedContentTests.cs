@@ -318,7 +318,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < candidates.Length; i++)
 				if (!string.IsNullOrEmpty(candidates[i])
 					&& File.Exists(Path.Combine(candidates[i], "Factions.xml"))) return candidates[i];
-			Assert.Ignore("Creed census requires installed Qud 2.0.211.51 base data.");
+			Assert.Ignore("Creed census requires installed Qud 2.0.211.56 base data.");
 			return null;
 		}
 	}
