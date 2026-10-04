@@ -36,6 +36,7 @@
     <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
     <Compile Include="KingdomHeartRungSettleTests.cs" />
     <Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+    <Compile Include="KingdomCampHeartBoundPassSourceTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />

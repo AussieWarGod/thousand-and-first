@@ -42,7 +42,9 @@ namespace ThousandAndFirst.Harness
 				out Dictionary<string, string> Records)
 			{
 				Records = new Dictionary<string, string>(StringComparer.Ordinal);
-				Heart = StandingHeart(); HeartId = Heart.IDIfAssigned;
+				// Inside the bound pass the unbound census refuses; read the heart from this pass.
+				var survey = KingdomSurvey.ActiveFor(Zone);
+				Heart = StandingHeart(survey); HeartId = Heart.IDIfAssigned;
 				int rung = KingdomPlots.HeartRung(Zone);
 				Require((rung == 3 || rung == 4) && KingdomUpgrade.IsFunctionallyBuilt(Heart)
 					&& KingdomUpgrade.DesignKeyOf(Heart) == (rung == 3 ? "heartmoot" : "heartcourt"),
@@ -71,7 +73,6 @@ namespace ThousandAndFirst.Harness
 					&& job.Route == KingdomConstructionRoute.Improvement && KingdomConstruction.HasReceipt(Heart, job)
 					&& job.Phase == KingdomConstructionPhase.Complete && job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled,
 					"higher-heart completed paid receipt differs");
-				var survey = KingdomSurvey.ActiveFor(Zone);
 				foreach (var root in survey.Built)
 					if (KingdomUpgrade.DesignKeyOf(root) == "airwellcourt") ChainProducers.Add(root);
 				RequireChainSupportInPass(survey);

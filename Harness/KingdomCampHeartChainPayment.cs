@@ -79,16 +79,8 @@ namespace ThousandAndFirst.Harness
 
 			private void CheckChainComplete()
 			{
-				Require(!KingdomSurvey.HasBoundPass, "chain completion found an outstanding survey");
-				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope, out string failure), failure);
-				using (scope) CheckChainCompleteInPass(KingdomSurvey.ActiveFor(Zone));
-				Require(!KingdomSurvey.HasBoundPass, "chain completion left its survey bound");
-			}
-
-			private void CheckChainCompleteInPass(KingdomSurvey Survey)
-			{
 				RequireChainTrack();
-				RequireChainSupportInPass(Survey);
+				RequireChainSupport();
 				Require(KingdomCampHeartChainHandoverOccupancy.Proved,
 					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
