@@ -12,8 +12,8 @@ namespace ThousandAndFirst.Harness
 	/// KingdomFoundingTransaction.TryFoundSecondWithoutWater for the transaction - the exact call
 	/// KingdomFounding.FoundSecond makes, taken directly so its failure sentence is retained in
 	/// the evidence instead of discarded - and the ZoneActivatedEvent handler's own
-	/// KingdomSystem.TrySeat for the seat exchange on return. Nothing here seats, claims or
-	/// publishes anything itself.
+	/// KingdomSystem.TrySeat for the seat exchange on return, with the polity dispatch window its
+	/// reconciliation opens. Nothing here seats, claims, reconciles or publishes anything itself.
 	/// </summary>
 	internal static class KingdomSecondCityNativeCases
 	{
@@ -154,7 +154,10 @@ namespace ThousandAndFirst.Harness
 		/// <summary>
 		/// Case four. The founder returns; activating the first city's ground is what production
 		/// itself acts on - KingdomSystem.HandleEvent(ZoneActivatedEvent) calls TrySeat before
-		/// the claim guard - so the seat must come back without this shard seating anything.
+		/// the claim guard - so the seat must come back without this shard seating anything. The
+		/// same handler then runs the realm's first polity reconciliation (setup proved no window
+		/// was open), which must open this period's dispatch window over both cities; a refused
+		/// reconciliation is only logged, and the persona forbids that line.
 		/// </summary>
 		private static void ReturnSeat(XRLGame Game, KingdomSystem System, StringBuilder Detail)
 		{
@@ -182,11 +185,19 @@ namespace ThousandAndFirst.Harness
 				&& System.ClaimedZones.Contains(KingdomSecondCityNativeChecks.HomeZoneId)
 				&& nonSeat[0].ClaimedZones.Contains(KingdomSecondCityNativeChecks.SiteZoneId),
 				"the exchanged topology does not hold both cities on their own ground");
+			KingdomPolityDispatchState polity = System.PolityDispatch;
+			ulong window = (ulong)(KingdomSecondCityNativeChecks.Ticks
+				/ KingdomPolityDispatchRules.PeriodTicks);
+			Require(polity != null && polity.HasWindow && polity.RealmId == System.RealmId
+				&& polity.LastWindowOrdinal == window && polity.EndpointCount == 2,
+				"the return's polity reconciliation did not open this period's window over both"
+				+ " cities; read its logged refusal");
 			Still(Game);
 			Detail.Append("; case=").Append(ReturnCase).Append(" seat=")
 				.Append(KingdomSecondCityNativeChecks.FirstSettlementId).Append(" non-seat=")
 				.Append(KingdomSecondCityNativeChecks.SecondSettlementId)
-				.Append(" settlements=2 seat-exchange=production");
+				.Append(" settlements=2 seat-exchange=production polity-window=").Append(window)
+				.Append(" polity-endpoints=2");
 		}
 
 		/// <summary>Seat identity plus every settlement's ordered claims, as one exact string.</summary>

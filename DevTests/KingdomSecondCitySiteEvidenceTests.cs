@@ -157,17 +157,23 @@ namespace ThousandAndFirst.Tests
 			// Every rejection goes through Reject, and nothing cuts the list to a roster width.
 			Assert.That(site, Does.Not.Contain("tried.Add("));
 			Assert.That(site, Does.Not.Contain("KingdomScenarioRules.Bounded("));
-			Assert.That(Count(site, "Rejected = KingdomSecondCitySiteRules.RejectedList(tried);"),
-				Is.EqualTo(2));
+			Assert.That(site, Does.Contain("Rejections = tried;"));
 			string checks = TestMain.ReadRepositoryText(ChecksSource);
-			Assert.That(Squash(checks), Does.Contain(Squash("string row = found"
+			Assert.That(checks, Does.Contain(
+				"string rejected = KingdomSecondCitySiteRules.RejectedList(rejections);"));
+			// The row is OK only when a site qualified AND the probes kept the nearest-first order.
+			Assert.That(Squash(checks), Does.Contain(Squash("bool sited = found && order == null;"
+				+ " string row = sited"
 				+ " ? KingdomSecondCitySiteRules.SiteRow(HomeZoneId, HomeCell.X, HomeCell.Y, border,"
 				+ " site, rejected) : KingdomSecondCitySiteRules.RefusedSiteRow(HomeZoneId,"
-				+ " HomeCell.X, HomeCell.Y, border, refusal, rejected);")));
+				+ " HomeCell.X, HomeCell.Y, border, order ?? refusal, rejected);")));
 			int journal = checks.IndexOf(
-				"KingdomScenarioJournal.Append(KingdomSecondCityScript.SiteRow, found, row);");
+				"KingdomScenarioJournal.Append(KingdomSecondCityScript.SiteRow, sited, row);");
 			Assert.That(journal, Is.GreaterThan(0));
-			Assert.That(checks.IndexOf("Require(found, refusal", journal), Is.GreaterThan(journal));
+			int order = checks.IndexOf("Require(order == null, order + unjournalled);", journal);
+			Assert.That(order, Is.GreaterThan(journal));
+			Assert.That(checks.IndexOf("Require(found, refusal + unjournalled);", order),
+				Is.GreaterThan(order));
 		}
 
 		private static string PersonaBinding(string Prefix)

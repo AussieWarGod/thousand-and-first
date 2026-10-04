@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -692,32 +693,59 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, outcome, "wrong second-city result")
                 self.assertTrue(matrix.match(expected, changed))
 
-    def test_second_city_forbids_the_activation_refusals_production_only_logs(self):
+    def test_second_city_forbids_every_refusal_production_only_logs(self):
         name = "second-city-native-check.persona"
         manifest = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
         forbidden = json.loads(manifest["LOG_FORBID"])
         self.assertEqual(["founding heart: reserved identity audit refused",
-                          "polity: zone reconciliation refused"], forbidden)
-        # Production's own sentences, logged and never thrown by the zone-activation handler.
-        events = (ROOT / "Core/KingdomSystem.z20.Events.cs").read_text(encoding="utf-8")
-        start = events.index("public override bool HandleEvent(ZoneActivatedEvent E)")
-        handler = events[start:events.index("\n\t\t}\n", start)]
-        for statement in ('KingdomLog.Log("founding heart: reserved identity audit refused");',
-                          'KingdomLog.Log("polity: zone reconciliation refused (" + polityFailure'
-                          ' + ")");'):
-            self.assertEqual(1, handler.count(statement), statement)
-        refusals = ["[TAF] founding heart: reserved identity audit refused",
-                    "[TAF] polity: zone reconciliation refused (open polity topology differs"
-                    " from its frozen facts)"]
+                          "plot effects: active-zone legacy recovery refused",
+                          "reconciliation refused",
+                          "construction: founding heart recovery requires inspection"], forbidden)
+
+        def body(path, signature):
+            text = (ROOT / path).read_text(encoding="utf-8")
+            start = text.index(signature)
+            return text[start:text.index("\n\t\t}\n", start)]
+
+        # Every refusal the zone-activation handler only logs, in production's own words: each is
+        # covered by exactly one literal, and the handler logs no refusal outside this list.
+        handler = body("Core/KingdomSystem.z20.Events.cs",
+                       "public override bool HandleEvent(ZoneActivatedEvent E)")
+        refusals = re.findall(r'KingdomLog\.Log\("([^"]*refused[^"]*)"', handler)
+        self.assertEqual(["founding heart: reserved identity audit refused",
+                          "plot effects: active-zone legacy recovery refused",
+                          "hosted authority: activation reconciliation refused (",
+                          "hosted interior: activation reconciliation refused (",
+                          "polity: zone reconciliation refused ("], refusals)
+        for text in refusals:
+            self.assertEqual(1, sum(entry in text for entry in forbidden), text)
+        # The fourth literal: the attended settlement pass that handler dispatches.
+        self.assertIn("AttendSeatedSemantics);", handler)
+        attended = body("Core/KingdomSystem.z21.SemanticPass.cs",
+                        "private bool AttendSeatedSemantics(Zone Z)")
+        self.assertIn("KingdomConstruction.OnSettlementPass(this, Z, survey);", attended)
+        construction = body("Growth/KingdomConstruction.Settlement.cs",
+                            "public static void OnSettlementPass(")
+        self.assertEqual(1, construction.count(
+            'KingdomLog.Log("construction: founding heart recovery requires inspection");'))
+        lines = ["[TAF] founding heart: reserved identity audit refused",
+                 "[TAF] plot effects: active-zone legacy recovery refused",
+                 "[TAF] hosted authority: activation reconciliation refused (ambiguous loaded shell)",
+                 "[TAF] hosted interior: activation reconciliation refused (unproved loaded"
+                 " authority)",
+                 "[TAF] polity: zone reconciliation refused (open polity topology differs from its"
+                 " frozen facts)",
+                 "[TAF] construction: founding heart recovery requires inspection"]
         clean = "[TAF] survey: zone=JoppaWorld.8.22.1.1.10 classifications=1\r\n[TAF] seat\r\n"
         self.assertEqual([], matrix.forbidden_log(manifest, clean.encode(), name))
-        for line, needle in zip(refusals, forbidden):
-            with self.subTest(forbidden=needle):
-                self.assertEqual(["line 3: " + needle], matrix.forbidden_log(
-                    manifest, (clean + line + "\r\n").encode(), name))
-        dirty = clean + "\r\n".join(refusals) + "\r\n"
-        self.assertEqual(2, len(matrix.forbidden_log(manifest, dirty.encode(), name)))
-        # The ordinary Player.log check passes both lines: only LOG_FORBID stops such a run.
+        for line in lines:
+            with self.subTest(line=line):
+                found = matrix.forbidden_log(manifest, (clean + line + "\r\n").encode(), name)
+                self.assertEqual(1, len(found), found)
+                self.assertTrue(found[0].startswith("line 3: "), found)
+        dirty = clean + "\r\n".join(lines) + "\r\n"
+        self.assertEqual(4, len(matrix.forbidden_log(manifest, dirty.encode(), name)))
+        # The ordinary Player.log check passes every one of them: only LOG_FORBID stops the run.
         with tempfile.TemporaryDirectory() as folder:
             log = pathlib.Path(folder) / "Player.log"
             log.write_text(dirty, encoding="utf-8")

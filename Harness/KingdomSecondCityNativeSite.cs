@@ -13,7 +13,8 @@ namespace ThousandAndFirst.Harness
 	/// A candidate parasang (KingdomSecondCitySiteRules.Candidates, nearest ring first) must
 	/// build, answer to no foreign faction and read Allowed from KingdomFounding.JudgeSite,
 	/// which alone decides held and too-close ground: nothing here skips a candidate unbuilt or
-	/// second-guesses production's per-zone adjacency law. On it, a rite cell
+	/// second-guesses production's per-zone adjacency law, and the caller refuses unless the
+	/// candidates built are exactly the nearest ones in order. On it, a rite cell
 	/// (KingdomSecondCitySiteRules.RiteOrder, seeded with city one's rite) must be empty, must hold
 	/// no liquid inside its rung-1 heart rect (the FoundingHeartGroundAllows predicate, read
 	/// through KingdomPlots.GroundGrid), and must pass production's own read-only founding-heart
@@ -28,17 +29,22 @@ namespace ThousandAndFirst.Harness
 	{
 		/// <summary>
 		/// Resolves the site, its rite cell and the heart rect into the checks frame. Site is the
-		/// short detail every verb row repeats; Rejected names every rejected candidate with its
+		/// short detail every verb row repeats; Rejections names every rejected candidate with its
 		/// reason for the second-city-site row, which is journalled on success and on refusal
-		/// alike, and each reason also reaches the log uncut. Returns false, with a Refusal naming
-		/// the probe limit, when no candidate qualifies within KingdomSecondCitySiteRules.MaxProbes.
+		/// alike, and each reason also reaches the log uncut. Probed is every candidate built, in
+		/// the order built; the caller holds both to KingdomSecondCitySiteRules.ProbeOrderFault.
+		/// Returns false, with a Refusal naming the probe limit, when no candidate qualifies
+		/// within KingdomSecondCitySiteRules.MaxProbes.
 		/// </summary>
-		internal static bool TryResolve(KingdomSystem System, out string Site, out string Rejected,
-			out string Refusal)
+		internal static bool TryResolve(KingdomSystem System, out string Site,
+			out IList<string> Rejections, out string Refusal, out IList<string> Probed)
 		{
 			Site = null;
-			Rejected = null;
 			Refusal = null;
+			List<string> tried = new List<string>();
+			List<string> probed = new List<string>();
+			Rejections = tried;
+			Probed = probed;
 			string home = KingdomSecondCityNativeChecks.HomeZoneId;
 			Cell homeCell = KingdomSecondCityNativeChecks.HomeCell;
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);
@@ -49,12 +55,12 @@ namespace ThousandAndFirst.Harness
 			KingdomRules.BuildEntry entry;
 			Require(KingdomData.TryGetBuilding(key, out entry) && entry != null,
 				"the founding heart " + key + " is missing from the catalogue");
-			List<string> tried = new List<string>();
 			int probes = 0;
 			for (int i = 0; i < candidates.Count && probes < KingdomSecondCitySiteRules.MaxProbes; i++)
 			{
 				string id = candidates[i];
 				probes++;
+				probed.Add(id);
 				Zone zone;
 				try { zone = The.ZoneManager.GetZone(id); }
 				catch (Exception error)
@@ -83,14 +89,12 @@ namespace ThousandAndFirst.Harness
 				KingdomSecondCityNativeChecks.SiteZone = zone;
 				KingdomSecondCityNativeChecks.SiteCell = rite;
 				KingdomSecondCityNativeChecks.SiteHeart = heart;
-				Rejected = KingdomSecondCitySiteRules.RejectedList(tried);
 				Site = "site=" + id + " rite=" + rite.X + "," + rite.Y + " heart=" + Describe(heart)
 					+ " centred=" + (KingdomSecondCitySiteRules.IsCentred(heart, rite.X, rite.Y)
 						? "true" : "false")
 					+ " probes=" + probes + " rejected=" + tried.Count;
 				return true;
 			}
-			Rejected = KingdomSecondCitySiteRules.RejectedList(tried);
 			Refusal = KingdomSecondCitySiteRules.Refusal(probes, candidates.Count);
 			return false;
 		}

@@ -22,15 +22,17 @@
 #    Harness/KingdomScenarioVerbProvider.cs forbids a provider from showing one.
 #  - the second site is ordinary worldgen; only the START zone is born-clean. Candidates
 #    start one world parasang out, three zones from city one (production judges closeness per
-#    zone), and at most 8 are built. A parasang is accepted only if it builds, answers to no
-#    foreign faction and reads Allowed from KingdomFounding.JudgeSite, which alone decides
-#    held and too-close ground, and only on an empty rite cell, nearest city one's rite, whose
-#    rung-1 heart rect holds no liquid and which passes production's own read-only
-#    founding-heart preflight (KingdomArchitectureRuntime.TryPrepareFoundingHeart: the basin
-#    binds to the rite and the authored entrance is walkable). Every rejected candidate is
-#    journalled with its reason in the second-city-site row, whether a site qualifies or
-#    the search refuses (the row is then REFUSED); each reason is kept to 512 characters
-#    there, with a marker naming any cut, and goes uncut to Player.log.
+#    zone), and at most 8 are built, nearest first: setup refuses unless the candidates built
+#    are exactly the nearest ones in order, each rejected with a reason or chosen. A parasang
+#    is accepted only if it builds, answers to no foreign faction and reads Allowed from
+#    KingdomFounding.JudgeSite, which alone decides held and too-close ground, and only on an
+#    empty rite cell, nearest city one's rite, whose rung-1 heart rect holds no liquid and
+#    which passes production's own read-only founding-heart preflight
+#    (KingdomArchitectureRuntime.TryPrepareFoundingHeart: the basin binds to the rite and the
+#    authored entrance is walkable). Every rejected candidate is journalled with its reason in
+#    the second-city-site row, whether a site qualifies or the search refuses (the row is then
+#    REFUSED); each reason is kept to 512 characters there, with a marker naming any cut, and
+#    goes uncut to Player.log.
 #  - city two has no population, buildings, stockpile or economy, and no case spends a turn:
 #    every case re-proves Game.Turns and Game.TimeTicks are unchanged since setup.
 #
@@ -41,14 +43,24 @@
 # The return leg asserts production's own seat exchange: KingdomSystem.HandleEvent
 # (ZoneActivatedEvent) calls TrySeat before the claim guard (Core/KingdomSystem.z20.Events.cs),
 # so activating the first city's ground must bring its seat back with nothing seated here.
+# The same handler then runs the realm's FIRST polity reconciliation: founding stamps the
+# semantic clock, so no settlement pass (and no daily reconciliation) is due in this one-turn
+# run, travel-out's unclaimed ground leaves the handler before polity, and nothing loads.
+# Setup proves no polity window is open; the return case requires production to have opened
+# this period's window over both cities.
 #
-# FORBIDDEN DIAGNOSTICS: that same handler only LOGS a refused founding-heart reserved-identity
-# audit (run on every activation, so on the return while city one is still the non-seat city)
-# and a refused polity zone reconciliation (run once the activated ground is the seated realm's,
-# so on the return). Neither fails a verb and Tools/check-player-log.sh passes both lines, so
-# LOG_FORBID fails the run on either. The polity refusal ("open polity topology differs from
-# its frozen facts") has appeared in other personas' native logs and is tracked in #244 and
-# #257; here it fails the run and is recorded against those issues, never as row 12 coverage.
+# FORBIDDEN DIAGNOSTICS: that handler only LOGS five refusals, no verb fails on them and
+# Tools/check-player-log.sh passes them, so LOG_FORBID names all five in three literals: the
+# founding-heart reserved-identity audit and the legacy plot-effect recovery (both run on
+# every activation, so on travel-out and on the return before the seat moves), and
+# "reconciliation refused", which covers the hosted authority and hosted interior activation
+# refusals (every activation) and the polity zone reconciliation (the return, after the seat),
+# and also every other reconciliation refusal production logs. The fourth literal is the
+# attended settlement pass's founding-heart recovery refusal, which the camp-heart personas
+# forbid too; no pass is due in this run, so it guards a pass that runs unexpectedly (that
+# pass's seal-staging refusal does not fit the four-literal cap). A polity refusal on the
+# return is the two-city realm's first reconciliation refusing: it is row-12 evidence, read
+# by its logged reason, and not the earlier-window refusal tracked in #244 and #257.
 DESCRIPTION=a realm founds a second city on a non-adjacent parasang, refuses a further founding on its own ground, and recovers the first city's seat on return
 REQUEST=founding-first-city
 START=8.22@40,12
@@ -56,5 +68,5 @@ SCRIPT=stagedigest;realize;advance 1;second-city-setup;second-city-check;second-
 VERBS=second-city-setup,second-city-check
 EXPECT=stagedigest:OK~founded=false,realize:OK,advance:OK,second-city-site:OK~adjacent=false,second-city-setup:OK~cases=4 passed=0 failed=0,second-city-check:OK~case=travel-out,second-city-topology:OK~settlements=2,second-city-check:OK~case=found-second,second-city-check:OK~case=refused-already-ours,second-city-check:OK~cases=4 passed=4 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=founding,growth,native-regression
-LOG_FORBID=["founding heart: reserved identity audit refused","polity: zone reconciliation refused"]
+LOG_FORBID=["founding heart: reserved identity audit refused","plot effects: active-zone legacy recovery refused","reconciliation refused","construction: founding heart recovery requires inspection"]
 TIMEOUT=900

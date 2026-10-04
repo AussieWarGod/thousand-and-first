@@ -25,7 +25,7 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// It also writes the second-city-site evidence row, so the row's width is value-tested
 	/// here: every rejected candidate keeps its id and its reason, whether a site qualified or
-	/// the search refused.
+	/// the search refused. ProbeOrderFault is the law the live search's probes are held to.
 	/// </para>
 	/// </summary>
 	internal static class KingdomSecondCitySiteRules
@@ -132,6 +132,31 @@ namespace ThousandAndFirst.Harness
 						candidates.Add(id);
 					}
 			return candidates;
+		}
+
+		/// <summary>
+		/// Null when Probed is the first Candidates(HomeZoneId) in order (one to MaxProbes if a site
+		/// qualified, all permitted if refused), each rejected with a reason but the chosen site;
+		/// otherwise why not, so a skipped, reordered, filtered, padded or unaccounted list refuses.
+		/// </summary>
+		internal static string ProbeOrderFault(string HomeZoneId, IList<string> Probed,
+			int Rejected, bool Found)
+		{
+			IList<string> candidates = Candidates(HomeZoneId);
+			int limit = Math.Min(MaxProbes, candidates.Count);
+			if (Probed == null) return "the site search reported no probe list";
+			if (Found ? Probed.Count < 1 || Probed.Count > limit : Probed.Count != limit)
+				return "the site search " + (Found ? "qualified a site" : "refused") + " after "
+					+ Number(Probed.Count) + " probes where " + (Found ? "1.." : "exactly ")
+					+ Number(limit) + " are permitted";
+			if (Rejected != Probed.Count - (Found ? 1 : 0))
+				return "the site search rejected " + Number(Rejected) + " of " + Number(Probed.Count)
+					+ " probes" + (Found ? " and chose one" : "");
+			for (int i = 0; i < Probed.Count; i++)
+				if (!string.Equals(Probed[i], candidates[i], StringComparison.Ordinal))
+					return "the site search probed " + Probed[i] + " at position " + Number(i + 1)
+						+ " where the nearest-first order offers " + candidates[i];
+			return null;
 		}
 
 		/// <summary>

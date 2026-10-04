@@ -1,23 +1,28 @@
 #if TAF_TESTS
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
 {
 	/// <summary>
-	/// Behavioural coverage row 12: which candidate sites production calls too close.
-	/// KingdomFounding.JudgeSite reads GroundIsTooClose for a zone bordering any realm claim, by
-	/// KingdomFounding.ZonesAdjacent: KingdomRules.CoordsAdjacent at the global zone coordinates
-	/// wx * 3 + zx, wy * 3 + zy, vertical neighbours included. That call parses ids with the
-	/// engine's ZoneID.Parse, so these cases run the same law through KingdomRules.TryParseZoneID,
-	/// which computes the same coordinates, and pin the production call that makes them equal.
+	/// Behavioural coverage row 12: which candidate sites production calls too close, and which
+	/// candidates the live search must build. KingdomFounding.JudgeSite reads GroundIsTooClose for
+	/// a zone bordering any realm claim, by KingdomFounding.ZonesAdjacent: KingdomRules.CoordsAdjacent
+	/// at the global zone coordinates wx * 3 + zx, wy * 3 + zy, vertical neighbours included. That
+	/// call parses ids with the engine's ZoneID.Parse, so these cases run production's engine-free
+	/// twin, KingdomRules.ZonesAdjacent with IncludeVertical, whose KingdomRules.TryParseZoneID
+	/// computes the same coordinates, and pin the production calls that make them equal. The
+	/// search's probes are held to KingdomSecondCitySiteRules.ProbeOrderFault, run here by value.
 	/// Not native acceptance: the live search still asks JudgeSite itself for every candidate.
 	/// </summary>
 	public class KingdomSecondCitySiteAdjacencyTests
 	{
 		private const string Home = "JoppaWorld.8.22.1.1.10";
 		private const string EastOfHome = "JoppaWorld.8.22.2.1.10";
+		private const string SiteSource = "Harness/KingdomSecondCityNativeSite.cs";
+		private const string ChecksSource = "Harness/KingdomSecondCityNativeChecks.cs";
 
 		/// <summary>Production's global zone coordinates: wx * 3 + zx, wy * 3 + zy, depth.</summary>
 		private static int[] Global(string Id)
@@ -31,13 +36,10 @@ namespace ThousandAndFirst.Tests
 			return new[] { gx, gy, z };
 		}
 
-		/// <summary>KingdomFounding.ZonesAdjacent's law: CoordsAdjacent, vertical included.</summary>
+		/// <summary>KingdomFounding.ZonesAdjacent's law, through production's engine-free twin.</summary>
 		private static bool Adjacent(string A, string B)
 		{
-			int[] a = Global(A);
-			int[] b = Global(B);
-			return KingdomRules.CoordsAdjacent("JoppaWorld", a[0], a[1], a[2], "JoppaWorld", b[0],
-				b[1], b[2], IncludeVertical: true);
+			return KingdomRules.ZonesAdjacent(A, B, IncludeVertical: true);
 		}
 
 		[Test]
@@ -50,8 +52,10 @@ namespace ThousandAndFirst.Tests
 			Assert.That(TestMain.ReadRepositoryText("Core/KingdomFounding.04.Claims.cs"), Does.Contain(
 				"return KingdomRules.CoordsAdjacent(worldA, pxA * 3 + zxA, pyA * 3 + zyA, zA, worldB, "
 				+ "pxB * 3 + zxB, pyB * 3 + zyB, zB, IncludeVertical: true);"));
-			Assert.That(TestMain.ReadRepositoryText("Core/KingdomRules.Spatial.cs"),
-				Does.Contain("GX = wx * 3 + zx;"));
+			string spatial = TestMain.ReadRepositoryText("Core/KingdomRules.Spatial.cs");
+			Assert.That(spatial, Does.Contain("GX = wx * 3 + zx;"));
+			Assert.That(spatial, Does.Contain(
+				"return CoordsAdjacent(worldA, gxA, gyA, zA, worldB, gxB, gyB, zB, IncludeVertical);"));
 			Assert.That(KingdomSettlement.JudgeSecondFounding(true, 1, false, true),
 				Is.EqualTo(KingdomSettlement.SecondFoundingVerdict.GroundIsTooClose));
 			Assert.That(KingdomSettlement.JudgeSecondFounding(true, 1, false, false),
@@ -95,9 +99,112 @@ namespace ThousandAndFirst.Tests
 			string site = TestMain.ReadRepositoryText("Harness/KingdomSecondCityNativeSite.cs");
 			Assert.That(site, Does.Contain("KingdomFounding.JudgeSite(System, zone);"));
 			Assert.That(site, Does.Contain("{ Reject(tried, id, verdict.ToString()); continue; }"));
-			// No candidate is skipped unbuilt by a harness copy of the claim or adjacency law.
+			// Spelling tripwires only. Whether a candidate was skipped is behaviour, held at run
+			// time by ProbeOrderFault (the probe-order cases below).
 			Assert.That(site, Does.Not.Contain("ZonesAdjacent("));
 			Assert.That(site, Does.Not.Contain("ClaimedZones.Contains("));
+		}
+
+		[Test]
+		public void OnlyTheNearestFirstPrefixIsALawfulProbeList()
+		{
+			List<string> all = new List<string>(KingdomSecondCitySiteRules.Candidates(Home));
+			int limit = KingdomSecondCitySiteRules.MaxProbes;
+			for (int n = 1; n <= limit; n++)
+				Assert.That(Fault(all.GetRange(0, n), n - 1, true), Is.Null, "qualified on probe " + n);
+			Assert.That(Fault(all.GetRange(0, limit), limit, false), Is.Null, "refused at the limit");
+			// A home with no surface candidates permits no probe at all.
+			Assert.That(KingdomSecondCitySiteRules.ProbeOrderFault("JoppaWorld.8.22.1.1.11",
+				new List<string>(), 0, false), Is.Null);
+		}
+
+		[Test]
+		public void ASkippedReorderedFilteredOrPaddedProbeListRefuses()
+		{
+			List<string> all = new List<string>(KingdomSecondCitySiteRules.Candidates(Home));
+			// Ring 1 dropped before the loop: probing would start at ring 2's first candidate.
+			Assert.That(Fault(all.GetRange(8, 1), 0, true), Is.EqualTo("the site search probed "
+				+ "JoppaWorld.6.20.1.1.10 at position 1 where the nearest-first order offers "
+				+ "JoppaWorld.7.21.1.1.10"));
+			Assert.That(Fault(new List<string> { all[1], all[0] }, 1, true),
+				Does.Contain("probed " + all[1] + " at position 1 "));
+			Assert.That(Fault(new List<string> { all[0], all[2] }, 1, true), Does.EndWith(
+				"probed " + all[2] + " at position 2 where the nearest-first order offers " + all[1]));
+			Assert.That(Fault(new List<string> { all[0], all[0] }, 1, true),
+				Does.Contain("probed " + all[0] + " at position 2 "));
+			Assert.That(Fault(all.GetRange(0, 9), 8, true), Is.EqualTo(
+				"the site search qualified a site after 9 probes where 1..8 are permitted"));
+			Assert.That(Fault(all.GetRange(0, 7), 7, false), Is.EqualTo(
+				"the site search refused after 7 probes where exactly 8 are permitted"));
+			Assert.That(Fault(new List<string>(), 0, true), Is.EqualTo(
+				"the site search qualified a site after 0 probes where 1..8 are permitted"));
+			Assert.That(Fault(null, 0, false), Is.EqualTo("the site search reported no probe list"));
+		}
+
+		[Test]
+		public void AProbeNeitherRejectedNorChosenRefuses()
+		{
+			List<string> all = new List<string>(KingdomSecondCitySiteRules.Candidates(Home));
+			Assert.That(Fault(all.GetRange(0, 3), 1, true), Is.EqualTo(
+				"the site search rejected 1 of 3 probes and chose one"));
+			Assert.That(Fault(all.GetRange(0, 3), 3, true), Is.EqualTo(
+				"the site search rejected 3 of 3 probes and chose one"));
+			Assert.That(Fault(all.GetRange(0, 8), 7, false), Is.EqualTo(
+				"the site search rejected 7 of 8 probes"));
+		}
+
+		[Test]
+		public void EveryProbeFaultSurvivesTheVerbRowFailureBound()
+		{
+			// Two-digit parasang coordinates, so every id is at its widest.
+			string home = "JoppaWorld.40.14.1.1.10";
+			List<string> all = new List<string>(KingdomSecondCitySiteRules.Candidates(home));
+			string[] faults = {
+				KingdomSecondCitySiteRules.ProbeOrderFault(home, all.GetRange(8, 1), 0, true),
+				KingdomSecondCitySiteRules.ProbeOrderFault(home, all.GetRange(0, 9), 8, true),
+				KingdomSecondCitySiteRules.ProbeOrderFault(home, all.GetRange(0, 7), 7, false),
+				KingdomSecondCitySiteRules.ProbeOrderFault(home, all.GetRange(0, 8), 7, false),
+				KingdomSecondCitySiteRules.ProbeOrderFault(home, null, 0, false) };
+			foreach (string fault in faults)
+			{
+				Assert.That(fault, Is.Not.Null);
+				string failure = "InvalidOperationException: " + fault;
+				Assert.That(KingdomScenarioRules.Bounded(failure), Is.EqualTo(failure));
+			}
+		}
+
+		[Test]
+		public void TheLiveSearchRecordsEveryProbeAndTheFrameRefusesAnyOtherOrder()
+		{
+			string site = TestMain.ReadRepositoryText(SiteSource);
+			// The candidates come straight from the pure rules and are never reassigned or edited.
+			Assert.That(site, Does.Contain(
+				"IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);"));
+			Assert.That(Regex.Matches(site, @"\bcandidates\s*=").Count, Is.EqualTo(1));
+			Assert.That(Regex.IsMatch(site, @"\bcandidates\s*\.\s*(Add|AddRange|Insert|Remove|"
+				+ @"RemoveAt|RemoveAll|RemoveRange|Clear|Sort|Reverse)\b"), Is.False);
+			Assert.That(Regex.IsMatch(site, @"\bcandidates\s*\[[^\]]*\]\s*=[^=]"), Is.False);
+			// Every candidate taken is recorded as a probe, in order, before anything can reject it.
+			Assert.That(Squash(site), Does.Contain(Squash(
+				"string id = candidates[i]; probes++; probed.Add(id); Zone zone;")));
+			Assert.That(Regex.Matches(site, @"\bprobed\.Add\(").Count, Is.EqualTo(1));
+			Assert.That(site, Does.Contain("Probed = probed;"));
+			string checks = TestMain.ReadRepositoryText(ChecksSource);
+			Assert.That(Squash(checks), Does.Contain(Squash("string order = KingdomSecondCitySiteRules"
+				+ ".ProbeOrderFault(HomeZoneId, probed, rejections.Count, found);")));
+		}
+
+		private static string Fault(IList<string> Probed, int Rejected, bool Found)
+		{
+			return KingdomSecondCitySiteRules.ProbeOrderFault(Home, Probed, Rejected, Found);
+		}
+
+		private static string Squash(string Source)
+		{
+			System.Text.StringBuilder kept = new System.Text.StringBuilder(Source.Length);
+			foreach (char c in Source)
+				if (c != ' ' && c != '\t' && c != '\r' && c != '\n') kept.Append(c);
+			return kept.ToString();
 		}
 	}
 }
