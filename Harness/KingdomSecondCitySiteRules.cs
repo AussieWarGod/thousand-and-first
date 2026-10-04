@@ -19,6 +19,11 @@ namespace ThousandAndFirst.Harness
 	/// arrays are sized to exactly that grid, so an off-map candidate crashes zone build rather
 	/// than refusing.
 	/// </para>
+	/// <para>
+	/// It also writes the second-city-site evidence row, so the row's width is value-tested
+	/// here: every rejected candidate keeps its id and its reason, whether a site qualified or
+	/// the search refused.
+	/// </para>
 	/// </summary>
 	internal static class KingdomSecondCitySiteRules
 	{
@@ -32,6 +37,21 @@ namespace ThousandAndFirst.Harness
 
 		/// <summary>The heart rung a founding lays (Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs).</summary>
 		internal const int FoundingRung = 1;
+
+		/// <summary>How many candidate parasangs may be built before the site search refuses.</summary>
+		internal const int MaxProbes = 8;
+
+		/// <summary>
+		/// Each rejected candidate's reason is kept to this many characters in the site row, the
+		/// journal's own marker naming any cut, so at the widest every candidate still fits under
+		/// KingdomScenarioJournalRules.MaxMessageChars: MaxProbes built candidates each with a
+		/// reason at this cap, and every other candidate skipped as claimed or adjacent. The log
+		/// keeps each reason uncut.
+		/// </summary>
+		internal const int ReasonChars = 512;
+
+		internal const string RejectedSeparator = " | ";
+		internal const string NoRejection = "none";
 
 		/// <summary>
 		/// Splits a surface zone id of the shape world.wx.wy.sx.sy.depth. The sub-cell columns
@@ -170,6 +190,68 @@ namespace ThousandAndFirst.Harness
 						Offer(order, x, y, Width, Height);
 				}
 			return order;
+		}
+
+		/// <summary>One rejected candidate as the site row names it: its id, then why.</summary>
+		internal static string Rejection(string ZoneId, string Reason)
+		{
+			return ZoneId + " (" + KingdomScenarioJournalRules.Bound(Reason, ReasonChars) + ")";
+		}
+
+		/// <summary>Every rejection in the order tried, or NoRejection when the first qualified.</summary>
+		internal static string RejectedList(IList<string> Rejections)
+		{
+			if (Rejections == null || Rejections.Count == 0) return NoRejection;
+			string[] items = new string[Rejections.Count];
+			Rejections.CopyTo(items, 0);
+			return string.Join(RejectedSeparator, items);
+		}
+
+		/// <summary>
+		/// Why the search refused. Short enough to survive the bound the failed verb row puts on
+		/// its exception text (KingdomScenarioRules.Bounded); the candidates are in the site row.
+		/// </summary>
+		internal static string Refusal(int Probes, int Candidates)
+		{
+			return "no eligible second-city site: probed " + Number(Probes) + " of at most "
+				+ Number(MaxProbes) + " parasangs (" + Number(Candidates) + " candidates in rings "
+				+ Number(MinRing) + ".." + Number(MaxRing) + "); every rejected candidate and its"
+				+ " reason is in the " + KingdomSecondCityScript.SiteRow + " row";
+		}
+
+		/// <summary>
+		/// The site row when a site qualified. The chosen site's facts come first, so a cut can
+		/// never take the part the persona binds; the rejected candidates come last.
+		/// </summary>
+		internal static string SiteRow(string Home, int RiteX, int RiteY, string Border,
+			string Site, string Rejected)
+		{
+			return Origin(Home, RiteX, RiteY, Border) + Site
+				+ " adjacent=false claimed=false verdict=Allowed"
+				+ "; synthetic-travel=true synthetic-water=false-spent force=false"
+				+ "; rejected-candidates=" + Rejected;
+		}
+
+		/// <summary>
+		/// The REFUSED site row when nothing qualified: the refusal and every rejected candidate,
+		/// with no claim about a chosen site.
+		/// </summary>
+		internal static string RefusedSiteRow(string Home, int RiteX, int RiteY, string Border,
+			string Why, string Rejected)
+		{
+			return Origin(Home, RiteX, RiteY, Border) + "refused=" + Why
+				+ "; rejected-candidates=" + Rejected;
+		}
+
+		private static string Origin(string Home, int RiteX, int RiteY, string Border)
+		{
+			return "home=" + Home + " home-rite=" + Number(RiteX) + "," + Number(RiteY)
+				+ "; border=" + Border + " border-verdict=GroundIsTooClose; ";
+		}
+
+		private static string Number(int Value)
+		{
+			return Value.ToString(CultureInfo.InvariantCulture);
 		}
 
 		private static void Offer(List<int> Order, int X, int Y, int Width, int Height)

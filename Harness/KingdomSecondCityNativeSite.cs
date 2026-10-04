@@ -24,16 +24,19 @@ namespace ThousandAndFirst.Harness
 	/// </summary>
 	internal static class KingdomSecondCityNativeSite
 	{
-		/// <summary>How many candidate parasangs may be built before the site search refuses.</summary>
-		internal const int MaxProbes = 8;
-
 		/// <summary>
-		/// Resolves the site, its rite cell and the heart rect into the checks frame and returns
-		/// the detail for the site evidence row; refuses naming every rejected candidate and the
-		/// probe limit when nothing qualifies.
+		/// Resolves the site, its rite cell and the heart rect into the checks frame. Site is the
+		/// short detail every verb row repeats; Rejected names every rejected candidate with its
+		/// reason for the second-city-site row, which is journalled on success and on refusal
+		/// alike, and each reason also reaches the log uncut. Returns false, with a Refusal naming
+		/// the probe limit, when no candidate qualifies within KingdomSecondCitySiteRules.MaxProbes.
 		/// </summary>
-		internal static string Resolve(KingdomSystem System)
+		internal static bool TryResolve(KingdomSystem System, out string Site, out string Rejected,
+			out string Refusal)
 		{
+			Site = null;
+			Rejected = null;
+			Refusal = null;
 			string home = KingdomSecondCityNativeChecks.HomeZoneId;
 			Cell homeCell = KingdomSecondCityNativeChecks.HomeCell;
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);
@@ -45,47 +48,60 @@ namespace ThousandAndFirst.Harness
 				"the founding heart " + key + " is missing from the catalogue");
 			List<string> tried = new List<string>();
 			int probes = 0;
-			for (int i = 0; i < candidates.Count && probes < MaxProbes; i++)
+			for (int i = 0; i < candidates.Count && probes < KingdomSecondCitySiteRules.MaxProbes; i++)
 			{
 				string id = candidates[i];
-				if (System.ClaimedZones.Contains(id)) { tried.Add(id + " (claimed)"); continue; }
-				if (KingdomFounding.ZonesAdjacent(home, id))
-				{ tried.Add(id + " (adjacent)"); continue; }
+				if (System.ClaimedZones.Contains(id)) { Reject(tried, id, "claimed"); continue; }
+				if (KingdomFounding.ZonesAdjacent(home, id)) { Reject(tried, id, "adjacent"); continue; }
 				probes++;
 				Zone zone;
 				try { zone = The.ZoneManager.GetZone(id); }
-				catch (Exception) { tried.Add(id + " (unbuildable)"); continue; }
-				if (zone == null) { tried.Add(id + " (null)"); continue; }
+				catch (Exception error)
+				{
+					Reject(tried, id, "unbuildable: " + error.GetType().Name + ": " + error.Message);
+					continue;
+				}
+				if (zone == null) { Reject(tried, id, "null"); continue; }
 				if (KingdomRules.GroundIsForeignFaction(zone.GetZoneProperty("faction", null),
 					KingdomSecondCityNativeChecks.RealmFactionName))
-				{ tried.Add(id + " (foreign)"); continue; }
+				{ Reject(tried, id, "foreign"); continue; }
 				KingdomSettlement.SecondFoundingVerdict verdict =
 					KingdomFounding.JudgeSite(System, zone);
 				if (verdict != KingdomSettlement.SecondFoundingVerdict.Allowed)
-				{ tried.Add(id + " (" + verdict + ")"); continue; }
+				{ Reject(tried, id, verdict.ToString()); continue; }
 				Cell rite;
 				KingdomPlotRules.PlotRect heart;
 				string refusal;
 				if (!TryRite(System, zone, key, entry.Category, homeCell.X, homeCell.Y, out rite,
 					out heart, out refusal))
 				{
-					tried.Add(id + " (no seatable rite: " + refusal + ")");
+					Reject(tried, id, "no seatable rite: " + refusal);
 					continue;
 				}
 				KingdomSecondCityNativeChecks.SiteZoneId = id;
 				KingdomSecondCityNativeChecks.SiteZone = zone;
 				KingdomSecondCityNativeChecks.SiteCell = rite;
 				KingdomSecondCityNativeChecks.SiteHeart = heart;
-				return "site=" + id + " rite=" + rite.X + "," + rite.Y + " heart=" + Describe(heart)
+				Rejected = KingdomSecondCitySiteRules.RejectedList(tried);
+				Site = "site=" + id + " rite=" + rite.X + "," + rite.Y + " heart=" + Describe(heart)
 					+ " centred=" + (KingdomSecondCitySiteRules.IsCentred(heart, rite.X, rite.Y)
 						? "true" : "false")
 					+ " probes=" + probes + " rejected=" + tried.Count;
+				return true;
 			}
-			Require(false, "no eligible second-city site: probed " + probes + " of at most "
-				+ MaxProbes + " parasangs (" + candidates.Count + " candidates in rings "
-				+ KingdomSecondCitySiteRules.MinRing + ".." + KingdomSecondCitySiteRules.MaxRing
-				+ "); tried " + KingdomScenarioRules.Bounded(string.Join(", ", tried.ToArray())));
-			return null;
+			Rejected = KingdomSecondCitySiteRules.RejectedList(tried);
+			Refusal = KingdomSecondCitySiteRules.Refusal(probes, candidates.Count);
+			return false;
+		}
+
+		/// <summary>
+		/// Records one rejected candidate: uncut in the log, and with its reason kept to
+		/// KingdomSecondCitySiteRules.ReasonChars for the site row.
+		/// </summary>
+		private static void Reject(List<string> Tried, string ZoneId, string Reason)
+		{
+			KingdomLog.Log("native-second-city rejected candidate " + ZoneId + ": " + Reason);
+			Tried.Add(KingdomSecondCitySiteRules.Rejection(ZoneId, Reason));
 		}
 
 		/// <summary>

@@ -26,7 +26,9 @@
 #    rung-1 heart rect holds no liquid and which passes production's own read-only
 #    founding-heart preflight (KingdomArchitectureRuntime.TryPrepareFoundingHeart: the basin
 #    binds to the rite and the authored entrance is walkable). Every rejected candidate is
-#    journalled with its reason.
+#    journalled with its reason in the second-city-site row, whether a site qualifies or
+#    the search refuses (the row is then REFUSED); each reason is kept to 512 characters
+#    there, with a marker naming any cut, and goes uncut to Player.log.
 #  - city two has no population, buildings, stockpile or economy, and no case spends a turn:
 #    every case re-proves Game.Turns and Game.TimeTicks are unchanged since setup.
 #

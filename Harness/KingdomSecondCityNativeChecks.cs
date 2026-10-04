@@ -134,14 +134,23 @@ namespace ThousandAndFirst.Harness
 			Turns = Game.Turns;
 			Ticks = Game.TimeTicks;
 			string border = ObserveBorder(system, Zone);
-			string site = KingdomSecondCityNativeSite.Resolve(system);
+			string site;
+			string rejected;
+			string refusal;
+			bool found = KingdomSecondCityNativeSite.TryResolve(system, out site, out rejected,
+				out refusal);
+			string row = found
+				? KingdomSecondCitySiteRules.SiteRow(HomeZoneId, HomeCell.X, HomeCell.Y, border,
+					site, rejected)
+				: KingdomSecondCitySiteRules.RefusedSiteRow(HomeZoneId, HomeCell.X, HomeCell.Y,
+					border, refusal, rejected);
+			// Journalled with its real outcome on both paths, BEFORE a refusal is thrown: the
+			// verb row's failure text is bounded to 300 characters, so a refused search keeps its
+			// rejected candidates and their reasons only here and in the log.
+			string note = KingdomScenarioJournal.Append(KingdomSecondCityScript.SiteRow, found, row);
+			Require(found, refusal + (note == null ? "" : "; the site row was not journalled: " + note));
 			Detail.Append("; ").Append(site);
-			Require(KingdomScenarioJournal.Append(KingdomSecondCityScript.SiteRow, true,
-				"home=" + HomeZoneId + " home-rite=" + HomeCell.X + "," + HomeCell.Y
-				+ "; border=" + border + " border-verdict=GroundIsTooClose; " + site
-				+ " adjacent=false claimed=false verdict=Allowed"
-				+ "; synthetic-travel=true synthetic-water=false-spent force=false") == null,
-				"second-city-site journal unavailable");
+			Require(note == null, "second-city-site journal unavailable");
 			Bound = true;
 		}
 
