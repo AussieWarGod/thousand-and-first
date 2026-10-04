@@ -14,8 +14,12 @@ namespace ThousandAndFirst.Tests
 {
 	/// <summary>#271/#272: a game that has not founded a city must be saveable. KingdomSystem
 	/// needs the engine, so its serialized field census and each book's writer are pinned from
-	/// source. Every durable book a fresh new game holds is built exactly as its field initializer
-	/// builds it and passed through its production writer and load validator engine-free.</summary>
+	/// source. Every durable book a fresh KingdomSystem is constructed with is built exactly as its
+	/// field initializer builds it and checked engine-free: codec books through their production
+	/// codec and load validator, named-field books against an emulation of the engine's writer, and
+	/// the empty settlement topologies against their write gate. The other save systems a new game
+	/// creates (KingdomSeal, KingdomCivicMemorySystem, and the optional succession and inheritance
+	/// systems) and state written by play before the first save are not covered here (#275).</summary>
 	public class KingdomFreshUnfoundedSaveTests
 	{
 		// Every serialized KingdomSystem field whose value reaches TAF serialization code, in
@@ -171,6 +175,48 @@ namespace ThousandAndFirst.Tests
 				TestMain.ReadRepositoryText("Trade/KingdomTrade.cs"));
 		}
 
+		private const string Open = "namespace ThousandAndFirst\n{\n\tpublic partial class KingdomSystem\n\t{\n";
+		private const string Probe = "public KingdomCarryBook ProbeBook = new KingdomCarryBook();";
+		private const string Kept = "KingdomCarryBook ProbeBook new KingdomCarryBook()";
+
+		// Synthetic KingdomSystem partials (name, source, parsed census rows joined by " | "). The
+		// first row is the review probe on f17105cc: a one-line [NonSerialized] declaration used to
+		// hide the next public field from the census. The control row keeps the two-line form.
+		private static readonly string[][] ParserRows =
+		{
+			new[] { "one-line attributed declaration", Open + "\t\t[System.NonSerialized] private bool ProbeReadFailed;\n\n"
+				+ "\t\t/// <summary>Probe.</summary>\n\t\t" + Probe + "\n\t}\n}\n", Kept },
+			new[] { "attribute alone skips the next declaration", Open + "\t\t[System.NonSerialized]\n\n"
+				+ "\t\t/// <summary>Probe.</summary>\n\t\t" + Probe + "\n\t}\n}\n", "" },
+			new[] { "same-line declaration consumes a pending attribute", Open + "\t\t[NonSerialized]\n"
+				+ "\t\t[Obsolete(\"x\")] private bool ProbeReadFailed;\n\t\t" + Probe + "\n\t}\n}\n", Kept },
+			new[] { "attribute text is not an attribute name", Open + "\t\t[Obsolete(\"was NonSerialized\")]\n\t\t"
+				+ Probe + "\n\t}\n}\n", Kept },
+			new[] { "same-line attributed public member", Open + "\t\t[Obsolete(\"x\")] " + Probe + "\n\t}\n}\n",
+				"UNPARSED [Obsolete(\"x\")] " + Probe },
+			new[] { "unreadable attribute line", Open + "\t\t[Obsolete(\"x\",\n\t\t\tfalse)]\n\t\t" + Probe + "\n\t}\n}\n",
+				"UNPARSED [Obsolete(\"x\", | " + Kept },
+			new[] { "member outside the tab layout", Open + "        " + Probe + "\n\t}\n}\n", "UNPARSED " + Probe },
+			new[] { "class declaration in another form", "namespace ThousandAndFirst\n{\n    public partial class "
+				+ "KingdomSystem\n    {\n        " + Probe + "\n    }\n}\n", "UNPARSED public partial class KingdomSystem" },
+			new[] { "field initialized by a lambda", Open + "\t\tpublic System.Func<int> ProbeHook = () => 1;\n"
+				+ "\t\tpublic int ProbeCount => 1;\n\t}\n}\n", "System.Func<int> ProbeHook () => 1" }
+		};
+
+		[Test]
+		public void FreshUnfoundedKingdomSystemCensusParserFailsClosed()
+		{
+			List<string> failures = new List<string>();
+			foreach (string[] row in ParserRows)
+			{
+				List<string[]> fields = new List<string[]>();
+				ParseSystemFields(row[1], fields);
+				string parsed = string.Join(" | ", fields.ConvertAll(f => string.Join(" ", f).Trim()));
+				if (parsed != row[2]) failures.Add(row[0] + ": expected <" + row[2] + "> but parsed <" + parsed + ">");
+			}
+			CollectionAssert.IsEmpty(failures, string.Join("\n", failures));
+		}
+
 		/// <summary>Serialized KingdomSystem fields (type, name, initializer) in declaration order:
 		/// public instance fields that are not static, const or [NonSerialized], as
 		/// SerializationWriter.WriteNamedFields selects them (decompiled 2.0.211.56
@@ -186,45 +232,76 @@ namespace ThousandAndFirst.Tests
 					&& !relative.StartsWith("Tools/", StringComparison.Ordinal)) files.Add(relative);
 			}
 			files.Sort(StringComparer.Ordinal);
-			Regex field = new Regex(@"^public\s+(?:readonly\s+)?(?<type>[\w.]+(?:<[\w.,\s]+>)?)\s+(?<name>\w+)\s*(?:=\s*(?<init>.+))?;$");
-			foreach (string file in files)
-			{
-				string[] lines = TestMain.ReadRepositoryText(file).Replace("\r\n", "\n").Split('\n');
-				bool inside = false, skip = false;
-				for (int i = 0; i < lines.Length; i++)
-				{
-					string line = lines[i];
-					if (!inside)
-					{
-						inside = Regex.IsMatch(line, @"^\t(public |internal )?(sealed )?partial class KingdomSystem\b");
-						continue;
-					}
-					if (line == "\t}") { inside = false; continue; }
-					if (line.StartsWith("\t\t[", StringComparison.Ordinal))
-					{
-						skip |= line.Contains("NonSerialized");
-						if (Regex.IsMatch(line, @"\]\s*public\s")) fields.Add(new[] { "UNPARSED " + line.Trim(), "", "" });
-						continue;
-					}
-					if (!line.StartsWith("\t\tpublic ", StringComparison.Ordinal))
-					{
-						if (line.Trim().Length > 0 && !line.TrimStart().StartsWith("//", StringComparison.Ordinal)) skip = false;
-						continue;
-					}
-					string declaration = Regex.Replace(line.Trim(), @";\s*//.*$", ";");
-					while (!declaration.EndsWith(";", StringComparison.Ordinal) && !declaration.Contains("{")
-						&& !declaration.Contains("(")) declaration += " " + lines[++i].Trim();
-					string head = declaration.Split('=')[0];
-					bool member = !head.Contains("(") && !head.Contains("{") && !declaration.Contains("=>")
-						&& !Regex.IsMatch(head, @"^public\s+(static|const|event|override|virtual|abstract|class|enum|struct|interface|delegate|sealed|partial)\b");
-					Match match = field.Match(declaration);
-					if (member && !skip) fields.Add(match.Success ? new[] { match.Groups["type"].Value,
-						match.Groups["name"].Value, match.Groups["init"].Value } : new[] { "UNPARSED " + declaration, "", "" });
-					skip = false;
-				}
-			}
+			foreach (string file in files) ParseSystemFields(TestMain.ReadRepositoryText(file), fields);
 			return fields;
 		}
+
+		/// <summary>Adds the serialized KingdomSystem fields one source file declares. It fails
+		/// closed: a declaration it cannot classify, a public member outside the tab layout it reads,
+		/// a KingdomSystem declaration in another form, or an attribute line it cannot read is added
+		/// as UNPARSED, which breaks the census. Only an attribute section alone on its line that names
+		/// NonSerialized skips a declaration (the next one, across blank and comment lines); an
+		/// attribute that shares its line with a declaration applies to that declaration alone.</summary>
+		private static void ParseSystemFields(string text, List<string[]> fields)
+		{
+			Regex field = new Regex(@"^public\s+(?:readonly\s+)?(?<type>[\w.]+(?:<[\w.,\s]+>)?)\s+(?<name>\w+)\s*(?:=\s*(?<init>.+))?;$");
+			string[] lines = text.Replace("\r\n", "\n").Split('\n');
+			bool inside = false, skip = false;
+			for (int i = 0; i < lines.Length; i++)
+			{
+				string line = lines[i], code = line.Trim(), indent = line.Substring(0, line.Length - line.TrimStart().Length);
+				if (!inside)
+				{
+					inside = Regex.IsMatch(line, @"^\t(public |internal )?(sealed )?partial class KingdomSystem\b");
+					if (!inside && Regex.IsMatch(code, @"^[\w\s]*\bclass\s+KingdomSystem\b")) fields.Add(Unparsed(code));
+					continue;
+				}
+				if (line == "\t}") { inside = false; continue; }
+				bool trivia = code.Length == 0 || code.StartsWith("//", StringComparison.Ordinal);
+				if (indent != "\t\t")
+				{
+					// Deeper tab-only lines are nested types and member bodies. A public member line at
+					// any other indentation would escape the two-tab layout read below.
+					if (Regex.IsMatch(code, @"^(\[.*\]\s*)?public\s") && !Regex.IsMatch(indent, "^\t{3,}$"))
+						fields.Add(Unparsed(code));
+					if (!trivia) skip = false;
+					continue;
+				}
+				if (code.StartsWith("[", StringComparison.Ordinal))
+				{
+					Match attribute = Regex.Match(code, @"^(?<sections>(?:\[[^\[\]]*\]\s*)+)(?<rest>.*)$");
+					string rest = attribute.Success ? attribute.Groups["rest"].Value : null;
+					if (rest != null && (rest.Length == 0 || rest.StartsWith("//", StringComparison.Ordinal)))
+						skip |= Regex.IsMatch(Regex.Replace(attribute.Groups["sections"].Value, "\"[^\"]*\"", "\"\""),
+							@"[\[,]\s*(field\s*:\s*)?(global::)?(System\.)?NonSerialized(Attribute)?\s*[\](,]");
+					else
+					{
+						// The declaration on this line consumes every pending attribute.
+						if (rest == null || Regex.IsMatch(rest, @"\bpublic\b")) fields.Add(Unparsed(code));
+						skip = false;
+					}
+					continue;
+				}
+				if (!Regex.IsMatch(code, @"^public\s"))
+				{
+					if (!trivia) skip = false;
+					continue;
+				}
+				string declaration = Regex.Replace(code, @";\s*//.*$", ";");
+				while (!declaration.EndsWith(";", StringComparison.Ordinal) && !declaration.Contains("{")
+					&& !declaration.Contains("(")) declaration += " " + lines[++i].Trim();
+				string head = declaration.Split('=')[0];
+				// An expression-bodied member's first '=' opens its '=>'; a field initializer's does not.
+				bool member = !head.Contains("(") && !head.Contains("{") && !Regex.IsMatch(declaration, "^[^=]*=>")
+					&& !Regex.IsMatch(head, @"^public\s+(static|const|event|override|virtual|abstract|class|enum|struct|interface|delegate|sealed|partial)\b");
+				Match match = field.Match(declaration);
+				if (member && !skip) fields.Add(match.Success ? new[] { match.Groups["type"].Value,
+					match.Groups["name"].Value, match.Groups["init"].Value } : Unparsed(declaration));
+				skip = false;
+			}
+		}
+
+		private static string[] Unparsed(string text) { return new[] { "UNPARSED " + text, "", "" }; }
 
 		private static string WriteBody(string path, string type)
 		{
