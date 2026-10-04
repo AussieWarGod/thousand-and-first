@@ -17,7 +17,7 @@ namespace ThousandAndFirst.Tests
 	/// FreshUnfoundedKingdomSystemEveryDurableBookIsWritable. Each is built exactly as its field
 	/// initializer builds it and checked through its production codec and load validator (codec
 	/// books) or against an emulation of the engine's named-field writer (named-field books). The
-	/// empty settlement topologies are only checked to be empty, to carry no opaque evidence and to
+	/// fresh settlement topologies are only checked to be empty, to carry no opaque evidence and to
 	/// pass NormalizeCurrent, the load-time check whose ragged/bound predicate matches their write
 	/// gate today; that gate is in Write(SerializationWriter), which neither test project compiles,
 	/// so this pin cannot see a changed gate. It is not a field census: a field added to
@@ -203,9 +203,9 @@ namespace ThousandAndFirst.Tests
 		private static string Topology(KingdomSettlementTopology topology)
 		{
 			// Write(SerializationWriter), with its gate, is compiled out of both test projects
-			// (#if !TAF_TESTS). This checks the empty topology against NormalizeCurrent, the load-time
-			// check, whose ragged/bound predicate matches that gate today; an empty topology has no
-			// rows for the gate's per-row checks.
+			// (#if !TAF_TESTS). This checks only that the fresh topology is empty, holds no opaque
+			// evidence and passes NormalizeCurrent, the load-time check whose ragged/bound predicate
+			// matches that gate today; an empty topology has no rows for the gate's per-row checks.
 			return topology.Count == 0 && !topology.HasOpaqueEvidence
 				&& topology.NormalizeCurrent(out string failure) ? null : "topology is not empty and canonical";
 		}

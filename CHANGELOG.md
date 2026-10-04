@@ -25,7 +25,7 @@ records current acceptance.
   first founding. A further pin writes and checks the durable books a fresh, unfounded
   `KingdomSystem` is constructed with, from an explicit list: the codec books and the city book
   reload exactly, and the other named-field books hold only values the engine's own field writer
-  saves. The empty settlement topologies are only checked to be empty, carry no opaque evidence
+  saves. The fresh settlement topologies are only checked to be empty, carry no opaque evidence
   and pass their load check (`NormalizeCurrent`), whose ragged/bound predicate matches their
   write gate today; that gate is compiled into neither test project, so a changed gate leaves
   the pin green. It is not a field census: a new `KingdomSystem` field leaves it green. The

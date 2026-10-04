@@ -52,9 +52,9 @@ byte-identically and reload valid; the named-field books hold only values the en
 named-field writer serializes itself; the load normalization that the ledger, binding, job,
 founder-history and realm-transition books run in their own `Read`, called directly here,
 settles, and the normalized realm transition validates (the dispatch-state and resident-operation
-`Read`s normalize nothing); and the two empty settlement topologies (main suite only) are empty,
-carry no opaque evidence and pass `NormalizeCurrent`, the load-time check whose ragged/bound
-predicate matches their write gate today; that gate is in `Write(SerializationWriter)`, which
+`Read`s normalize nothing); and the two fresh settlement topologies (main suite only) are checked
+to be empty, carry no opaque evidence and pass `NormalizeCurrent`, the load-time check whose
+ragged/bound predicate matches their write gate today; that gate is in their `Write`, which
 neither test project compiles, so the pin cannot run it (measured below). On dev the
 city book carries schema 5 (the residence column), so here its fields are also walked behind its
 load guard, and its written fields reload through the production load path (residence and
