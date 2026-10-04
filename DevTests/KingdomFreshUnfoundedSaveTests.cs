@@ -61,8 +61,10 @@ namespace ThousandAndFirst.Tests
 #endif
 			Check(failures, "PolityLedger", new KingdomPolityLedger(), b => Polity((KingdomPolityLedger)b));
 			Check(failures, "FounderHistory", new KingdomFounderHistoryReceipt(), b => History((KingdomFounderHistoryReceipt)b));
+			// Its Read normalizes after the named fields load, so the loaded transition must settle and validate.
 			Check(failures, "PolityTransition", new KingdomPolityRealmTransition(), b =>
-				KingdomPolityRules.TryValidateRealmTransition((KingdomPolityRealmTransition)b, out string f) ? null : f);
+				Settled(b, x => ((KingdomPolityRealmTransition)x).Normalize())
+				?? (KingdomPolityRules.TryValidateRealmTransition((KingdomPolityRealmTransition)b, out string f) ? null : f));
 			Check(failures, "Experience", new KingdomExperienceLedger(), b => Experience((KingdomExperienceLedger)b));
 			Check(failures, "PolityDispatch", new KingdomPolityDispatchState(), b =>
 				KingdomPolityDispatchRules.ValidState((KingdomPolityDispatchState)b, out string f) ? null : f);
