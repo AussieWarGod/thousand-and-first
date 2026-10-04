@@ -1330,11 +1330,28 @@ class PolityWindowWitnessTest(unittest.TestCase):
 
     def test_the_window_advances_by_one_with_a_newer_revision(self):
         rows = polity_rows(70)
-        self.assertTrue(self.story(self.replace_reading(rows, 6, polity_reading(11, 1))))
+        stale = rows
+        for ordinal in range(6, 11):  # every reading of window 11 keeps window 10's revision
+            stale = self.replace_reading(stale, ordinal, polity_reading(11, 1))
+        self.assertEqual(["window 11 opened without a newer revision (1 after 1)"],
+                         self.story(stale))
         jumped = self.story(self.replace_reading(rows, 10, polity_reading(13, 3)))
         self.assertTrue(any("moved from 11 to 13" in item for item in jumped), jumped)
         regressed = self.story(self.replace_reading(rows, 10, polity_reading(10, 2)))
         self.assertTrue(any("moved from 11 to 10" in item for item in regressed), regressed)
+
+    def test_every_reading_must_fit_its_frozen_slots(self):
+        for count, mask, intents in ((1, 3, 0), (1, 1, 2), (2, 4, 0)):
+            with self.subTest(count=count, mask=mask, intents=intents):
+                rows = polity_rows(70)
+                windows = [10] * 6 + [11] * 5
+                revisions = [1] * 6 + [2] * 5
+                for ordinal in range(11):
+                    rows = self.replace_reading(rows, ordinal, polity_reading(
+                        windows[ordinal], revisions[ordinal], count, mask, intents))
+                problems = self.story(rows)
+                self.assertEqual(11, len(problems), problems)
+                self.assertTrue(all("outside its frozen slots" in item for item in problems))
 
     def test_a_run_without_a_witnessed_window_and_advance_fails(self):
         flat = polity_rows(70)

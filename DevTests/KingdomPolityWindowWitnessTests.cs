@@ -27,14 +27,23 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
-		public void CountsOpenIntentsAndCompletedSlots()
+		public void CountsOnlyOpenIntentsAndCompletedSlots()
 		{
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
-			Open(state, Cities(Period * 60L), 3);
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryOpen(state, Cities(Period * 60L),
+				out List<KingdomPolityDueWork> work, out string failure), failure);
+			ClassicAssert.AreEqual(3, work.Count);
 			ClassicAssert.AreEqual("window=60 revision=1 count=3 mask=0 intents=3", Read(state));
 			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryComplete(state, 60UL, 0,
-				out string failure), failure);
+				out failure), failure);
 			ClassicAssert.AreEqual("window=60 revision=2 count=3 mask=1 intents=2", Read(state));
+			// A capacity fallback replaces its intent with a durable direct record, which is not
+			// an open intent even though it stays in the same record list.
+			ClassicAssert.IsTrue(KingdomPolityDispatchRules.TryRecordCapacityFallback(state,
+				work[1], out KingdomPolityDirectRecord record, out failure), failure);
+			StringAssert.StartsWith(KingdomPolityDispatchRules.DirectPrefix, record.RecordId);
+			ClassicAssert.AreEqual(2, state.DirectRecords.Count);
+			ClassicAssert.AreEqual("window=60 revision=3 count=3 mask=3 intents=1", Read(state));
 		}
 
 		[Test]
