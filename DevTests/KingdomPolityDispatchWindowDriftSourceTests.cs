@@ -50,6 +50,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void EndpointFactsComeOnlyFromTheEngineFreeRules()
+		{
+			// The drift pins build offers through KingdomPolityEndpointFactRules; TryOffer must
+			// build the game's offers the same way, with no inline fact or cause construction.
+			string runtime = Read("Polity/KingdomPolityEndpointFactRuntime.cs");
+			ClassicAssert.AreEqual(2, Count(runtime, "KingdomPolityEndpointFactRules.TryBuild("));
+			ClassicAssert.AreEqual(2, Count(runtime, "KingdomPolityEndpointFactRules.CanonicalZone("));
+			int link = Index(runtime, "KingdomPolityEndpointFactRules.LinkSources(System.RealmId, endpoints);");
+			ClassicAssert.Less(Index(runtime, "endpoints.Add(endpoint);"), link,
+				"sources link only after every endpoint is built");
+			ClassicAssert.Less(link, Index(runtime, "Offer = new KingdomPolityDispatchOffer"));
+			foreach (string inline in new[] { "ActivationId(", "ActivationDigest(",
+				"KingdomPolityEndpointObservationRules.", "CauseRef", "FactRef" })
+				StringAssert.DoesNotContain(inline, runtime);
+		}
+
+		[Test]
 		public void DriftNoteDedupeIsPrivateInstanceStateNeverSerialized()
 		{
 			string state = Read("Core/KingdomSystem.z02d.State.PolityDispatch.cs");
