@@ -223,15 +223,18 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomCampHeartChainScript.Matches(saved.Concat(new[] { KingdomCampHeartChainScript.Save }).ToArray()), Is.False);
 		}
 
-		[Test]
-		public void ChainHousingGridFitsSeventeenLotsAndLeavesNextWorkBesideTentAndFutureHeart()
+		[TestCase(false, 18)]
+		[TestCase(true, 17)]
+		public void ChainHousingGridFitsEachVariantsLotsBesideTentAndFutureHeart(bool Save, int Homes)
 		{
+			Assert.That(KingdomCampHeartChainGrid.Homes(Save), Is.EqualTo(Homes),
+				"the accepted unsaved chain keeps eighteen tent rows; only the save variant gives one up");
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
 			var occupied = new System.Collections.Generic.List<KingdomPlotRules.PlotRect> {
 				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
 				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
 			int accepted = 0;
-			foreach (var rect in KingdomCampHeartChainGrid.Candidates())
+			foreach (var rect in KingdomCampHeartChainGrid.Candidates(Save))
 			{
 				if (!KingdomPlotRules.Fits(rect, usable)
 					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, occupied[0])
@@ -239,34 +242,74 @@ namespace ThousandAndFirst.Tests
 					|| KingdomPlotRules.CrowdsExisting(rect, occupied)) continue;
 				occupied.Add(rect); accepted++;
 			}
-			Assert.That(accepted, Is.GreaterThanOrEqualTo(KingdomCampHeartChainGrid.HomeCount),
+			Assert.That(accepted, Is.GreaterThanOrEqualTo(Homes),
 				"leave complete paid entrance approaches and every existing plot's reserved lane intact");
-			Assert.That(KingdomCampHeartChainGrid.Candidates().All(rect =>
+			Assert.That(KingdomCampHeartChainGrid.Candidates(Save).All(rect =>
 				KingdomPlotRules.Fits(rect, usable)), Is.True, "all candidates fit the production interior");
 		}
 
 		[Test]
-		public void CityFixtureReservesEveryWaterFootprintAndKeepsAllPaidApproaches()
+		public void OnlyTheSaveVariantSelectsTheSeventeenHomeLayoutAndSpareLot()
 		{
+			// Source pins only; the sealed native personas own the behaviour.
+			string chain = TestMain.ReadRepositoryText("Harness/KingdomCampHeartChain.cs");
+			string support = TestMain.ReadRepositoryText("Harness/KingdomCampHeartChainSupport.cs");
+			int variant = chain.IndexOf("ChainSaveVariant = KingdomCampHeartChainScript.Matches(script, true);",
+				StringComparison.Ordinal);
+			Assert.That(variant, Is.GreaterThan(0), "setup reads the sealed script variant");
+			Assert.That(variant, Is.LessThan(chain.IndexOf("SeedChainSupport();", StringComparison.Ordinal)),
+				"the variant is known before any synthetic home or supply container is placed");
+			Assert.That(chain, Does.Contain("synthetic-homes=\" + ChainHomes.Count"));
+			foreach (string token in new[] { "KingdomCampHeartChainGrid.Homes(ChainSaveVariant)",
+				"KingdomCampHeartChainGrid.Candidates(ChainSaveVariant)",
+				"if (ChainSaveVariant) plots.Add(KingdomCampHeartChainGrid.NextWork);" })
+				Assert.That(support, Does.Contain(token), token);
+			Assert.That(support, Does.Not.Contain("KingdomCampHeartChainGrid.HomeCount"));
+			Assert.That(TestMain.ReadRepositoryText("Harness/KingdomCampHeartChainPayment.cs"),
+				Does.Contain("if (Target == 3 && ChainSaveVariant) PreflightChainNextWork(true);"));
+		}
+
+		[Test]
+		public void OnlyTheSaveVariantReservesTheNextWorkLot()
+		{
+			var work = KingdomCampHeartChainGrid.NextWork;
+			var unsaved = KingdomCampHeartChainGrid.Candidates(false).ToList();
+			var saved = KingdomCampHeartChainGrid.Candidates(true).ToList();
+			Assert.That(unsaved.Any(rect => KingdomPlotRules.Overlaps(rect, work)), Is.True,
+				"the accepted eighteen-home layout keeps its original candidates");
+			Assert.That(saved, Is.EqualTo(unsaved.Where(rect => !KingdomPlotRules.Overlaps(rect, work)).ToList()),
+				"the save variant drops exactly the candidates on its spare lot");
+			Assert.That(KingdomCampHeartChainGrid.HomeCount, Is.EqualTo(18));
+			Assert.That(KingdomCampHeartChainGrid.SaveHomeCount, Is.EqualTo(17));
+		}
+
+		[TestCase(false)]
+		[TestCase(true)]
+		public void CityFixtureReservesEveryWaterFootprintAndKeepsAllPaidApproaches(bool Save)
+		{
+			int homes = KingdomCampHeartChainGrid.Homes(Save);
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
 			var occupied = new List<KingdomPlotRules.PlotRect> {
 				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
 				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
-			foreach (var home in KingdomCampHeartChainGrid.Candidates())
+			foreach (var home in KingdomCampHeartChainGrid.Candidates(Save))
 			{
 				if (!KingdomPlotRules.Fits(home, usable)
 					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[0])
 					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[1])
 					|| KingdomPlotRules.CrowdsExisting(home, occupied)) continue;
 				occupied.Add(home);
-				if (occupied.Count == KingdomCampHeartChainGrid.HomeCount + 2) break;
+				if (occupied.Count == homes + 2) break;
 			}
-			Assert.That(occupied.Count, Is.EqualTo(KingdomCampHeartChainGrid.HomeCount + 2), "seventeen homes plus both paid lots");
-			Assert.That(KingdomPlotRules.CrowdsExisting(KingdomCampHeartChainGrid.NextWork, occupied), Is.False,
-				"the next ordinary job needs its own complete plot and reserved lane");
-			Assert.That(KingdomCampHeartChainGrid.ClearsWaterFootprints(KingdomCampHeartChainGrid.NextWork), Is.True);
-			Assert.That(KingdomPlotRules.Fits(KingdomCampHeartChainGrid.NextWork, usable), Is.True);
-			occupied.Add(KingdomCampHeartChainGrid.NextWork);
+			Assert.That(occupied.Count, Is.EqualTo(homes + 2), "every authored home plus both paid lots");
+			if (Save)
+			{
+				Assert.That(KingdomPlotRules.CrowdsExisting(KingdomCampHeartChainGrid.NextWork, occupied), Is.False,
+					"the next ordinary job needs its own complete plot and reserved lane");
+				Assert.That(KingdomCampHeartChainGrid.ClearsWaterFootprints(KingdomCampHeartChainGrid.NextWork), Is.True);
+				Assert.That(KingdomPlotRules.Fits(KingdomCampHeartChainGrid.NextWork, usable), Is.True);
+				occupied.Add(KingdomCampHeartChainGrid.NextWork);
+			}
 			var water = KingdomCampHeartChainGrid.WaterCourts().ToList();
 			Assert.That(water.Count, Is.EqualTo(8));
 			foreach (var court in water)

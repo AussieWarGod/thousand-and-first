@@ -4,8 +4,13 @@ namespace ThousandAndFirst.Harness
 {
 	internal static class KingdomCampHeartChainGrid
 	{
-		internal const int HomeCount = 17;
+		// The accepted unsaved chain houses its fifty residents in eighteen tent rows. Only the
+		// save variant gives one row up so its next ordinary paid job keeps a complete spare lot.
+		internal const int HomeCount = 18;
+		internal const int SaveHomeCount = 17;
 		internal static KingdomPlotRules.PlotRect NextWork => new KingdomPlotRules.PlotRect(16, 8, 21, 11);
+
+		internal static int Homes(bool ReserveNextWork) => ReserveNextWork ? SaveHomeCount : HomeCount;
 
 		internal static bool ClearsPaidApproach(KingdomPlotRules.PlotRect Candidate,
 			KingdomPlotRules.PlotRect PaidPlot)
@@ -32,7 +37,7 @@ namespace ThousandAndFirst.Harness
 			return true;
 		}
 
-		internal static IEnumerable<KingdomPlotRules.PlotRect> Candidates()
+		internal static IEnumerable<KingdomPlotRules.PlotRect> Candidates(bool ReserveNextWork)
 		{
 			for (int side = 0; side < 2; side++)
 				for (int y = 2; y <= 14; y += 6)
@@ -40,7 +45,8 @@ namespace ThousandAndFirst.Harness
 					{
 						int x = (side == 0 ? 2 : 53) + column * 7;
 						var rect = new KingdomPlotRules.PlotRect(x, y, x + 5, y + 3);
-						if (ClearsWaterFootprints(rect) && !KingdomPlotRules.Overlaps(rect, NextWork)) yield return rect;
+						if (ClearsWaterFootprints(rect)
+							&& !(ReserveNextWork && KingdomPlotRules.Overlaps(rect, NextWork))) yield return rect;
 					}
 		}
 	}

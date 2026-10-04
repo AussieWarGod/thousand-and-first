@@ -29,6 +29,9 @@ namespace ThousandAndFirst.Harness
 			private List<GameObject> ChainBrush;
 			private string ChainBrushDigest;
 			private string ChainSupplyClaim;
+			// Only the save variant gives up one tent row and reserves the spare lot its next ordinary
+			// paid job needs; the accepted unsaved chain keeps its original eighteen-row layout.
+			private bool ChainSaveVariant;
 
 			internal string ChainStep(string Verb)
 			{
@@ -36,6 +39,8 @@ namespace ThousandAndFirst.Harness
 				{
 					Require(ChainPhase == 0, "chain setup is not repeatable");
 					ChainPhase = -1;
+					Require(KingdomScenarioScript.TryRead(out var script, out string scriptFailure), scriptFailure);
+					ChainSaveVariant = KingdomCampHeartChainScript.Matches(script, true);
 					ChainHeart = StandingHeart();
 					Require(KingdomPlots.HeartRung(Zone) == 2, "chain did not start at paid rung two");
 					var blocked = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
@@ -49,7 +54,9 @@ namespace ThousandAndFirst.Harness
 					SeedChainSupport();
 					ClearChainFounder();
 					ChainPhase = 1;
-					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=17"
+					var spare = KingdomCampHeartChainGrid.NextWork;
+					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=" + ChainHomes.Count
+						+ (ChainSaveVariant ? "; reserved-next-work=" + spare.X1 + "," + spare.Y1 + ".." + spare.X2 + "," + spare.Y2 : "")
 						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true; synthetic-store-identities=true"
 						+ "; housing-calendar-frontier=true; no-improvement-driven=true; " + ChainState();
 				}
