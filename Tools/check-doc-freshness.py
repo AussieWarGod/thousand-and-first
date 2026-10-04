@@ -654,9 +654,9 @@ def audit_rollback_claims(problems):
     """Keep current release text inside the supported rollback policy (#272).
 
     PLAYTESTING owns the supported rollback: restore the backed-up save together with its
-    matching package. Only the unfounded lifecycle record has been checked against older
-    readers, engine-free; no whole newer save has been loaded with older mod code. No current
-    guide or ledger may therefore promise that a newer save loads on older builds.
+    matching package. Only the unfounded lifecycle and polity records have been checked against
+    older readers, engine-free; no whole newer save has been loaded with older mod code. No
+    current guide or ledger may therefore promise that a newer save loads on older builds.
     """
     require(
         problems,
