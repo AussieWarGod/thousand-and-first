@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -17,6 +18,7 @@ namespace ThousandAndFirst.Tests
 		private const string Host = "Tools/personas/persona_polity.py";
 		private const string DriftText =
 			" continues with endpoint facts changed since it opened; no new dispatch until window ";
+		private const string RungText = "heart rung raised: 1 (";
 
 		[Test]
 		public void ProviderJournalsTheObservationBeforeItsOwnRowAndNeverWrites()
@@ -47,17 +49,19 @@ namespace ThousandAndFirst.Tests
 				"VERBS=polity-window-check", "CHECK=polity-window", "TIMEOUT=1200",
 				"LOG_FORBID=[\"polity: daily reconciliation refused\",\"polity: zone reconciliation "
 					+ "refused\",\"polity: active load reconciliation refused\",\" withdrawn: \"]",
-				"LOG_REQUIRE=[\"" + DriftText + "\"]" })
+				"LOG_REQUIRE=[\"" + RungText + "\",\"" + DriftText + "\"]" })
 				ClassicAssert.AreEqual(1, Regex.Matches(persona, "(?m)^" + Regex.Escape(row) + "$").Count,
 					row);
 			Match script = Regex.Match(persona, "(?m)^SCRIPT=(.*)$");
 			ClassicAssert.IsTrue(script.Success);
 			ClassicAssert.AreEqual("stagedigest;realize;" + Repeat("advance 1200;polity-window-check;", 11)
 				+ "stagedigest", script.Groups[1].Value);
-			string notes = Read("Polity/KingdomPolitySchedulerRuntime.DispatchNotes.cs");
-			StringAssert.Contains("\"polity: dispatch window \" + Window.ToString(CultureInfo.InvariantCulture)",
-				notes);
-			StringAssert.Contains("+ \"" + DriftText + "\"", notes);
+			// The drift line is built engine-free, so execute it rather than pin its source text.
+			StringAssert.Contains(DriftText + "11", KingdomPolityDispatchRules.DispatchNotes(10UL,
+				new List<string>(), true)[0]);
+			// Growth/KingdomCeremonyHeart.cs logs each heart rung the rite ground raises.
+			StringAssert.Contains("KingdomLog.Log(\"heart rung raised: \" + rung + \" (\" + Key + \")\");",
+				Read("Growth/KingdomCeremonyHeart.cs"));
 		}
 
 		[Test]
