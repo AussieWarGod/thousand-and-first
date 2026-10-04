@@ -12,7 +12,7 @@ namespace ThousandAndFirst.Harness
 	/// THE UPGRADE IS DRIVEN BY THE REAL SETTLEMENT PASS. No shard of this seam calls
 	/// <c>KingdomUpgrade.Begin</c>, <c>BeginPrepared</c>, <c>BeginPreparedPlanChange</c>,
 	/// <c>TryApplyUpgrade</c>, <c>KingdomPlots.Advance</c> or
-	/// <c>KingdomConstruction.TryFundNew</c>, and nothing at all advances the tent or the
+	/// <c>KingdomConstruction.TryFundNew</c>, and no harness code drives the tent or the
 	/// tent-row. Ordinary turn advance runs
 	/// <c>KingdomSystem.AttendSeatedSemantics</c>'s "improvement" step
 	/// (<c>Core/KingdomSystem.z21.SemanticPass.cs:112-115</c>), which is what assesses, begins,

@@ -28,6 +28,7 @@ namespace ThousandAndFirst.Harness
 			private void StandingTent()
 			{
 				GameObject tent = Standing(FromKey);
+				if (tent == null) RecordUnbuilt();
 				Require(tent != null, "no completed settlement tent stands after the build wait");
 				Require(tent.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1
 					&& tent.GetIntProperty(KingdomUpgrade.AdoptedProperty) != 1,
@@ -113,6 +114,36 @@ namespace ThousandAndFirst.Harness
 					.Append("; brush=").Append(QuoteBrush)
 					.Append("; due=").Append(job.DueTick)
 					.Append("; scaffold=").Append(scaffold.IDIfAssigned);
+			}
+
+			/// <summary>Why no completed tent stands after leg one, journaled before the refusal:
+			/// the commission receipt's phase, projection, due tick and recorded failure, the
+			/// works' stage, the crew inputs and the ledger tail. docs/DEVELOPMENT.md asks for the
+			/// recorded construction reason before any longer wait: an unpriced window, a short
+			/// gang and a blocked completion each look the same from the outside.</summary>
+			private void RecordUnbuilt()
+			{
+				KingdomConstructionJob job;
+				bool found = KingdomConstruction.TryFind(TentJobId, out job) && job != null;
+				Evidence.Append("\nunbuilt tick=").Append(Game.TimeTicks)
+					.Append("; job=").Append(TentJobId)
+					.Append("; phase=").Append(found ? job.Phase.ToString() : "absent");
+				if (found)
+				{
+					Evidence.Append("; physical=").Append(job.PhysicalPhase)
+						.Append("; projection=").Append(job.Projection)
+						.Append("; due=").Append(job.DueTick)
+						.Append("; updated=").Append(job.UpdatedTick)
+						.Append("; failure=").Append(KingdomScenarioRules.Bounded(job.Failure));
+					GameObject works = string.IsNullOrEmpty(job.OutputId) ? null : Exact(job.OutputId);
+					var plot = works?.GetPart<r_KingdomPlotWorks>();
+					if (plot != null)
+						Evidence.Append("; works-stage=").Append(plot.StageApplied)
+							.Append("; works-start=").Append(plot.StartTick)
+							.Append("; works-total=").Append(plot.TotalTicks);
+				}
+				Evidence.Append("; population=").Append(System.Population)
+					.Append("; assigned=").Append(System.AssignedCrew).Append(LedgerTail());
 			}
 
 			/// <summary>Why the ready-looking begin never happened (docs/DEVELOPMENT.md readiness

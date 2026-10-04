@@ -115,6 +115,21 @@ namespace ThousandAndFirst.Tests
 				"System.Ledger.Note(\"{{r|The improvement waits. \" + zoningFailure + \"}}\");"));
 		}
 
+		/// <summary>When no completed tent stands after leg one, the first check journals the
+		/// commission receipt's phase, due tick and recorded failure, the works' stage and the
+		/// crew inputs before it refuses (docs/DEVELOPMENT.md: inspect the recorded construction
+		/// reason before any longer wait).</summary>
+		[Test]
+		public void AnUnbuiltTentJournalsItsConstructionReceiptBeforeRefusing()
+		{
+			string phases = Read(Phases);
+			Assert.That(Follows(phases, "if (tent == null) RecordUnbuilt();",
+				"\"no completed settlement tent stands after the build wait\"", 120), Is.True);
+			foreach (string field in new[] { "\"; phase=\"", "\"; due=\"", "\"; failure=\"",
+				"\"; works-stage=\"", "\"; assigned=\"" })
+				Assert.That(phases, Does.Contain(field), field);
+		}
+
 		/// <summary>
 		/// Every LOG_FORBID entry is a line production writes to Player.log through KingdomLog.Log
 		/// on this path. The forbidden-log scan reads Player.log only (Tools/run-personas.sh), so

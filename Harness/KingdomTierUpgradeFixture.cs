@@ -21,7 +21,7 @@ namespace ThousandAndFirst.Harness
 	/// natively-run camp-heart fixture does. DISCLOSED synthetic parts of that helper: the
 	/// founder's westward walk off the heart's footprint by ordinary movement, and the
 	/// explicit future calendar frontier it hands the production labour driver for the
-	/// heart's own works. No rung state is stamped by hand and the tent is never advanced.
+	/// heart's own works. No rung state is stamped by hand, and the helper never touches the tent.
 	/// </para>
 	/// <para>
 	/// The tent is commissioned rather than fabricated on purpose: the authored upgrade lane
