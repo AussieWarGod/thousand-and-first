@@ -161,6 +161,7 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-retry-removal", "camp-heart-chain-survey-stakes",
     "camp-heart-chain-renovation", "camp-heart-chain-renovation-refusals",
     "camp-heart-chain-renovation-cleared",
+    "camp-heart-chain-next-preflight",
 )
 
 # Evidence rows the second-city family writes beside its automatic verb rows: the resolved

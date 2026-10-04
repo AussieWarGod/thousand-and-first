@@ -17,7 +17,9 @@ namespace ThousandAndFirst.Harness
 	/// standing, how much water is stored) come from the production unbound-recovery observation:
 	/// it builds the ordinary physical index WITHOUT legacy migration, citizenship publication,
 	/// ledger work or economic simulation, is refused outright while a settlement pass holds a
-	/// bound survey, and refuses a PARTIAL index rather than under-reporting the ground.
+	/// bound survey, and refuses a PARTIAL index rather than under-reporting the ground. Code that
+	/// runs inside its own bound pass reads the standing heart from that pass's survey instead,
+	/// through <c>StandingHeart(KingdomSurvey)</c>.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
@@ -183,11 +185,27 @@ namespace ThousandAndFirst.Harness
 			/// <summary>The one standing heart plot, observed rather than remembered.</summary>
 			internal GameObject StandingHeart()
 			{
-				KingdomSurvey survey = Census();
+				return HeartIn(Census());
+			}
+
+			/// <summary>The one standing heart plot, read from the settlement pass the caller has
+			/// bound. The unbound census refuses outright while any pass is bound, so an observation
+			/// running inside its own pass reads that pass's survey: never a second classification,
+			/// never another ground's survey, and never a partial index.</summary>
+			internal GameObject StandingHeart(KingdomSurvey Survey)
+			{
+				Require(Survey != null && ReferenceEquals(KingdomSurvey.ActiveFor(Zone), Survey)
+					&& ReferenceEquals(Survey.Ground, Zone) && Survey.TryLoaded(out _),
+					"taf-camp-heart-pass-survey: the bound pass survey is absent, foreign or partial");
+				return HeartIn(Survey);
+			}
+
+			private GameObject HeartIn(KingdomSurvey Survey)
+			{
 				GameObject found = null;
-				for (int i = 0; i < survey.Built.Count; i++)
+				for (int i = 0; i < Survey.Built.Count; i++)
 				{
-					GameObject item = survey.Built[i];
+					GameObject item = Survey.Built[i];
 					if (!GameObject.Validate(item)
 						|| item.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1) continue;
 					Require(found == null,

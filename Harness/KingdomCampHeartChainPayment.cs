@@ -12,6 +12,7 @@ namespace ThousandAndFirst.Harness
 			private void SupplyChain(int Target)
 			{
 				Require(Target == 3 || Target == 4, "unknown heart chain target");
+				if (Target == 3 && ChainSaveVariant) PreflightChainNextWork(true);
 				ChainTarget = Target; ChainFrom = Target == 3 ? "heartwaterstone" : "heartmoot";
 				ChainTo = Target == 3 ? "heartmoot" : "heartcourt";
 				ChainWater = Target == 3 ? 28 : 50;

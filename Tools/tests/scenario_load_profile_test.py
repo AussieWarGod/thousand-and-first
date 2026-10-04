@@ -44,6 +44,64 @@ def snapshot(root):
 
 
 class ScenarioLoadProfileTest(unittest.TestCase):
+    def chain_fixture(self, **changes):
+        from heart_chain_fixture import physical, saved
+        self.fixture()
+        self.saved_snapshot, _, self.fact_wires = physical()
+        if changes:
+            fields = load.heart_chain.decode_snapshot(self.saved_snapshot)
+            fields.update(changes)
+            self.saved_snapshot = saved(**fields)
+        (self.source / "scenario-save-snapshot.txt").write_bytes(self.saved_snapshot)
+        receipt_path = self.source / "scenario-save-receipt.txt"
+        receipt = receipt_path.read_text().splitlines()
+        receipt[4] = sha(self.saved_snapshot)
+        receipt_path.write_text("\n".join(receipt) + "\n")
+        for domain, wire in self.fact_wires.items():
+            (self.source / load.heart_chain.fact_name(domain)).write_bytes(wire)
+
+    def test_higher_heart_copies_binds_and_seals_all_four_exact_fact_files(self):
+        self.chain_fixture()
+        before = self.before()
+        evidence = load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual(before, self.before())
+        seal = load.scenario_profile.read_seal(str(self.destination_seal / "profile.sha256"))
+        for domain, wire in self.fact_wires.items():
+            name = load.heart_chain.fact_name(domain)
+            self.assertEqual(wire, (self.destination / "Local" / name).read_bytes())
+            self.assertEqual(sha(wire), seal[name])
+            self.assertEqual(sha(wire), evidence["sourceHashes"][name])
+
+    def test_higher_heart_missing_corrupt_wrong_digest_or_linked_facts_refuse_before_copy(self):
+        for domain in load.heart_chain.DOMAINS:
+            for mode in ("missing", "corrupt", "mismatch", "link", "duplicate"):
+                with self.subTest(domain=domain, mode=mode):
+                    self.chain_fixture()
+                    path = self.source / load.heart_chain.fact_name(domain)
+                    if mode == "missing": path.unlink()
+                    elif mode == "corrupt": path.write_bytes(b"invalid facts")
+                    elif mode == "mismatch": path.write_bytes(self.fact_wires["support" if domain != "support" else "jobs"])
+                    elif mode == "link":
+                        path.unlink()
+                        target = self.source / "linked-facts.txt"
+                        target.write_bytes(self.fact_wires[domain])
+                        path.symlink_to(target)
+                    else:
+                        (self.local / path.name).write_bytes(path.read_bytes())
+                        with contextlib.redirect_stdout(io.StringIO()):
+                            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+                    self.assert_refuses_unchanged()
+
+    def test_higher_heart_unsupported_rung_wrong_game_unknown_version_refuse(self):
+        for changes in ({"rung": 3}, {"game_id": "11234567-89ab-cdef-0123-456789abcdef"}, {}):
+            self.chain_fixture(**changes)
+            if not changes:
+                wire = self.saved_snapshot.replace(b"save-v1:", b"save-v2:")
+                (self.source / "scenario-save-snapshot.txt").write_bytes(wire)
+                receipt = self.source / "scenario-save-receipt.txt"
+                receipt.write_text(receipt.read_text().replace(sha(self.saved_snapshot), sha(wire)))
+            with self.subTest(changes=changes): self.assert_refuses_unchanged()
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="taf-load-profile-test.")
         self.addCleanup(self.temporary.cleanup)

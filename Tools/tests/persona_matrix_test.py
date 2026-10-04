@@ -658,6 +658,21 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, outcome, "wrong physical result")
                 self.assertTrue(matrix.match(expected, changed))
 
+    def test_higher_heart_save_requires_preflight_and_actual_save_witnesses(self):
+        names = ("camp-heart-chain-next-preflight", "camp-heart-chain-save")
+        expected = matrix.parse_expect(",".join(name + ":OK~proved" for name in names) + ",COMPLETE",
+                                       "chain-save", {"camp-heart-chain-save"})
+        rows = [(name, "OK", "proved") for name in names] + [("SCRIPT-COMPLETE", "OK", "")]
+        self.assertEqual([], matrix.match(expected, rows))
+        self.assertEqual(rows, matrix.significant(rows))
+        for index in range(2):
+            self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+            self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+            for status, detail in (("REFUSED", "proved"), ("OK", "wrong identity")):
+                changed = list(rows)
+                changed[index] = (names[index], status, detail)
+                self.assertTrue(matrix.match(expected, changed))
+
     def test_second_city_witnesses_are_required_once_in_order_with_their_verdicts(self):
         name = "second-city-native-check.persona"
         found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
@@ -931,7 +946,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(111, len(self.personas()))
+        self.assertEqual(112, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1167,8 +1182,9 @@ class ShippedPersonaTest(unittest.TestCase):
                                      expected.index(verb), path.name)
                     expected.remove(observation)
             for observations, next_verb in (
-                (("camp-heart-chain-spatial", "camp-heart-chain-occupancy",
-                  "camp-heart-chain-road-wear"), "camp-heart-chain-supply"),
+                (("camp-heart-chain-spatial",)
+                 + (("camp-heart-chain-next-preflight",) if "camp-heart-chain-next-preflight" in expected else ())
+                 + ("camp-heart-chain-occupancy", "camp-heart-chain-road-wear"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
                   "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
                   "camp-heart-chain-retry-removal"), "camp-heart-chain-check"),
