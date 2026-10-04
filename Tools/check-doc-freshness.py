@@ -650,6 +650,23 @@ def audit_public_release_status(problems):
     forbid(problems, "MODDING.md", '"r_ThousandAndFirst": "0.2.0"')
 
 
+def audit_rollback_claims(problems):
+    """Keep current release text inside the supported rollback policy (#272).
+
+    PLAYTESTING owns the supported rollback: restore the backed-up save together with its
+    matching package. Only the unfounded lifecycle record has been checked against older
+    readers, engine-free; no whole newer save has been loaded with older mod code. No current
+    guide or ledger may therefore promise that a newer save loads on older builds.
+    """
+    require(
+        problems,
+        "PLAYTESTING.md",
+        "Loading a newer save with older mod code is not a supported rollback.",
+    )
+    for relative in ("README.md", "CHANGELOG.md", "docs/STATUS.md", "PLAYTESTING.md"):
+        forbid(problems, relative, "loads on older 0.3.x builds")
+
+
 def audit_public(problems):
     buildings, plots, maps, variants = catalogue_counts()
     report = structure_report()
@@ -1275,6 +1292,7 @@ def audit_private(problems):
 def main():
     problems = []
     audit_public(problems)
+    audit_rollback_claims(problems)
     audit_private(problems)
     audit_archive_contract(problems)
     audit_research_alignment_contract(problems)

@@ -18,12 +18,15 @@ candidate; not yet uploaded or accepted. Public Alpha remains 0.3.7.
   Roleplay or Wander checkpoint on entering Joppa, Classic or Kingdom autosaves and manual saves,
   and a Kingdom Quickstart that stopped before founding. It reproduces with this mod alone. A
   not-yet-founded lifecycle book whose state is entirely default (or a canonical empty
-  quarantine) is now written in the earlier growth-free lifecycle record that every 0.3.x reader
-  already loads back as the same founding-ready book. Founded saves are byte-for-byte unchanged.
-  Any other unwritable state is still refused, never truncated, and the error now names the
-  failing check.
-- No save-format change. An unfounded save made by 0.3.8 loads on older 0.3.x builds and can
-  found a kingdom there, but saving that still-unfounded game on an older build fails as before.
+  quarantine) is now written in the earlier growth-free lifecycle record, which the unchanged
+  lifecycle reader parses back into the same founding-ready book. Founded saves are
+  byte-for-byte unchanged. Any other unwritable state is still refused, never truncated, and the
+  error now names the failing check.
+- No save-format change. Loading a newer save with older mod code remains unsupported
+  (PLAYTESTING.md): to roll back, restore the backed-up save together with its matching package.
+  Only the unfounded lifecycle record has been checked against older readers, engine-free; no
+  whole 0.3.8 save has been loaded, nor a kingdom founded in game, with older mod code. Releases
+  0.3.0 to 0.3.7 still cannot save a game before its kingdom is founded.
 - Target Caves of Qud core build 2.0.211.56 (Steam build 25520692, installed by Steam on
   2026-09-25; marketing version 1.0.5, save format 409). 0.3.7 was built for core build
   2.0.211.51, which that update replaced. Gameplay is otherwise unchanged from 0.3.7.

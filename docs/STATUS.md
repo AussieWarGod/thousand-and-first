@@ -11,12 +11,21 @@ save before founding threw "growth envelope is not bounded and writable". The sa
 in every 0.3.x release. `WriteLifecycle` now chooses the frame before writing any byte: a book
 that `DormantLifecycleWireExact` admits (identity-unbound, pristine growth, no lane operations,
 resources or proofs, a constructor-default raid ledger, and the pristine shape or the canonical
-unbound quarantine) is written in the growth-free lifecycle v5 frame that every reader since
-v0.3.0 rebuilds into the same book. Every other book keeps the current frame and the unchanged
-strict gate. Refusals keep their message as the exact prefix and gain the failing check. The
-production writer now depends permanently on the lifecycle v5 read branch. No format bump: an
-unfounded save from this build loads on older 0.3.x builds and can found there; saving it still
-unfounded there still fails. The four production files are byte-identical to dev PR #277.
+unbound quarantine) is written in the growth-free lifecycle v5 frame, which the lifecycle
+reader (unchanged since v0.3.0) rebuilds into the same book. Every other book keeps the current
+frame and the unchanged strict gate. Refusals keep their message as the exact prefix and gain the
+failing check. The production writer now depends permanently on the lifecycle v5 read branch. No
+format bump. The four production files are byte-identical to dev PR #277.
+
+Downgrade scope: loading a newer save with older mod code remains unsupported (PLAYTESTING.md,
+"Upgrade, rollback, and uninstall"); roll back by restoring the backed-up save with its matching
+package. Only the lifecycle record has been checked against older readers. Engine-free probes
+outside the repository suites fed this writer's admitted dormant images to the unpatched v0.3.0
+and v0.3.7 lifecycle readers, which rebuilt them field for field; the pristine books also passed
+first-founding preparation there, and 0.3.1 to 0.3.6 carry the same reader blobs. The rest of a
+0.3.8 save is written by 0.3.7-era code (for example city book schema 4, where 0.3.0 knows schema
+3). No whole save has been loaded on an older build, and no kingdom has been founded in game
+there. Releases 0.3.0 to 0.3.7 still cannot save an unfounded game.
 
 The candidate also re-pins main to Caves of Qud build 25520692 (core 2.0.211.56, save format
 409). It takes only the pins main's compile gate and Alpha release lane need from dev's re-pin

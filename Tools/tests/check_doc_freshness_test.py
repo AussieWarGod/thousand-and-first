@@ -208,6 +208,51 @@ class DocumentationFreshnessTests(unittest.TestCase):
             finally:
                 CHECKER.ROOT = original_root
 
+    def test_rollback_claims_refuse_a_newer_save_on_older_builds(self) -> None:
+        policy = "Loading a newer save with older mod code is not a supported rollback."
+        claim = "loads on older 0.3.x builds"
+        documents = ("README.md", "CHANGELOG.md", "docs/STATUS.md", "PLAYTESTING.md")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "docs").mkdir()
+            for relative in documents:
+                (root / relative).write_text("Back up saves before updating.\n", encoding="utf-8")
+            playtesting = root / "PLAYTESTING.md"
+            playtesting.write_text("To roll back, restore the backed-up save. " + policy + "\n",
+                                   encoding="utf-8")
+            with mock.patch.object(CHECKER, "ROOT", root):
+                problems = []
+                CHECKER.audit_rollback_claims(problems)
+                self.assertEqual([], problems)
+                for relative in documents:
+                    with self.subTest(relative=relative):
+                        target = root / relative
+                        current = target.read_text(encoding="utf-8")
+                        # The shipped 0.3.8 draft wrapped the promise across a line break.
+                        target.write_text(
+                            current + "No save-format change. An unfounded save made by 0.3.8 "
+                            "loads on older\n  0.3.x builds and can found a kingdom there.\n",
+                            encoding="utf-8",
+                        )
+                        problems = []
+                        CHECKER.audit_rollback_claims(problems)
+                        self.assertEqual(
+                            [f"{relative} retains stale current-status text: {claim}"], problems
+                        )
+                        target.write_text(current, encoding="utf-8")
+                playtesting.write_text("To roll back, restore the backed-up save.\n",
+                                       encoding="utf-8")
+                problems = []
+                CHECKER.audit_rollback_claims(problems)
+                self.assertEqual(
+                    [f"PLAYTESTING.md is missing current contract text: {policy}"], problems
+                )
+
+    def test_current_release_text_keeps_the_supported_rollback_policy(self) -> None:
+        problems = []
+        CHECKER.audit_rollback_claims(problems)
+        self.assertEqual([], problems)
+
     def test_current_research_disposition_is_machine_guarded(self) -> None:
         problems = []
         CHECKER.audit_research_alignment_contract(problems)
