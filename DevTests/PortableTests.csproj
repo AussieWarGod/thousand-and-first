@@ -829,6 +829,7 @@
 	<Compile Include="KingdomPolityClosureSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
 	<Compile Include="KingdomPolityAmbientTransactionTests.cs" />
 	<Compile Include="KingdomPolityEndpointObservationRulesTests.cs" />
 	<Compile Include="KingdomPolityExpeditionDeedRulesTests.cs" />

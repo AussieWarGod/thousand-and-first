@@ -1945,6 +1945,7 @@
 	<Compile Include="KingdomPolityActivationSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3SourceTests.cs" />
 	<Compile Include="KingdomPolityConsignmentTests.cs" />
