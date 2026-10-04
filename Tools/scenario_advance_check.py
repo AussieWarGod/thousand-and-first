@@ -60,10 +60,22 @@ def judge(rows, requested):
 
 
 def bind_chain_clocks(rows, waits):
-    """The chain observes Game.Turns between each wait; setup is the first clock anchor."""
+    """The chain observes Game.Turns between each wait; setup is the first clock anchor. The
+    four-rung chain has eight anchors. The five-rung chain (camp-heart-rung5-native-check) runs
+    its zero-turn capital seed right after the eighth, then four more anchors: supply, paid,
+    completed and standing."""
     anchors = [(index, int(field(detail, 'turns'))) for index, (event, _, detail) in enumerate(rows)
                if event in ('camp-heart-chain-setup', 'camp-heart-chain-supply', 'camp-heart-chain-check')]
-    require(len(anchors) == 8, 'chain lacks its eight world clock anchors')
+    capitals = [(index, int(field(detail, 'turns'))) for index, (event, _, detail) in enumerate(rows)
+                if event == 'camp-heart-chain-capital']
+    require(len(capitals) <= 1, 'chain repeats its capital seed')
+    if not capitals:
+        require(len(anchors) == 8, 'chain lacks its eight world clock anchors')
+    else:
+        require(len(anchors) == 12, 'five-rung chain lacks its twelve world clock anchors')
+        (seed, seen), (before, start), (after, _) = capitals[0], anchors[7], anchors[8]
+        require(before < seed < after, 'capital seed is not between the rung-four leg and its supply')
+        require(seen == start, 'capital seed world clock differs from the rung-four leg it follows')
     for (before, start), (after, end) in zip(anchors, anchors[1:]):
         elapsed = sum(wait['elapsed'] for wait in waits if before < wait['complete'] < after)
         require(end - start == elapsed, 'chain world clock differs from actual elapsed ordinary waits')

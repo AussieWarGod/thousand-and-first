@@ -190,6 +190,10 @@ python3 Tools/scenario_advance_check.py /path/to/scenario-journal.tsv \
   --chain-clocks --results /fresh/path/to/wait-accounting.json
 ```
 
+For the five-rung chain (`camp-heart-rung5-native-check`), pass that persona's own sixteen waits;
+`--chain-clocks` then binds its twelve anchors and requires its zero-turn capital seed to read
+the same clock as the rung-four leg it follows.
+
 ## Release batch
 
 Prepare version constants, manifest, Workshop lane, README, changelog and ledger together.
