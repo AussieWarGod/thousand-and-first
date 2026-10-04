@@ -1,5 +1,28 @@
 # Current implementation and release evidence
 
+## Qud build 25520692 re-pin: compile and licensed gates pass
+
+Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. Steam
+serves only that build: core `2.0.211.56`, marketing 1.0.5, save format 409. It removed
+`Microsoft.Contracts.dll` and `UnityMultiSelectDropdown.dll` from the managed directory; no
+production, Harness or DevTests source names a type from either, and `DevTests/refs.rsp` drops
+both references. The release target, Workshop description, release-record examples, SDK lock
+label (both SDK DLL hashes unchanged), native save-format checks, upgrade-observer engine pin and
+architecture reference assembly hash now name `2.0.211.56`. The published 0.3.7 candidate record
+keeps its true `2.0.211.51` target through one exact published-record entry.
+
+Engine check: an ILSpy 9.1 decompile of the installed assembly differs from the pinned
+`2.0.211.51` decompile in 18 files and adds two autoexplore files. Format 409 only adds a
+coral-polyp render migration; the serializer files are unchanged. Engine types TAF patches or
+cites change only in save-version constants, except `ActionManager`, whose cited turn loop is
+identical nine lines later. The archive and wear serializer probes pass against the installed
+engine (103/103, 7/7 and 4/4 cases, save version 409), and the Hearthpyre 2.2.3 ABI proof is clean.
+
+All four engine compile modes pass (3117/3121 ordinary and 3444/3448 dev-harness sources), and
+both full licensed suites pass on the installed base: 15,122 main and 5,997 portable cases, zero
+skips. Native evidence below ran on `2.0.211.51`; docs/DEVELOPMENT.md requires the same engine
+binding for reuse, so native acceptance on `2.0.211.56` is owed.
+
 ## Absent-owner loss fix — native damage replay passes
 
 New `sr3` claims freeze map-qualified home ownership alongside the existing work/plot and

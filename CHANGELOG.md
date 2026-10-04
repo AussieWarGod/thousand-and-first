@@ -10,6 +10,16 @@ records current acceptance.
 
 **Unreleased development**
 
+- Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. That
+  build reports core `2.0.211.56` (marketing 1.0.5, save format 409) and removed
+  `Microsoft.Contracts.dll` and `UnityMultiSelectDropdown.dll`; no source uses either, so
+  `DevTests/refs.rsp` drops both. The release target, Workshop description, release-record
+  examples, SDK lock label, native save-format checks, upgrade-observer engine pin and
+  architecture reference assembly hash now name `2.0.211.56`; the published 0.3.7 candidate record
+  keeps its true `2.0.211.51` target. All four engine compile modes with the exact Hearthpyre
+  2.2.3 ABI proof and both full licensed suites (15,122 and 5,997 cases, zero skips) pass on the
+  installed build. No native game run has used `2.0.211.56` yet.
+
 - A refused scaffold-removal proof now names the first failed identity predicate (recorded
   cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
   gatehouse projection, live output, same output) instead of the bare shared sentence, and every
