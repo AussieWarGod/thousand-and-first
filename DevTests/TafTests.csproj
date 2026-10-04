@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
     <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
     <Compile Include="KingdomRetainedTransitionTests.cs" />
     <Compile Include="KingdomLodgingRoomTests.cs" />
@@ -32,6 +33,7 @@
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUnfoundedSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
