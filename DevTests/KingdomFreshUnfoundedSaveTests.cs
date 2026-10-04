@@ -179,8 +179,10 @@ namespace ThousandAndFirst.Tests
 				composites.Add(field[0] + " " + field[1] + " "
 					+ (field[2] == "" ? "null" : field[2] == "new " + field[0] + "()" ? "new" : field[2]));
 			}
-			CollectionAssert.AreEqual(Census, composites,
-				"a KingdomSystem durable field changed: extend FreshUnfoundedKingdomSystemEveryDurableBookIsWritable");
+			CollectionAssert.AreEqual(Census, composites, "a KingdomSystem durable field changed: extend "
+				+ "FreshUnfoundedKingdomSystemEveryDurableBookIsWritable. Read but not in the census: "
+				+ string.Join("; ", composites.FindAll(row => Array.IndexOf(Census, row) < 0)) + ". In the census but not read: "
+				+ string.Join("; ", Array.FindAll(Census, row => !composites.Contains(row))));
 			ClassicAssert.AreEqual(names.Count, new HashSet<string>(names).Count, "field names are unique");
 			foreach (string[] row in Enums)
 				StringAssert.IsMatch(@"\benum " + row[0].Substring(row[0].LastIndexOf('.') + 1) + @"\b",
