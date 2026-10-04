@@ -53,6 +53,11 @@ namespace ThousandAndFirst.Harness
 				if (ReferenceEquals(__instance, The.Player)) KingdomSubsidenceRungLoadWitness.Prefix();
 				return;
 			}
+			if (KingdomScenarioLoadEntry.UnfoundedSnapshot != null)
+			{
+				if (ReferenceEquals(__instance, The.Player)) KingdomUnfoundedLoad.BeforeActivation();
+				return;
+			}
 			try
 			{
 				if (!ReferenceEquals(__instance, The.Player)) return;

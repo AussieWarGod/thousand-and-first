@@ -1,11 +1,19 @@
-"""One cold-process Quickstart continuation; never reuse a spent profile or resume its script."""
+"""One cold-process continuation per recipe; never reuse a spent profile or resume its script."""
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import time
+
+# The unfounded save leg's exact sealed recipe (Tools/personas/persona_matrix.py
+# UNFOUNDED_RELOAD_SCRIPT/UNFOUNDED_RELOAD_VERB, Harness/KingdomUnfoundedSave.cs).
+UNFOUNDED_SCRIPT = "stagedigest unfounded-save stagedigest"
+UNFOUNDED_VERB = "unfounded-save"
+START = re.compile(r"(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)@(0|[1-9][0-9]?),(0|[1-9][0-9]?)\Z")
+START_BOUNDS = (80, 25, 80, 25)
 
 
 def require(value, reason):
@@ -13,13 +21,58 @@ def require(value, reason):
         raise ValueError(reason)
 
 
+def valid_start(start) -> bool:
+    found = START.match(start) if isinstance(start, str) else None
+    return bool(found) and all(int(part) < bound for part, bound in zip(found.groups(), START_BOUNDS))
+
+
 def execute(backend, location: str, advisor: str) -> dict:
     """Injected backend is a test seam only; production CLI always constructs NativeBackend."""
     require(location in ("marsh", "canyon", "dunes") and advisor in ("yes", "no"),
             "unsupported reload selection")
+
+    def verify(saved, loaded):
+        require(saved["command"] == "quickstart-save " + location + " " + advisor,
+                "reload evidence belongs to another selection")
+        for name in ("Primary.sav.gz", "Primary.json"):
+            before = saved.get("saveHashes", {}).get(name)
+            require(before and loaded.get("saveHashes", {}).get(name) == before,
+                    "reload save bytes changed: " + name)
+
+    return cycle(backend, (location, advisor), verify, "developer-quickstart-cold-reload", {})
+
+
+def execute_unfounded(backend, start: str) -> dict:
+    """#272/#271: an unfounded real save, exact owned stop, fresh-profile cold load, production
+    founding and a second real save. Injected backend is a test seam only; the production CLI
+    always constructs UnfoundedNativeBackend."""
+    require(valid_start(start), "unsupported unfounded reload start")
+
+    def verify(saved, loaded):
+        require(saved["command"] == "unfounded-save " + start,
+                "reload evidence belongs to another start")
+        primary = saved.get("saveHashes", {}).get("Primary.sav.gz")
+        for name in ("Primary.sav.gz", "Primary.json"):
+            before = saved.get("saveHashes", {}).get(name)
+            require(before and loaded.get("importedSaveHashes", {}).get(name) == before,
+                    "reload imported other save bytes: " + name)
+        require(loaded.get("backupSaveHash") == primary,
+                "the second save backup is not the imported unfounded save")
+        second = loaded.get("secondSaveHashes", {}).get("Primary.sav.gz")
+        require(second and second != primary, "the cold-loaded world wrote no second real save")
+        require(loaded.get("foundedAfterLoad") is True,
+                "the cold-loaded world did not found its first city")
+
+    return cycle(backend, (start,), verify, "developer-unfounded-cold-reload",
+                 dict(foundedAfterLoad=True, secondRealSave=True))
+
+
+def cycle(backend, selection, verify, scope, extra) -> dict:
+    """The shared owned-process order: save, exact stop, fresh destination, stopped-source
+    transport, cold load, strict checks on both journals, exact stop."""
     backend.idle("initial")
     source = backend.fresh("save")
-    backend.prepare(source, location, advisor)
+    backend.prepare(source, *selection)
     active = None
     failure = None
     try:
@@ -43,19 +96,16 @@ def execute(backend, location: str, advisor: str) -> dict:
                 "cold-load evidence did not pass")
         for key in ("gameId", "seed", "command"):
             require(saved.get(key) and loaded.get(key) == saved[key], "reload identity changed: " + key)
-        require(saved["command"] == "quickstart-save " + location + " " + advisor,
-                "reload evidence belongs to another selection")
-        for name in ("Primary.sav.gz", "Primary.json"):
-            before = saved.get("saveHashes", {}).get(name)
-            require(before and loaded.get("saveHashes", {}).get(name) == before,
-                    "reload save bytes changed: " + name)
+        verify(saved, loaded)
         backend.stop(destination, "load")
         active = None
         backend.idle("final")
-        return dict(verdict="PASS", scope="developer-quickstart-cold-reload",
-                    source=str(source), destination=str(destination), gameId=saved["gameId"],
-                    sameProfileDirectory=False, scriptResumed=False, gracefulQuit=False,
-                    ordinaryAcceptance=False, releaseAcceptance=False)
+        result = dict(verdict="PASS", scope=scope,
+                      source=str(source), destination=str(destination), gameId=saved["gameId"],
+                      sameProfileDirectory=False, scriptResumed=False, gracefulQuit=False,
+                      ordinaryAcceptance=False, releaseAcceptance=False)
+        result.update(extra)
+        return result
     except BaseException as error:
         failure = error
         raise
@@ -119,8 +169,10 @@ class NativeBackend:
                      "-Root", self.windows(root), "-Game", self.windows(self.game)])
 
     def wait(self, root, phase):
+        self.await_journal(root, phase, ("QUICKSTART-" + phase.upper() + "-COMPLETE").encode())
+
+    def await_journal(self, root, phase, target):
         deadline = time.monotonic() + self.timeout
-        target = "QUICKSTART-" + phase.upper() + "-COMPLETE"
         journal = root / "scenario-journal.tsv"
         while time.monotonic() < deadline:
             if journal.is_file():
@@ -128,7 +180,7 @@ class NativeBackend:
                     raw = stream.read(1024 * 1024 + 1)
                 require(len(raw) <= 1024 * 1024, "reload journal exceeds bound")
                 # This only wakes the strict checker; a substring cannot grant a pass.
-                if target.encode() in raw or b"\tREFUSED\t" in raw:
+                if target in raw or b"\tREFUSED\t" in raw:
                     return
             time.sleep(1)
         raise ValueError("reload " + phase + " timed out; retained profile=" + str(root))
@@ -145,3 +197,29 @@ class NativeBackend:
         self.command("transport", ["python3", str(self.tools / "prepare-scenario-load.py"),
                                   str(source), str(destination)],
                      dict(os.environ, TAF_QUD_ROOT=str(self.game.parent)))
+
+
+class UnfoundedNativeBackend(NativeBackend):
+    """The same owned process, transport and stop authority as the Quickstart route; only the
+    sealed recipe, the wake row and the strict checker (check-unfounded-results.py) differ."""
+
+    def prepare(self, root, start):
+        require(valid_start(start), "unsupported unfounded reload start")
+        # A Quickstart advisor would make the profile tool refuse an ordinary script.
+        env = {key: value for key, value in os.environ.items()
+               if key != "TAF_SCENARIO_QUICKSTART_ADVISOR"}
+        env.update(TAF_REQUEST="founding-first-city", TAF_SCENARIO_SCRIPT=UNFOUNDED_SCRIPT,
+                   TAF_SCENARIO_START=start, TAF_SCENARIO_EXTRA_VERBS=UNFOUNDED_VERB,
+                   TAF_QUD_ROOT=str(self.game.parent))
+        args = ["bash", str(self.tools / "prepare-scenario.sh"), str(root)]
+        if self.seed:
+            args.append(self.seed)
+        self.command("prepare-save", args, env)
+
+    def wait(self, root, phase):
+        self.await_journal(root, phase, b"\tSCRIPT-COMPLETE\t")
+
+    def check(self, root, phase):
+        path = self.command("check-" + phase, ["python3", str(self.tools / "check-unfounded-results.py"),
+                            str(root), "--phase", phase], dict(os.environ, TAF_LOG_ALLOW=""))
+        return json.loads(path.read_text(encoding="utf-8"))

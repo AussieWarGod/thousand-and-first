@@ -6,8 +6,9 @@ from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS))
-from persona_reload import execute, NativeBackend
-from personas.persona_matrix import parse_manifest, assess
+from persona_reload import execute, execute_unfounded, NativeBackend, UnfoundedNativeBackend, valid_start
+from personas.persona_matrix import parse_manifest, assess, reload_start
+import scenario_profile
 
 MANIFEST = "REQUEST=founding-first-city\nSCRIPT=reload-descendant quickstart marsh yes\nEXPECT=RELOAD-COMPLETE\n"
 
@@ -171,6 +172,165 @@ class ReloadTests(unittest.TestCase):
             source[source.index('if __name__ == "__main__":'):],
             "signal registration belongs inside main()'s own try, not a bare pre-main call "
             "main()'s except clause cannot see")
+
+
+UNFOUNDED = "REQUEST=founding-first-city\nSCRIPT=reload-descendant unfounded 8.22@40,12\nEXPECT=RELOAD-COMPLETE\n"
+
+
+class UnfoundedFake(Fake):
+    """The unfounded route's two strict verdicts; the load leg saved again, so its own
+    primary differs while the engine backup still equals the imported save."""
+
+    def check(self, root, phase):
+        self.event("check-" + phase)
+        result = dict(verdict="PASS", phase=phase, gameId="game-id", seed="#4242",
+                      command="unfounded-save 8.22@40,12")
+        if phase == "save":
+            result["saveHashes"] = {"Primary.sav.gz": "save-hash", "Primary.json": "info-hash",
+                                    "Cache.db": "cache-hash"}
+        else:
+            result.update(importedSaveHashes={"Primary.sav.gz": "save-hash", "Primary.json": "info-hash"},
+                          secondSaveHashes={"Primary.sav.gz": "founded-hash", "Primary.json": "founded-info"},
+                          backupSaveHash="save-hash", foundedAfterLoad=True)
+            if self.change:
+                self.change(result)
+        return result
+
+
+class UnfoundedReloadTests(unittest.TestCase):
+    def test_unfounded_route_keeps_the_owned_effect_order(self):
+        fake = UnfoundedFake()
+        result = execute_unfounded(fake, "8.22@40,12")
+        self.assertEqual(fake.events, ["idle-initial", "fresh-save", "prepare", "launch-save",
+            "wait-save", "check-save", "stop-save", "idle-between", "fresh-load", "transport",
+            "launch-load", "wait-load", "check-load", "stop-load", "idle-final"])
+        self.assertEqual(result["verdict"], "PASS")
+        self.assertEqual(result["scope"], "developer-unfounded-cold-reload")
+        self.assertIs(result["foundedAfterLoad"], True)
+        self.assertIs(result["secondRealSave"], True)
+        for flag in ("sameProfileDirectory", "scriptResumed", "gracefulQuit", "ordinaryAcceptance", "releaseAcceptance"):
+            self.assertIs(result[flag], False)
+
+    def test_unfounded_failed_stages_refuse_and_clean_the_active_process(self):
+        events = UnfoundedFake()
+        execute_unfounded(events, "8.22@40,12")
+        for fault in events.events:
+            with self.subTest(fault=fault):
+                fake = UnfoundedFake(fault)
+                with self.assertRaises(ValueError): execute_unfounded(fake, "8.22@40,12")
+                if fault.startswith(("launch-", "wait-", "check-", "stop-")):
+                    self.assertEqual(fake.events[-1], "stop-failure")
+
+    def test_unfounded_identity_imported_bytes_backup_second_save_or_founding_cannot_drift(self):
+        changes = [lambda r, key=key: r.update({key: "foreign"}) for key in ("gameId", "seed", "command")]
+        changes += [lambda r, key=key: r["importedSaveHashes"].update({key: "changed"})
+                    for key in ("Primary.sav.gz", "Primary.json")]
+        changes += [lambda r: r.update(backupSaveHash="changed"),
+                    lambda r: r["secondSaveHashes"].update({"Primary.sav.gz": "save-hash"}),
+                    lambda r: r["secondSaveHashes"].pop("Primary.sav.gz"),
+                    lambda r: r.update(foundedAfterLoad=False),
+                    lambda r: r.pop("foundedAfterLoad"),
+                    lambda r: r.pop("importedSaveHashes")]
+        for change in changes:
+            fake = UnfoundedFake(change=change)
+            with self.assertRaises((ValueError, KeyError)): execute_unfounded(fake, "8.22@40,12")
+            self.assertEqual(fake.events[-1], "stop-failure")
+
+    def test_unfounded_evidence_for_another_start_cannot_pass(self):
+        fake = UnfoundedFake()
+        with self.assertRaisesRegex(ValueError, "another start"):
+            execute_unfounded(fake, "8.23@40,12")
+        self.assertEqual(fake.events[-1], "stop-failure")
+
+    def test_unfounded_noncanonical_start_refuses_before_any_effect(self):
+        for start in ("8.22", "08.22@40,12", "80.22@40,12", "8.22@40,25", "8.22@40,12 ", "", None):
+            with self.subTest(start=start):
+                fake = UnfoundedFake()
+                with self.assertRaises(ValueError): execute_unfounded(fake, start)
+                self.assertEqual(fake.events, [])
+
+    def test_unfounded_manifest_normalizes_the_exact_save_leg(self):
+        manifest = parse_manifest(UNFOUNDED, "test")
+        self.assertEqual(manifest["RELOAD"], "unfounded")
+        self.assertEqual(manifest["SCRIPT_WORDS"], "stagedigest unfounded-save stagedigest")
+        self.assertEqual(manifest["VERBS"], "unfounded-save")
+        self.assertEqual(manifest["START"], "8.22@40,12")
+        self.assertTrue(assess(manifest, "", "test"), "a journal alone never grants a reload pass")
+        self.assertEqual(scenario_profile.parse_script(manifest["SCRIPT_WORDS"].split(), ("unfounded-save",)),
+                         ["stagedigest", "unfounded-save", "stagedigest"])
+        for text in (UNFOUNDED.replace("8.22@40,12", "8.22"), UNFOUNDED.replace("8.22@40,12", "8.22@40,12 extra"),
+                     UNFOUNDED.replace("8.22@40,12", "8.22@40,12;status"), UNFOUNDED.replace("unfounded ", "unfounded  quickstart "),
+                     UNFOUNDED.replace("RELOAD-COMPLETE", "COMPLETE"), UNFOUNDED + "START=8.22@40,12\n",
+                     UNFOUNDED + "VERBS=unfounded-save\n", UNFOUNDED + 'LOG_FORBID=["ignored"]\n',
+                     UNFOUNDED + 'LOG_EXPECT=["ignored"]\n', UNFOUNDED + "CHECK=status-digest-stable\n",
+                     UNFOUNDED.replace("founding-first-city", "arch-gallery-slice;facing=north")):
+            with self.subTest(text=text), self.assertRaises(SystemExit): parse_manifest(text, "test")
+
+    def test_unfounded_start_grammar_agrees_with_the_profile_tool(self):
+        for start in ("0.0@0,0", "8.22@40,12", "79.24@79,24", "14.18@40,12"):
+            with self.subTest(start=start):
+                self.assertTrue(reload_start(start))
+                self.assertTrue(valid_start(start))
+                wx, rest = start.split(".")
+                wy, cell = rest.split("@")
+                x, y = cell.split(",")
+                self.assertEqual(scenario_profile.parse_start(start),
+                                 "GlobalLocation:JoppaWorld.%s.%s.1.1.10@%s,%s" % (wx, wy, x, y))
+        for start in ("80.0@0,0", "0.25@0,0", "0.0@80,0", "0.0@0,25"):
+            with self.subTest(start=start):
+                self.assertFalse(reload_start(start))
+                self.assertFalse(valid_start(start))
+                with self.assertRaises(SystemExit): scenario_profile.parse_start(start)
+        for start in ("8.22", "8.22@040,12", "8.22@40,12,1", "a.b@c,d", "8.22@40;12"):
+            with self.subTest(start=start):
+                self.assertFalse(reload_start(start))
+                self.assertFalse(valid_start(start))
+
+    def test_unfounded_backend_prepares_the_exact_leg_without_a_quickstart_advisor(self):
+        backend = UnfoundedNativeBackend(TOOLS, Path("/licensed/CoQ.exe"), Path("/evidence"), 600, "#123")
+        calls = []
+        backend.command = lambda name, args, env=None: calls.append((name, args, env))
+        with patch.dict("os.environ", {"TAF_SCENARIO_QUICKSTART_ADVISOR": "yes"}):
+            backend.prepare(Path("/source"), "8.22@40,12")
+        backend.transport(Path("/source"), Path("/destination"))
+        name, args, env = calls[0]
+        self.assertEqual(name, "prepare-save")
+        self.assertEqual(args, ["bash", str(TOOLS / "prepare-scenario.sh"), "/source", "#123"])
+        self.assertNotIn("TAF_SCENARIO_QUICKSTART_ADVISOR", env)
+        self.assertEqual(env["TAF_REQUEST"], "founding-first-city")
+        self.assertEqual(env["TAF_SCENARIO_SCRIPT"], "stagedigest unfounded-save stagedigest")
+        self.assertEqual(env["TAF_SCENARIO_START"], "8.22@40,12")
+        self.assertEqual(env["TAF_SCENARIO_EXTRA_VERBS"], "unfounded-save")
+        self.assertEqual(env["TAF_QUD_ROOT"], "/licensed")
+        self.assertEqual(calls[1][1], ["python3", str(TOOLS / "prepare-scenario-load.py"), "/source", "/destination"])
+        with self.assertRaises(ValueError): backend.prepare(Path("/source"), "8.22")
+        class Json:
+            def read_text(self, **kwargs): return '{"verdict":"PASS"}'
+        with patch.object(backend, "command", return_value=Json()) as command:
+            backend.check(Path("/destination"), "load")
+            args = command.call_args.args
+            self.assertEqual(args[1], ["python3", str(TOOLS / "check-unfounded-results.py"),
+                                     "/destination", "--phase", "load"])
+            self.assertEqual(args[2]["TAF_LOG_ALLOW"], "")
+
+    def test_unfounded_wait_wakes_on_the_terminal_or_a_refusal_never_an_ordinary_row(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            backend = UnfoundedNativeBackend(TOOLS, Path("/licensed/CoQ.exe"), root, 1, "")
+            journal = root / "scenario-journal.tsv"
+            for row in ("x\tSCRIPT-COMPLETE\tOK\tdone\n", "x\tunfounded-save\tREFUSED\tno\n",
+                        "x\tSCRIPT-STOPPED\tREFUSED\tno\n"):
+                journal.write_text(row, encoding="utf-8")
+                backend.wait(root, "save")
+            journal.write_text("x\tunfounded-save\tOK\treal-save=true dormant-frame=5\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "timed out"): backend.wait(root, "load")
+
+    def test_cli_dispatches_the_unfounded_route_to_its_own_backend(self):
+        source = (TOOLS / "run-persona-reload.py").read_text(encoding="utf-8")
+        self.assertIn('require(route in ("quickstart", "unfounded"), "not a cold-reload persona")', source)
+        self.assertIn("UnfoundedNativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)", source)
+        self.assertIn('execute_unfounded(backend, manifest["START"])', source)
 
 
 if __name__ == "__main__":

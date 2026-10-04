@@ -26,6 +26,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomUpgradeSnapshot UpgradeSnapshot;
 		internal static KingdomCampHeartSaveSnapshot CampSnapshot;
 		internal static KingdomCampHeartChainSnapshot ChainSnapshot;
+		internal static KingdomUnfoundedSaveSnapshot UnfoundedSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
 
@@ -107,6 +108,10 @@ namespace ThousandAndFirst.Harness
 					Check(KingdomQuickstartLifecycleSnapshotCodec.TryDecode(SnapshotWire, out LifecycleSnapshot)
 						&& LifecycleSnapshot.GameId == Request.GameId,
 						"sealed lifecycle snapshot does not bind the selected save");
+				else if (SnapshotWire.StartsWith(KingdomUnfoundedSaveSnapshot.Prefix, StringComparison.Ordinal))
+					Check(KingdomUnfoundedSaveSnapshot.TryDecode(SnapshotWire, out UnfoundedSnapshot)
+						&& UnfoundedSnapshot.GameId == Request.GameId,
+						"sealed unfounded snapshot does not bind the selected save");
 				else if (KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(SnapshotWire))
 					Check(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(SnapshotWire)
 						&& KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(SnapshotWire, out RungSnapshot)
@@ -177,6 +182,11 @@ namespace ThousandAndFirst.Harness
 						"native-lifecycle cold-load session complete; real-save-quit-load=true"
 						+ "; new-game-script-replayed=false; ordinary-acceptance=false") == null,
 						"lifecycle load completion could not be journalled");
+					return;
+				}
+				if (UnfoundedSnapshot != null)
+				{
+					KingdomUnfoundedLoad.VerifyLoaded(loaded, UnfoundedSnapshot, Request.PrimarySha256);
 					return;
 				}
 				string route = RungSnapshot == null ? KingdomScenarioLoadWitness.VerifyRecovered(loaded, Snapshot)

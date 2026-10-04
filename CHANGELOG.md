@@ -1,14 +1,42 @@
 # Changelog
 
-Current 3121-file census is line-cap green: 441,804 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `49f38a49aebb5eabf902e31b2456cbd2ef17ec01f275ccd72dc62ee96c603aa8`.
-The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
+Current 3123-file census is line-cap green: 441,887 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `7b968cde76cea0979cec5857ee97f1cf6763bd625878c6f0dcfa3c092632ffc7`.
+The cold-install inventory contains 3157 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- A game whose kingdom has not been founded can now be saved (#271, #272). Every save before
+  the first city was founded failed with "growth envelope is not bounded and writable": the
+  Roleplay/Wander checkpoint on entering Joppa, Classic or Kingdom autosaves and manual saves,
+  and a Kingdom Quickstart that stopped before founding. A not-yet-founded lifecycle book whose
+  state is entirely default (or a canonical empty quarantine) is now written in the earlier
+  growth-free lifecycle record that every 0.3.x reader already loads back as the same
+  founding-ready book. Founded saves are byte-for-byte unchanged; any other unwritable state is
+  still refused, never truncated, and the refusal now names the failing check. No format bump:
+  the dormant record is the historical v5 lifecycle record that every 0.3.x lifecycle reader
+  accepts. Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
+  refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
+  hotfix built from main. Source pins prove the frame, cold load, byte-identical re-save and
+  first founding. A further pin writes and checks the durable books a fresh, unfounded
+  `KingdomSystem` is constructed with, from an explicit list: the codec books and the city book
+  reload exactly, and the other named-field books hold only values the engine's own field writer
+  saves. The fresh settlement topologies are only checked to be empty, carry no opaque evidence
+  and pass their load check (`NormalizeCurrent`), whose ragged/bound predicate matches their
+  write gate today; that gate is compiled into neither test project, so a changed gate leaves
+  the pin green. It is not a field census: a new `KingdomSystem` field leaves it green. The
+  native unfounded-save persona performs a real engine save of every serialized field and is
+  the complete census for a release build; `docs/RELEASING.md` requires that automated
+  unfounded save and reload check for every release, and an in-game reflection census is #281.
+  The other save systems a new game creates (`KingdomSeal`, `KingdomCivicMemorySystem` and the
+  optional `KingdomSuccession` and `KingdomInheritanceLifecycle`) and state that play writes
+  before the first save are not pinned (#275). The native unfounded save and cold-load personas
+  are owed, and the Roleplay checkpoint and starting-pet Quickstart routes are not driven
+  natively (#274, #276).
 
 - Added a developer court-save variant with physical city evidence, retained fact files and a
   post-serialization comparison; the next ordinary paid job is preflighted before long waits and
