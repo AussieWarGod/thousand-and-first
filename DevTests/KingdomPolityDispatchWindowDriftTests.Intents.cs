@@ -27,7 +27,7 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDispatchState state = OpenIntents(Realm(Period * 61L, a, b, CityC()),
 				out List<KingdomPolityDueWork> first, Patrol, Courier, Trader);
 			long revision = state.Revision;
-			// Same day, before any check-in re-reads a zone: only the owned topology changed.
+			// Same day, before any check-in re-reads a zone: C has left; no reading or store changed.
 			ClassicAssert.IsTrue(Open(state, Realm(Period * 61L + 600L, a, b),
 				out List<KingdomPolityDueWork> work, out bool drifted, out List<string> withdrawn,
 				out string failure), failure);
@@ -133,8 +133,11 @@ namespace ThousandAndFirst.DevTests
 			ClassicAssert.AreEqual(1, work.Count); ClassicAssert.AreEqual(71UL, work[0].WindowOrdinal);
 		}
 
-		[Test]
-		public void OpenIntentIsReprovedWhenAnotherCityDriftsOutsideItsCause()
+		/// <summary>Production changes that a courier intent does not bind.</summary>
+		public enum Unbound { SeatReadings, OtherPopulation }
+
+		[TestCase(Unbound.SeatReadings)] [TestCase(Unbound.OtherPopulation)]
+		public void CourierIntentIsReprovedWhenOnlyFactsItDoesNotBindChanged(Unbound change)
 		{
 			Site a = CityA(), b = CityB();
 			KingdomPolityDispatchState state = OpenIntents(Realm(Period * 72L, a, b),
@@ -143,7 +146,15 @@ namespace ThousandAndFirst.DevTests
 				out string failure), failure);
 			KingdomPolityDispatchState before = KingdomPolityDispatchRules.CloneState(state);
 			Site[] later = Copies(a, b);
-			later[1].Storage = 40; // only B's stores moved; A's courier cause reads B's deed
+			// A's courier cause binds B's deed and the owned topology, and its due facts bind A's
+			// own seat, population, stage, shop and stores. The seat's next daily check-in rewrites
+			// only its readings; a roll projection can move another city's population.
+			if (change == Unbound.SeatReadings)
+			{
+				Apply(later, Drift.ZoneRead, Period * 72L + Day);
+				Apply(later, Drift.WorkRun, Period * 72L + Day);
+			}
+			else later[1].Population += 1;
 			ClassicAssert.IsTrue(Open(state, Realm(Period * 72L + Day, later),
 				out List<KingdomPolityDueWork> work, out bool drifted, out List<string> withdrawn,
 				out failure), failure);
