@@ -1269,9 +1269,10 @@ class PolityWindowWitnessTest(unittest.TestCase):
                 self.assertEqual([], matrix.assess(found, journal(*polity_rows(start_day)),
                                                    POLITY_PERSONA))
 
-    def test_ten_daily_readings_would_miss_the_worst_start_phase(self):
-        # Phase 5: two passes close the first window and the next opens on reading 3, so two
-        # later-in-window passes and a further boundary need readings 3..10 plus one more.
+    def test_nine_daily_readings_would_miss_the_worst_start_phase(self):
+        # Phase 5: two passes close the first window and the next opens on reading 3, so the
+        # boundary after its two later passes is first read on reading 10. The persona's eleven
+        # readings keep one spare.
         self.assertEqual([], self.story(polity_rows(74, days=10)))
         self.assertTrue(self.story(polity_rows(74, days=9)))
 
