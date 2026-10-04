@@ -356,6 +356,36 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\"beta-local-pause\", \"advance 1200\"",
 				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));
 		}
+
+		// The engine completes an advance on the next player action opportunity, so a
+		// 1200-turn wait can be observed as 1201 elapsed turns (docs/DEVELOPMENT.md); return
+		// must accept that single-turn overshoot and refuse anything else.
+		[TestCase(1199L, false)]
+		[TestCase(1200L, true)]
+		[TestCase(1201L, true)]
+		[TestCase(1202L, false)]
+		public void ReturnReadyAcceptsExactWaitOrOneTurnOvershoot(long elapsed, bool ready)
+			=> ClassicAssert.AreEqual(ready, KingdomScenarioTravelRules.ReturnReady(elapsed, KingdomScenarioTravelRules.WaitTurns));
+
+		[Test]
+		public void ReturnReadyRefusesANegativeRequirement()
+			=> ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(0L, -1L));
+
+		// Required + 1 wraps at Int64.MaxValue; the band must hold at the type boundary.
+		[Test]
+		public void ReturnReadyHoldsTheBandAtTheInt64Boundary()
+		{
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue - 1));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue - 1, long.MaxValue));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, long.MaxValue - 2));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.ReturnReady(long.MaxValue, 0L));
+		}
+
+		[TestCase(1199L, "return requires 1200 or 1201 completed advance turns; observed 1199")]
+		[TestCase(1202L, "return requires 1200 or 1201 completed advance turns; observed 1202")]
+		public void ReturnRefusalNamesTheAcceptedWaitAndTheObservedTurns(long elapsed, string expected)
+			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.ReturnRefusal(elapsed));
 	}
 }
 #endif

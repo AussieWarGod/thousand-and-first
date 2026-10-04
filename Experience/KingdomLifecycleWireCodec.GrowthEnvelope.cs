@@ -14,11 +14,13 @@ namespace ThousandAndFirst
 			if (Book.OpaquePayload != null)
 			{
 				if (!KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
-					throw new InvalidDataException("opaque growth envelope is malformed");
+					throw new InvalidDataException("opaque growth envelope is malformed ("
+						+ KingdomLifecycleRules.GrowthEnvelopeRefusalReason(Book) + ")");
 				return (byte[])Book.OpaquePayload.Clone();
 			}
 			if (!KingdomLifecycleRules.GrowthEnvelopeWritable(Book))
-				throw new InvalidDataException("growth envelope is not bounded and writable");
+				throw new InvalidDataException("growth envelope is not bounded and writable ("
+					+ KingdomLifecycleRules.GrowthEnvelopeRefusalReason(Book) + ")");
 			using (GrowthCappedWriteStream stream =
 				new GrowthCappedWriteStream(KingdomLifecycleRules.MaxGrowthSectionBytes))
 			using (BinaryWriter writer = new BinaryWriter(stream, StrictUtf8, true))

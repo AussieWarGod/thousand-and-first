@@ -9,7 +9,7 @@ from pathlib import Path
 import signal
 import tempfile
 
-from persona_reload import NativeBackend, execute, require
+from persona_reload import NativeBackend, UnfoundedNativeBackend, execute, execute_unfounded, require
 from personas.persona_matrix import load
 
 _PR_SET_PDEATHSIG = 1
@@ -80,7 +80,8 @@ def main():
         signal.signal(signal.SIGTERM, interrupted)
         arm_parent_death_signal()
         manifest, _ = load(str(args.persona))
-        require(manifest.get("RELOAD") == "quickstart", "not a cold-reload persona")
+        route = manifest.get("RELOAD")
+        require(route in ("quickstart", "unfounded"), "not a cold-reload persona")
         require(not os.environ.get("TAF_PERSONA_CAPTURE_DIR"),
                 "reload persona has no screenshot contract; omit TAF_PERSONA_CAPTURE_DIR")
         require(args.game.is_file(), "configured game executable is missing")
@@ -89,10 +90,15 @@ def main():
                 "reload timeout must be 1..3600 seconds")
         args.report_dir.mkdir(parents=True, exist_ok=True)
         evidence = Path(tempfile.mkdtemp(prefix="reload-", dir=args.report_dir))
-        _, location, advisor = manifest["SCRIPT_WORDS"].split()
-        backend = NativeBackend(Path(__file__).resolve().parent, args.game.resolve(), evidence,
-                                int(timeout), os.environ.get("TAF_PERSONA_SEED", ""))
-        result = execute(backend, location, advisor)
+        seed = os.environ.get("TAF_PERSONA_SEED", "")
+        tools = Path(__file__).resolve().parent
+        if route == "unfounded":
+            backend = UnfoundedNativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)
+            result = execute_unfounded(backend, manifest["START"])
+        else:
+            _, location, advisor = manifest["SCRIPT_WORDS"].split()
+            backend = NativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)
+            result = execute(backend, location, advisor)
         result["evidence"] = str(evidence)
         print(json.dumps(result, sort_keys=True))
         return 0
