@@ -7,12 +7,12 @@ using XRL.World;
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
-	/// Behavioural coverage row 12 "Multiple cities": the frame. City one is founded by the
-	/// built-in realize verb (the production first-city transaction) and lives one ordinary
-	/// turn; this shard then proves no polity window is open yet, reads the bordering zone's
-	/// verdict and has KingdomSecondCityNativeSite resolve a second site on a NON-adjacent surface
-	/// parasang, probing the nearest candidates in order, and the four cases in
-	/// KingdomSecondCityNativeCases drive travel, the production second founding, its
+	/// Behavioural coverage row 12 "Multiple cities": the frame. City one is founded by the built-in
+	/// realize verb (the production first-city transaction) and lives one ordinary turn; this shard
+	/// then proves no polity window is open yet, reads the bordering zone's verdict and has
+	/// KingdomSecondCityNativeSite resolve a second site on a NON-adjacent surface zone, one world
+	/// parasang out and three zones from city one, probing the nearest candidates in order, and the
+	/// four cases in KingdomSecondCityNativeCases drive travel, the production second founding, its
 	/// already-ours refusal, and the production seat exchange and polity window on return.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED: the founder is relocated with zero-energy SystemMoveTo plus

@@ -45,7 +45,7 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>
-		/// Case one. The founder reaches the distant parasang and it becomes the active ground.
+		/// Case one. The founder reaches the second site's zone and it becomes the active ground.
 		/// The seat must NOT move: that ground answers to nobody yet.
 		/// </summary>
 		private static void TravelOut(XRLGame Game, KingdomSystem System, StringBuilder Detail)

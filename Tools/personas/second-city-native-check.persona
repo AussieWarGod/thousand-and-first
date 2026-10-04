@@ -1,6 +1,6 @@
-# Behavioural coverage row 12 "Multiple cities": found a second, independent city of the same
-# realm on a NON-adjacent surface parasang, refuse a further founding on ground now held, and
-# prove the seat comes back when the founder returns to the first city.
+# Behavioural coverage row 12 "Multiple cities": found a second, independent city of the same realm
+# on a NON-adjacent surface zone, one world parasang out and three zones from city one, refuse a
+# further founding on ground now held, and prove the seat comes back on the return to city one.
 #
 # City one is founded by the built-in realize verb -- the production first-city transaction,
 # never a harness copy -- and then lives one ordinary turn (advance 1). That turn is required:
@@ -23,7 +23,7 @@
 #  - the second site is ordinary worldgen; only the START zone is born-clean. Candidates
 #    start one world parasang out, three zones from city one (production judges closeness per
 #    zone), and at most 8 are built, nearest first: setup refuses unless the candidates built
-#    are exactly the nearest ones in order, each rejected with a reason or chosen. A parasang
+#    are exactly the nearest ones in order, each rejected with a reason or chosen. A candidate
 #    is accepted only if it builds, answers to no foreign faction and reads Allowed from
 #    KingdomFounding.JudgeSite, which alone decides held and too-close ground, and only on an
 #    empty rite cell, nearest city one's rite, whose rung-1 heart rect holds no liquid and
@@ -61,7 +61,7 @@
 # pass's seal-staging refusal does not fit the four-literal cap). A polity refusal on the
 # return is the two-city realm's first reconciliation refusing: it is row-12 evidence, read
 # by its logged reason, and not the earlier-window refusal tracked in #244 and #257.
-DESCRIPTION=a realm founds a second city on a non-adjacent parasang, refuses a further founding on its own ground, and recovers the first city's seat on return
+DESCRIPTION=a realm founds a second city on a non-adjacent surface zone three zones from the first city, refuses a further founding on its own ground, and recovers the first city's seat on return
 REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;realize;advance 1;second-city-setup;second-city-check;second-city-check;second-city-check;second-city-check;stagedigest

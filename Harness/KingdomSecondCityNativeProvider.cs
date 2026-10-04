@@ -7,13 +7,13 @@ using XRL.World;
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
-	/// Behavioural coverage row 12 "Multiple cities". City one is founded by the built-in
-	/// realize verb - the production first-city transaction, never a harness copy - and lives one
-	/// ordinary turn. This provider then resolves a second site on a non-adjacent surface
-	/// parasang, relocates the founder, drives the production second-city transaction
-	/// (KingdomFoundingTransaction.TryFoundSecondWithoutWater, which KingdomFounding.FoundSecond
-	/// wraps), proves the held-ground refusal spends nothing, and proves the seat comes back by
-	/// production's own ZoneActivatedEvent handler when the founder returns.
+	/// Behavioural coverage row 12 "Multiple cities". City one is founded by the built-in realize
+	/// verb - the production first-city transaction, never a harness copy - and lives one ordinary
+	/// turn. This provider then resolves a second site on a non-adjacent surface zone, one world
+	/// parasang out and three zones from city one, relocates the founder, drives the production
+	/// second-city transaction (KingdomFoundingTransaction.TryFoundSecondWithoutWater, which
+	/// KingdomFounding.FoundSecond wraps), proves the held-ground refusal spends nothing, and proves
+	/// the seat comes back by production's own ZoneActivatedEvent handler when the founder returns.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED: zero-energy SystemMoveTo plus SetActiveZone instead of walking
 	/// the world map; the waterless route, so the basin's dram cost and its three Popup prompts

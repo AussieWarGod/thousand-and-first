@@ -14,7 +14,8 @@ namespace ThousandAndFirst.Tests
 	/// call parses ids with the engine's ZoneID.Parse, so these cases run production's engine-free
 	/// twin, KingdomRules.ZonesAdjacent with IncludeVertical, whose KingdomRules.TryParseZoneID
 	/// computes the same coordinates, and pin the production calls that make them equal. The
-	/// search's probes are held to KingdomSecondCitySiteRules.ProbeOrderFault, run here by value.
+	/// search's probes are held to KingdomSecondCitySiteRules.ProbeOrderFault, run here by value,
+	/// and every text naming where city two sits is held to the zone it is.
 	/// Not native acceptance: the live search still asks JudgeSite itself for every candidate.
 	/// </summary>
 	public class KingdomSecondCitySiteAdjacencyTests
@@ -23,6 +24,13 @@ namespace ThousandAndFirst.Tests
 		private const string EastOfHome = "JoppaWorld.8.22.2.1.10";
 		private const string SiteSource = "Harness/KingdomSecondCityNativeSite.cs";
 		private const string ChecksSource = "Harness/KingdomSecondCityNativeChecks.cs";
+		private const string ProviderSource = "Harness/KingdomSecondCityNativeProvider.cs";
+		private const string CasesSource = "Harness/KingdomSecondCityNativeCases.cs";
+		private const string PersonaSource = "Tools/personas/second-city-native-check.persona";
+
+		/// <summary>The site's place relative to city one, as every summary must state it.</summary>
+		private const string SitePlace =
+			"on a non-adjacent surface zone, one world parasang out and three zones from city one,";
 
 		/// <summary>Production's global zone coordinates: wx * 3 + zx, wy * 3 + zy, depth.</summary>
 		private static int[] Global(string Id)
@@ -81,6 +89,35 @@ namespace ThousandAndFirst.Tests
 				"JoppaWorld.7.21.1.1.10", "JoppaWorld.8.21.1.1.10", "JoppaWorld.9.21.1.1.10",
 				"JoppaWorld.7.22.1.1.10", "JoppaWorld.9.22.1.1.10", "JoppaWorld.7.23.1.1.10",
 				"JoppaWorld.8.23.1.1.10", "JoppaWorld.9.23.1.1.10" }));
+		}
+
+		[Test]
+		public void EveryLawfulSiteIsANonAdjacentZoneOneParasangOutAndNoTextCallsItAParasangApart()
+		{
+			// Every probe the search may build lies in a world parasang bordering city one's
+			// (production's gx = wx * 3 + zx, so gx / 3 is the parasang) and three zones from
+			// city one. Only the ZONE is non-adjacent: a non-adjacent or distant PARASANG would
+			// be a separation no run has.
+			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(Home);
+			Assert.That(candidates.Count, Is.GreaterThanOrEqualTo(KingdomSecondCitySiteRules.MaxProbes));
+			int[] home = Global(Home);
+			for (int i = 0; i < KingdomSecondCitySiteRules.MaxProbes; i++)
+			{
+				int[] at = Global(candidates[i]);
+				Assert.That(Chebyshev(at[0] / 3 - home[0] / 3, at[1] / 3 - home[1] / 3), Is.EqualTo(1),
+					candidates[i]);
+				Assert.That(Chebyshev(at[0] - home[0], at[1] - home[1]), Is.EqualTo(3), candidates[i]);
+			}
+			Regex apart = new Regex(@"\b(non-?adjacent|distant)\s+((surface|world)\s+)?parasangs?\b",
+				RegexOptions.IgnoreCase);
+			foreach (string path in new[] { PersonaSource, ProviderSource, ChecksSource, CasesSource,
+				SiteSource })
+				Assert.That(apart.Match(Prose(path)).Value, Is.Empty, path);
+			// The run's headline, the persona header and both harness summaries say where it is.
+			Assert.That(Prose(PersonaSource), Does.Contain("DESCRIPTION=a realm founds a second city "
+				+ "on a non-adjacent surface zone three zones from the first city, refuses"));
+			foreach (string path in new[] { PersonaSource, ProviderSource, ChecksSource })
+				Assert.That(Prose(path).ToLowerInvariant(), Does.Contain(SitePlace), path);
 		}
 
 		[Test]
@@ -205,6 +242,21 @@ namespace ThousandAndFirst.Tests
 			foreach (char c in Source)
 				if (c != ' ' && c != '\t' && c != '\r' && c != '\n') kept.Append(c);
 			return kept.ToString();
+		}
+
+		private static int Chebyshev(int Dx, int Dy)
+		{
+			return System.Math.Max(System.Math.Abs(Dx), System.Math.Abs(Dy));
+		}
+
+		/// <summary>
+		/// A file's text with each line's leading comment marker dropped and every run of
+		/// whitespace made one space, so a phrase a comment wraps still reads as one phrase.
+		/// </summary>
+		private static string Prose(string Path)
+		{
+			string text = Regex.Replace(TestMain.ReadRepositoryText(Path), @"(?m)^[ \t]*(///|//|#)", "");
+			return Regex.Replace(text, @"\s+", " ");
 		}
 	}
 }
