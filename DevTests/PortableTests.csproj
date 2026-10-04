@@ -828,6 +828,7 @@
 	<Compile Include="KingdomPolityClosureRulesTests.cs" />
 	<Compile Include="KingdomPolityClosureSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
 	<Compile Include="KingdomPolityAmbientTransactionTests.cs" />
 	<Compile Include="KingdomPolityEndpointObservationRulesTests.cs" />
 	<Compile Include="KingdomPolityExpeditionDeedRulesTests.cs" />
@@ -1080,6 +1081,7 @@
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Facts.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.DirectRecords.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Aggregates.cs" />
+	<Compile Include="..\Polity\KingdomPolityDispatchRules.Drift.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Retirement.cs" />
 	<Compile Include="..\Polity\KingdomPolityRivalTrafficRules.cs" />
 	<Compile Include="..\Polity\KingdomPolityCohortRules.Schedule.cs" />

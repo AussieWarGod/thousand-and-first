@@ -30,7 +30,23 @@ namespace ThousandAndFirst
 			KingdomPolityDispatchOffer Offer, bool AdmitNewCauses,
 			out List<KingdomPolityDueWork> Work, out string Failure)
 		{
+			return TryOpen(State, ExpectedRevision, Offer, AdmitNewCauses, out Work,
+				out bool _, out List<string> _, out Failure);
+		}
+
+		/// <summary>Opens or continues the current window. The frozen endpoint digest authenticates
+		/// this window's open intents only; it is not a whole-city equality guard. Ordinary city
+		/// evolution inside a window (stores, readings, deeds, growth, seat exchange, a founded or
+		/// lost city) sets <paramref name="FactsDrifted"/>, mints nothing, and writes nothing unless
+		/// an open intent must be withdrawn; each withdrawal is reported in
+		/// <paramref name="Withdrawn"/>.</summary>
+		internal static bool TryOpen(KingdomPolityDispatchState State, long ExpectedRevision,
+			KingdomPolityDispatchOffer Offer, bool AdmitNewCauses,
+			out List<KingdomPolityDueWork> Work, out bool FactsDrifted,
+			out List<string> Withdrawn, out string Failure)
+		{
 			Work = new List<KingdomPolityDueWork>(); Failure = null;
+			FactsDrifted = false; Withdrawn = new List<string>();
 			if (!ValidState(State, out Failure) || !ValidOffer(Offer, out Failure)) return false;
 			if (State.RealmId != null && State.RealmId != Offer.RealmId)
 				return Fail("polity dispatch belongs to another realm", out Failure);
@@ -40,9 +56,8 @@ namespace ThousandAndFirst
 				return Fail("polity dispatch clock regressed", out Failure);
 			string digest = EndpointDigest(Offer.Endpoints);
 			bool admit = AdmitNewCauses && WindowStart(window) >= State.FutureCauseFloorTick;
-			if (State.HasWindow && window == State.LastWindowOrdinal
-				&& State.EndpointDigest != digest)
-				return Fail("open polity topology differs from its frozen facts", out Failure);
+			FactsDrifted = State.HasWindow && window == State.LastWindowOrdinal
+				&& State.EndpointDigest != digest;
 
 			KingdomPolityDispatchState candidate = CloneState(State);
 			bool changed = !candidate.HasWindow || window != candidate.LastWindowOrdinal;
@@ -50,8 +65,8 @@ namespace ThousandAndFirst
 			{
 				if (candidate.Revision == long.MaxValue)
 					return Fail("polity dispatch revision is exhausted", out Failure);
-				if (!(admit ? TerminalizeOpenIntents(candidate, out Failure)
-					: SuppressOpenIntents(candidate, out Failure))) return false;
+				if (!(admit ? TerminalizeOpenIntents(candidate, Withdrawn, out Failure)
+					: SuppressOpenIntents(candidate, Withdrawn, out Failure))) return false;
 				candidate.RealmId = Offer.RealmId; candidate.HasWindow = true;
 				candidate.LastWindowOrdinal = window;
 				candidate.WindowCauseTick = WindowStart(window);
@@ -75,11 +90,13 @@ namespace ThousandAndFirst
 			{
 				if (State.Revision == long.MaxValue)
 					return Fail("polity dispatch revision is exhausted", out Failure);
-				if (!SuppressOpenIntents(candidate, out Failure)) return false;
+				if (!SuppressOpenIntents(candidate, Withdrawn, out Failure)) return false;
 				candidate.Revision++; SortRecords(candidate.DirectRecords);
 				if (!TryCommitState(State, candidate, ExpectedRevision, out Failure)) return false;
 			}
 			if (!admit) return ValidState(State, out Failure);
+			if (FactsDrifted) return TryReproveOpenIntents(State, ExpectedRevision, Offer, window,
+				Work, Withdrawn, out Failure);
 			for (int i = 0; i < Offer.Endpoints.Count; i++)
 			{
 				if ((State.CompletedMask & 1 << i) != 0) continue;
