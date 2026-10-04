@@ -81,10 +81,10 @@ subsidence, paid repair, frozen-application recovery and damaged-home cold load 
 The retained native failure below is superseded for this case only; #230 stays open and this
 does not establish Beta acceptance.
 
-Current census: 3121 staged C# files; 441,804 physical lines; zero at or above 300 lines.
-Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3155 files.
-Inventory SHA-256: `49f38a49aebb5eabf902e31b2456cbd2ef17ec01f275ccd72dc62ee96c603aa8`.
-Engine gate passes for 3121 sources, baseline and compatibility symbols, plus both harness modes.
+Current census: 3123 staged C# files; 441,942 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3157 files.
+Inventory SHA-256: `2187df91b11b80eef61072d4154da5fa125afc6864d3b1e66a25cea5b91c32ff`.
+Engine gate passes for 3123 sources, baseline and compatibility symbols, plus both harness modes.
 
 ## Absent-owner home damage — native defect reproduced
 

@@ -305,6 +305,20 @@ conclude conflict or death. Exact intent/witness/replay removes cohort-owned bod
 returns foreign objects to the loaded cell, and never resurrects a missing committed body.
 Presentation disabling does not stop semantic time and re-enable cannot backlog old causes.
 
+The scheduler opens one dispatch window per seven calendar days
+(`KingdomPolityDispatchRules.PeriodTicks`). The window's first reconciliation freezes an endpoint
+digest over every owned settlement's facts and mints at most one intent per endpoint. That digest
+authenticates only the window's still-open intents; it is not a whole-city equality guard. A later
+same-window reconciliation whose facts drifted (readings, stores, deeds, growth, seat exchange, a
+city founded or lost) mints nothing and writes nothing. It re-proves each open intent at its
+frozen slot from its own settlement's live facts, and withdraws, completes and reports one that
+cannot be re-proved (`polity: window N <Purpose> intent for <id> withdrawn: <reason>`). Rollover
+drops and paused-cause suppressions are reported the same way. Drift is logged once per window per
+process (`polity: dispatch window N continues with endpoint facts changed since it opened; no new
+dispatch until window N+1`). A city founded mid-window waits for the next window, so no visit is
+replayed. Loaded-endpoint reconciliation runs on every successful daily, zone and load
+reconciliation (#244, #257).
+
 ### Resident authority
 
 `KingdomCityBook` resident rows are the living-roll authority. Production code reads and mutates
