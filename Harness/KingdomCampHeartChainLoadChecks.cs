@@ -122,7 +122,11 @@ namespace ThousandAndFirst.Harness
 				Require(ReferenceEquals(System, Original.System) && ReferenceEquals(Heart, Original.Heart)
 					&& ReferenceEquals(Store, Original.Store) && ReferenceEquals(ChainBasin, Original.ChainBasin)
 					&& ReferenceEquals(ChainTrack, Original.ChainTrack), "loaded paid work replaced an original anchor body");
-				RequireSameBodies(Original.ChainResidents, ChainResidents, "loaded higher-heart original residents");
+				// Residents stand on city ground, never in the camp store, so RequireSameBodies (which
+				// also proves store custody) cannot compare them. Compare by reference (GameObject keeps
+				// object equality); CaptureChainResidents already proved each body's exact ground custody.
+				foreach (var original in Original.ChainResidents)
+					Require(ChainResidents.Contains(original), "loaded higher-heart original resident was lost or replaced");
 				var prior = new Dictionary<string, string>(StringComparer.Ordinal);
 				Require(CaptureChainJobs(prior, NewJob) == Witness.JobsDigest,
 					"loaded paid work altered a prior paid receipt or introduced another job");

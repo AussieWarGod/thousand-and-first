@@ -26,7 +26,7 @@ namespace ThousandAndFirst.Tests
 			"if", "for", "foreach", "while", "using", "switch", "catch", "lock", "return", "new",
 			"typeof", "nameof", "sizeof", "default", "checked", "unchecked", "base", "this", "when" };
 
-		private static readonly Regex Declaration = new Regex(@"^[ \t]*(?:(?:private|internal|public|"
+		internal static readonly Regex Declaration = new Regex(@"^[ \t]*(?:(?:private|internal|public|"
 			+ @"protected|static|override|sealed|async|new|virtual|abstract|extern|unsafe|partial)\s+)+"
 			+ @"[\w\.]+(?:<[^;{}()=]*?>)?(?:\[\])?\??\s+(\w+)\s*\(", RegexOptions.Multiline);
 
@@ -174,7 +174,7 @@ namespace ThousandAndFirst.Tests
 
 		// Comments are dropped and literal contents blanked, so neither a message naming a helper
 		// nor a commented-out call counts as a call; braces and parentheses stay balanced.
-		private static string Clean(string Source)
+		internal static string Clean(string Source)
 		{
 			var text = new StringBuilder(Source.Length);
 			int i = 0;
@@ -215,7 +215,7 @@ namespace ThousandAndFirst.Tests
 			return text.ToString();
 		}
 
-		private static int Close(string Text, int Open, char Opening, char Closing)
+		internal static int Close(string Text, int Open, char Opening, char Closing)
 		{
 			int depth = 0;
 			for (int i = Open; i < Text.Length; i++)
@@ -226,13 +226,13 @@ namespace ThousandAndFirst.Tests
 			throw new InvalidOperationException("unbalanced " + Opening + " at " + Open);
 		}
 
-		private static int Skip(string Text, int At)
+		internal static int Skip(string Text, int At)
 		{
 			while (At < Text.Length && char.IsWhiteSpace(Text[At])) At++;
 			return At;
 		}
 
-		private static string Statement(string Text, int At)
+		internal static string Statement(string Text, int At)
 		{
 			At = Skip(Text, At);
 			if (Text[At] == '{') return Text.Substring(At, Close(Text, At, '{', '}') - At + 1);
