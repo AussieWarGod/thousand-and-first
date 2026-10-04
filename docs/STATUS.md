@@ -1,5 +1,51 @@
 # Current implementation and release evidence
 
+## Unfounded saves - source fix, native proof owed (#271, #272)
+
+Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
+identity-unbound growth book, and the strict growth writer gate had no branch for it, so every
+save before founding threw "growth envelope is not bounded and writable". The same code shipped
+in every 0.3.x release. `WriteLifecycle` now chooses the frame before writing any byte: a book
+that `DormantLifecycleWireExact` admits (identity-unbound, pristine growth, no lane operations,
+resources or proofs, a constructor-default raid ledger, and the pristine shape or the canonical
+unbound quarantine) is written in the growth-free lifecycle v5 frame that every reader since
+v0.3.0 rebuilds into the same book. Every other book keeps the current frame and the unchanged
+strict gate. Refusals keep their message as the exact prefix and gain the failing check
+(`identity-unbound`, `identity-proof`, `root-shape`, ...). The production writer now depends
+permanently on the lifecycle v5 read branch. No format bump: an unfounded save from this build
+loads on older 0.3.x builds and can found there; saving it still unfounded there still fails.
+
+Engine-free evidence only. `KingdomLifecycleDormantSaveTests` (20 cases, registered in both
+suites) pins the exact 139-byte dormant image, equal to the historical v5 fixture writer; cold
+load, byte-identical re-save and first founding with the founded book back on frame 10;
+field-for-field round trips of the admitted quarantine states, including non-default counters,
+options and a 4096-character fault; refusal of every non-dormant unbound state; current-frame
+retention for an unbound quarantine carrying quarantined or staged growth; the frozen
+serialized-field census; and the refusal reasons. On a scratch copy with the writer and the two
+messages reverted, 16 of the 20 cases fail (the writer cases with the #272 message) and only
+the 4 refusal and census pins pass. Three of four predicate mutants are killed; the fourth
+(the explicit lane-operation checks) is equivalent, because an operation always carries a
+settlement identity an unbound book lacks.
+
+Native acceptance on this head is owed, not claimed: `unfounded-save-native-check` (a real engine
+save of an unfounded world with the SaveGameError witness armed; a run on a writer without the
+fix must refuse and is retained as detection evidence), `unfounded-reload` (unfounded save,
+owned stop, fresh descendant cold load, production founding and a second real save, strictly
+checked by `Tools/check-unfounded-results.py`), and the founded regressions `quickstart-reload`
+and one founded real-save persona. The reload host and checker are covered by fake-effect and
+synthetic-fixture tests only.
+
+Disclosed gaps: the exact #271 route (the Roleplay engine checkpoint save on entering Joppa) and
+a Kingdom Quickstart stopped by a starting pet (#274) are not driven natively, because the
+harness can drive neither (#276). The fix is state-based, so the unfounded save covers both once
+it passes natively. A reporter re-test on #271 is welcome but is never a release gate. Save-time
+robustness for other writers is tracked separately (#275).
+
+Current census: 3123 staged C# files; 441,887 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3157 files.
+Inventory SHA-256: `7b968cde76cea0979cec5857ee97f1cf6763bd625878c6f0dcfa3c092632ffc7`.
+Engine gate passes for 3123 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Absent-owner loss fix — native damage replay passes
 
 New `sr3` claims freeze map-qualified home ownership alongside the existing work/plot and

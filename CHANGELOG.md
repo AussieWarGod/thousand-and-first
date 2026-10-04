@@ -1,14 +1,28 @@
 # Changelog
 
-Current 3121-file census is line-cap green: 441,804 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `49f38a49aebb5eabf902e31b2456cbd2ef17ec01f275ccd72dc62ee96c603aa8`.
-The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
+Current 3123-file census is line-cap green: 441,887 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `7b968cde76cea0979cec5857ee97f1cf6763bd625878c6f0dcfa3c092632ffc7`.
+The cold-install inventory contains 3157 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- A game whose kingdom has not been founded can now be saved (#271, #272). Every save before
+  the first city was founded failed with "growth envelope is not bounded and writable": the
+  Roleplay/Wander checkpoint on entering Joppa, Classic or Kingdom autosaves and manual saves,
+  and a Kingdom Quickstart that stopped before founding. A not-yet-founded lifecycle book whose
+  state is entirely default (or a canonical empty quarantine) is now written in the earlier
+  growth-free lifecycle record that every 0.3.x reader already loads back as the same
+  founding-ready book. Founded saves are byte-for-byte unchanged; any other unwritable state is
+  still refused, never truncated, and the refusal now names the failing check. No format bump:
+  an unfounded save from this build loads on older 0.3.x builds and can found there, but saving
+  that still-unfounded game on an older build fails as before. Source pins prove the frame, cold
+  load, byte-identical re-save and first founding; the native unfounded save and cold-load
+  personas are owed, and the Roleplay checkpoint and starting-pet Quickstart routes are not
+  driven natively (#274, #276).
 
 - A refused scaffold-removal proof now names the first failed identity predicate (recorded
   cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
