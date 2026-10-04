@@ -1,5 +1,20 @@
 # Higher-heart cold-load acceptance
 
+## Review fixes before the next source run
+
+Review of `afa55a53` found that the survey-bound completion check and the higher-heart capture
+each called `StandingHeart()` inside their own bound local-operation survey. Its unbound census
+refuses while any pass is bound, so the first rung-three completion check and every save,
+preactivation, activation and completion capture would have stopped with
+`taf-camp-heart-census-incomplete`. Native21-23 stopped before that check, so the bound path never
+executed. The completion check is again the unbound form Native30 passed; the capture reads the
+heart from its own pass. A source contract rejects any bound region that reaches the unbound
+census or an unbound-only helper, directly or through other frame methods.
+
+The seventeen-row layout, the spare-lot candidate and supply exclusions and the early next-job
+preflight now apply only to the save variant. The unsaved `camp-heart-chain` persona keeps its
+eighteen-row fixture and completion check. No native run has exercised these fixes.
+
 ## Native22 closed; distinguish a hint from reserved ground
 
 Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then
@@ -24,8 +39,9 @@ Native21 at `d46f77e3` is CLOSED FAIL before higher payment: the next fire quote
 court ground, and the dense fixture had filled every spare housing plot. Its full sealed archive
 is recorded in STATUS.md. No save or load occurred.
 
-The retry retains seventeen full authored tent rows (51 physical beds), all fifty test residents,
-and every water producer, while leaving one separate small plot for the next job. Early evidence
+The save variant's retry retains seventeen full authored tent rows (51 physical beds), all fifty
+test residents, and every water producer, while leaving one separate small plot for the next job.
+The unsaved paid chain keeps its eighteen rows. Early evidence
 uses ground, crowding, typed payload and physical ingress preflight there, plus the ordinary quoted price; source save and loaded payment independently
 require an ordinary commission quote outside the final heart. Housing assignment, costs, custody,
 all prior receipts, completed construction and full cold-load facts remain required. This does
@@ -73,7 +89,8 @@ quote outside the future court footprint, checking its two-drams/one-timber bill
 change to paid jobs, original store custody or civic water. It quotes again before saving,
 then explicitly adds one next-job timber to the original store. The whole snapshot must
 match again after actual Primary serialization before the save receipt is published.
-Completion reads share one local survey and prove disposal; no speedup is claimed yet.
+The capture reads the heart, support, residents and custody from one bound local survey and
+proves its disposal; the completion check keeps the unbound form the unsaved chain passed.
 
 ## Required native integration
 
@@ -116,7 +133,7 @@ retains separate preactivation, activated and completed facts. Before any new ac
 must match exactly. After ordinary work, resident movement and resource use are allowed while
 original resident identities, anchors, stakes, prior jobs and 21 original brush units remain
 required; the saved timber must pay the new fire job. The oracle keeps actual wait overshoot.
-Run `Tools/dev-check.sh tools 'camp_heart_chain_*test.py'` and the existing
+Run `Tools/dev-check.sh tools 'camp_heart_chain_*_test.py'` and the existing
 `scenario_load_profile_test.py` selection for these host contracts.
 
 The installed Hearthpyre update to 2.2.4 initially stopped the canonical gate at its exact

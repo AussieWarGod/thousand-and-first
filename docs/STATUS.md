@@ -975,6 +975,28 @@ codec evidence, not loaded-game acceptance. Fresh native court validation remain
 Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
 PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
 candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+## PR #219 review fixes - 2026-10-04 (no native run yet)
+
+Review of `afa55a53` found two defects in the court-save branch that no host gate could see.
+The survey-bound completion check and the higher-heart capture each called `StandingHeart()`
+inside their own bound local-operation survey. Its unbound census refuses while any pass is
+bound, so the first rung-three completion check, the save, and every preactivation, activation
+and completion capture would have stopped with `taf-camp-heart-census-incomplete`. Native21-23
+stopped before that check. The completion check is restored to the unbound form Native30
+passed (byte-identical to `a6e23f74`), and the capture reads the heart from its own pass. A new
+engine-free source contract fails on `afa55a53` (four bound regions) and rejects any bound
+region that reaches the unbound census or an unbound-only helper.
+
+The seventeen-row layout, the spare-lot candidate and supply exclusions and the early next-job
+preflight had also changed the unsaved `camp-heart-chain` persona. They now apply only to the
+save variant. The unsaved persona again uses dev's eighteen-row fixture, candidate list, supply
+siting and completion check; its only new step is one sealed-script read at setup. That restores
+parity with dev for this persona; it is not a native run, and Native30 remains evidence from its
+original inputs on `2.0.211.51` only (see the re-pin note above). The room-witness test regained
+the verdict assertion a merge had dropped, and the save persona header now discloses its actual
+synthetic setup. Gate results for this head are recorded on PR #219. No native source or load
+run has exercised these fixes.
+
 ## Native23 closed; source release validation separated from cold load
 
 Native23 at `ded5e3fe` passed the spare-site payload, ingress and ordinary-price checks,
@@ -1026,7 +1048,7 @@ scenario FAIL; full pinned profile recipe (3435 entries/3397 C#), strict log and
 No source save or cold load occurred. The profile remains closed and must not be reused.
 
 The fixture now leaves `(16,8)..(21,11)` for the next job and places seventeen unchanged
-three-bed tent rows; actual physical roof assignments for all fifty residents remain mandatory.
+three-bed tent rows (in the save variant only since 2026-10-04); actual physical roof assignments for all fifty residents remain mandatory.
 Supply containers also keep the spare plot and its approach clear. Early preflight now proves the spare plot through ordinary ground, crowding, typed payload and
 physical ingress checks, plus the ordinary quoted price, with no stake or debit; after the court completes,
 the actual save and cold-loaded payment still use ordinary commission siting and must both
@@ -1110,7 +1132,8 @@ before the higher construction waits and ordinary commission siting at save, dis
 jobs/residents/support/custody fact files, and compares the whole snapshot after serialization.
 Facts bind original anchors, all four survey stakes, water mixtures, larders and material
 stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
-Completion checks now share one local survey and verify disposal; speedup is unmeasured.
+The capture reads one bound local survey and verifies its disposal; the completion check keeps
+the unbound form Native30 passed (review fix, 2026-10-04).
 Continue dispatch, full preactivation/activation comparison, dedicated input rearming and an
 ordinary paid fire followed by 3600 requested turns are now implemented and engine-compiled,
 but its first fresh native source attempt stopped at the early fixture preflight described above. The host importer validates, copies and seals all four retained fact files. The new

@@ -12,10 +12,12 @@ records current acceptance.
 
 - Added a developer court-save variant with physical city evidence, retained fact files and a
   post-serialization comparison; the next ordinary paid job is preflighted before long waits and
-  original stock is retained across the disclosed one-timber save fixture. Dedicated cold-load
-  dispatch, preactivation/activation comparison and the next ordinary paid action carry strict
-  host import and journal/fact checks. No higher-heart native save/load has completed; this does
-  not establish native persistence acceptance.
+  original stock is retained across the disclosed one-timber save fixture. Only the save variant
+  gives up one of the eighteen synthetic tent rows to keep a spare lot for that job; the unsaved
+  paid chain keeps its fixture and completion check. Dedicated cold-load dispatch,
+  preactivation/activation comparison and the next ordinary paid action carry strict host import
+  and journal/fact checks. No higher-heart native save/load has completed; this does not
+  establish native persistence acceptance.
 
 - Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. That
   build reports core `2.0.211.56` (marketing 1.0.5, save format 409) and removed
