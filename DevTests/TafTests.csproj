@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
     <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
     <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
     <Compile Include="KingdomRetainedTransitionTests.cs" />
