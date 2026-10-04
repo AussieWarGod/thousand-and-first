@@ -276,8 +276,11 @@ namespace ThousandAndFirst.Tests
 			}
 			string[] writer = Array.Find(Writers, row => row[1] == value.GetType().Name);
 			if (writer == null) return path + " (" + value.GetType().Name + ") has no engine-free writer";
-			// A book with its own writer is exercised only at top level, by its validator.
-			if (writer[2] != Named) return depth == 0 ? null : path + " nests a book with its own writer";
+			// A book with its own writer is exercised only at top level, by its validator. A top-level
+			// writer that ends in the named-field writer (the city book, after its load guard) writes
+			// every field through WriteObject, so its fields are walked too.
+			if (writer[2] != Named && (depth > 0 || !writer[2].EndsWith(Named, StringComparison.Ordinal)))
+				return depth == 0 ? null : path + " nests a book with its own writer";
 			// SerializationWriter.WriteNamedFields selects public instance fields that are not
 			// static, literal or NotSerialized (decompiled XRL/World/SerializationWriter.cs:2981-3008).
 			foreach (FieldInfo field in value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
@@ -321,6 +324,14 @@ namespace ThousandAndFirst.Tests
 				return "subsidence storage is not writable and readable";
 			if (!KingdomNamedCookRules.Validate(book.NamedCook, out string failure)
 				|| !KingdomAssentingMootRules.Validate(book.AssentingMoot, out failure)) return failure;
+			// The engine reads the written fields into a new book through the production load path:
+			// residence and subsidence storage migration, then validated load normalization.
+			StringBuilder saved = new StringBuilder(), reloaded = new StringBuilder();
+			KingdomCityBook loaded = new KingdomCityBook();
+			Walk(book, "book", 0, saved);
+			loaded.ReadNamedState(() => CopyNamedFields(book, loaded));
+			if ((Walk(loaded, "book", 0, reloaded) ?? (loaded.HasValidSubsidenceStorage() ? null : "invalid"))
+				!= null || saved.ToString() != reloaded.ToString()) return "city book does not reload exactly";
 			return Settled(book, x => ((KingdomCityBook)x).Normalize())
 				?? (book.HasValidSubsidenceStorage() ? null : "normalized subsidence storage is unreadable");
 		}
@@ -370,6 +381,28 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleRules.Normalize(loaded);
 			return !loaded.Quarantined && !loaded.WireRejected
 				&& Same(saved, Bytes(w => KingdomLifecycleWireCodec.WriteCarry(w, loaded))) ? null : "carry does not reload exactly";
+		}
+
+		/// <summary>What SerializationReader.ReadNamedFields assigns (decompiled 2.0.211.56
+		/// XRL/World/SerializationReader.cs:395-415): each field the named-field writer wrote, by
+		/// name, read back into new objects.</summary>
+		private static void CopyNamedFields(object source, object target)
+		{
+			foreach (FieldInfo field in source.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
+				if (!field.IsLiteral && !Attribute.IsDefined(field, typeof(NonSerializedAttribute)))
+					field.SetValue(target, Clone(field.GetValue(source)));
+		}
+
+		private static object Clone(object value)
+		{
+			if (value == null || value is string || value is Enum || value.GetType().IsPrimitive) return value;
+			object copy = Activator.CreateInstance(value.GetType());
+			if (value is IDictionary map)
+				foreach (DictionaryEntry entry in map) ((IDictionary)copy).Add(Clone(entry.Key), Clone(entry.Value));
+			else if (value is IList list)
+				foreach (object item in list) ((IList)copy).Add(Clone(item));
+			else CopyNamedFields(value, copy);
+			return copy;
 		}
 
 		private static byte[] Bytes(Action<BinaryWriter> write)
