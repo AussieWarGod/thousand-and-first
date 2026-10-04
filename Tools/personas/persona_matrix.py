@@ -152,6 +152,12 @@ ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "hall-route-restored", "hall-open-locked", "hall-exterior-locked", "hall-exterior-unlocked", "hall-partitions-restored",
 ))
 
+# Observation emitted inside each polity-window-check (Harness/KingdomPolityWindowNativeProvider.cs):
+# the realm's polity dispatch receipt after an ordinary daily pass, landed immediately before the
+# verb's own row. Positional like every evidence row; Tools/personas/persona_polity.py owns its
+# grammar and the window story a CHECK=polity-window persona must tell (#244/#257).
+POLITY_EVIDENCE_ROWS = ("polity-dispatch",)
+
 # The save verb observes remaining custody before publishing its snapshot.
 CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input",
@@ -200,6 +206,7 @@ VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
 CHECKS = (
+    "polity-window",
     "quickstart-housing",
     "status-digest-stable",
     "travel-away",
@@ -218,6 +225,7 @@ OPTIONAL_KEYS = (
     "SET",
     "LOG_EXPECT",
     "LOG_FORBID",
+    "LOG_REQUIRE",
 )
 
 # Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
@@ -284,7 +292,7 @@ def parse_manifest(text: str, name: str) -> dict:
             or found["REQUEST"] != "founding-first-city"
             or any(
                 found.get(key)
-                for key in ("START", "CHECK", "VERBS", "LOG_EXPECT", "LOG_FORBID")
+                for key in ("START", "CHECK", "VERBS", "LOG_EXPECT", "LOG_FORBID", "LOG_REQUIRE")
             )
         ):
             fail(
@@ -315,6 +323,11 @@ def parse_manifest(text: str, name: str) -> dict:
     if "LOG_FORBID" in found:
         found["LOG_FORBID"] = json.dumps(
             parse_log_forbid(found["LOG_FORBID"], name),
+            ensure_ascii=False, separators=(",", ":"),
+        )
+    if "LOG_REQUIRE" in found:
+        found["LOG_REQUIRE"] = json.dumps(
+            parse_log_require(found["LOG_REQUIRE"], name),
             ensure_ascii=False, separators=(",", ":"),
         )
     return found
@@ -375,19 +388,36 @@ def parse_log_forbid(value: str, name: str) -> list[str]:
     tick or an id the persona cannot know in advance, and one occurrence anywhere fails the run.
     Bounded exactly like LOG_EXPECT so a persona cannot smuggle a regex or an essay in here.
     """
+    return parse_log_substrings(value, name, "LOG_FORBID")
+
+
+def parse_log_require(value: str, name: str) -> list[str]:
+    """Diagnostics that MUST appear in Player.log at least once.
+
+    The positive twin of LOG_FORBID, for a witness line whose exact text the persona cannot know
+    in advance: the #244/#257 drift line names the dispatch window, and a new game's start day is
+    random (XRLGame.CreateNewGame), so LOG_EXPECT's complete-line form cannot name it. Each entry
+    is a literal SUBSTRING bounded exactly like LOG_FORBID; absence anywhere fails the run, and it
+    never excuses a MODERROR, MODWARN or any other line the strict checker refuses.
+    """
+    return parse_log_substrings(value, name, "LOG_REQUIRE")
+
+
+def parse_log_substrings(value: str, name: str, key: str) -> list[str]:
+    """The shared bounded literal-substring list behind LOG_FORBID and LOG_REQUIRE."""
     if len(value) > 8192:
-        fail("%s LOG_FORBID exceeds 8192 characters" % name)
+        fail("%s %s exceeds 8192 characters" % (name, key))
     try:
         lines = json.loads(value)
     except (ValueError, RecursionError):
-        fail("%s LOG_FORBID must be a JSON array of literal substrings" % name)
+        fail("%s %s must be a JSON array of literal substrings" % (name, key))
     if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
-        fail("%s LOG_FORBID must contain 1..4 literal substrings" % name)
+        fail("%s %s must contain 1..4 literal substrings" % (name, key))
     if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
            or not line.isprintable() for line in lines):
-        fail("%s LOG_FORBID lines must be 1..1024 printable characters" % name)
+        fail("%s %s lines must be 1..1024 printable characters" % (name, key))
     if len(set(lines)) != len(lines) or sum(map(len, lines)) > 8192:
-        fail("%s LOG_FORBID lines must be unique and total at most 8192 characters" % name)
+        fail("%s %s lines must be unique and total at most 8192 characters" % (name, key))
     return lines
 
 
@@ -404,6 +434,18 @@ def forbidden_log(manifest: dict, raw: bytes, name: str) -> list[str]:
                 found.append("line %d: %s" % (number, forbidden))
                 break
     return found
+
+
+def required_log(manifest: dict, raw: bytes, name: str) -> list[str]:
+    """Every required substring that did NOT appear on any line, in declaration order."""
+    if "LOG_REQUIRE" not in manifest:
+        fail("%s requires LOG_REQUIRE for required-log" % name)
+    lines = raw.replace(b"\r\n", b"\n").split(b"\n")
+    return [
+        required
+        for required in parse_log_require(manifest["LOG_REQUIRE"], name)
+        if not any(required.encode("utf-8") in line for line in lines)
+    ]
 
 
 def parse_set(value: str, name: str) -> tuple[str, ...]:
@@ -560,6 +602,7 @@ def parse_expect(
             and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
+            and verb not in POLITY_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
@@ -726,6 +769,12 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
         problems.extend(housing.assess(read_journal(journal)))
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
+    if manifest.get("CHECK") == "polity-window":
+        spec = importlib.util.spec_from_file_location(
+            "taf_persona_polity", os.path.join(os.path.dirname(__file__), "persona_polity.py"))
+        polity = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(polity)
+        problems.extend(polity.assess(rows))
     if manifest.get("CHECK", "").startswith("travel-"):
         spec = importlib.util.spec_from_file_location(
             "taf_persona_travel",
@@ -759,7 +808,8 @@ def load(path: str) -> tuple[dict, str]:
 def main(argv: list[str]) -> int:
     if len(argv) < 3:
         fail(
-            "usage: persona_matrix.py <fields|assert|terminal|warnings|expected-log|forbidden-log>"
+            "usage: persona_matrix.py"
+            " <fields|assert|terminal|warnings|expected-log|forbidden-log|required-log>"
             " <persona|journal>"
             " [journal|Player.log]"
         )
@@ -777,6 +827,7 @@ def main(argv: list[str]) -> int:
             "SET",
             "LOG_EXPECT",
             "LOG_FORBID",
+            "LOG_REQUIRE",
             "RELOAD",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
@@ -793,6 +844,14 @@ def main(argv: list[str]) -> int:
             seen = forbidden_log(manifest, handle.read(), name)
         if seen:
             print("; ".join(seen))
+            return 1
+        return 0
+    if action == "required-log" and len(argv) == 4:
+        manifest, name = load(argv[2])
+        with open(argv[3], "rb") as handle:
+            missing = required_log(manifest, handle.read(), name)
+        if missing:
+            print("missing: " + "; ".join(missing))
             return 1
         return 0
     if action == "terminal" and len(argv) == 3:

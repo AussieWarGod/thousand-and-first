@@ -1947,6 +1947,9 @@
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomPolityWindowReading.cs" />
+	<Compile Include="KingdomPolityWindowWitnessTests.cs" />
+	<Compile Include="KingdomPolityWindowWitnessSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3SourceTests.cs" />
 	<Compile Include="KingdomPolityConsignmentTests.cs" />
 	<Compile Include="KingdomPolityConsignmentSourceTests.cs" />

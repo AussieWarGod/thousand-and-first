@@ -830,6 +830,8 @@
 	<Compile Include="KingdomPolityWave3Tests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
 	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
+	<Compile Include="..\Harness\KingdomPolityWindowReading.cs" />
+	<Compile Include="KingdomPolityWindowWitnessTests.cs" />
 	<Compile Include="KingdomPolityAmbientTransactionTests.cs" />
 	<Compile Include="KingdomPolityEndpointObservationRulesTests.cs" />
 	<Compile Include="KingdomPolityExpeditionDeedRulesTests.cs" />

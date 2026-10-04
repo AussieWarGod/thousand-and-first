@@ -1,0 +1,25 @@
+# #244/#257 positive native witness for the polity dispatch window contract.
+# The production founding transaction founds a population-0 camp. Its first daily pass raises the
+# rite ground, so every later daily pass changes the camp's endpoint facts (that work row's read
+# tick): before the fix, days 2-7 of every window refused reconciliation.
+# Each advance crosses exactly one day boundary and is followed by a read-only witness that
+# journals the realm's dispatch receipt as one polity-dispatch row. A new game starts on a random
+# day (XRLGame.CreateNewGame), so the first pass may fall on any day of its 8400-tick window;
+# eleven daily witnesses guarantee that some window is read three times in a row (two
+# later-in-window passes) and that a newer window opens after them, whatever the start phase.
+# CHECK=polity-window asserts constant receipts inside a window and a committed advance at the
+# boundary; LOG_FORBID asserts zero reconciliation refusals and no withdrawn intent; LOG_REQUIRE
+# asserts the once-per-window-per-process drift line.
+# No synthetic citizens, stores, clock checkpoints or dispatch writes. No save/load, cold load,
+# second city, zone re-entry or scheduled-cohort presentation claim; those stay owed elsewhere.
+DESCRIPTION=daily polity reconciliations keep one frozen window receipt through fact drift and advance at the window boundary
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;realize;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;advance 1200;polity-window-check;stagedigest
+VERBS=polity-window-check
+EXPECT=stagedigest:OK~founded=false,realize:OK,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,advance:OK,polity-dispatch:OK~window=,polity-window-check:OK~recorded polity-dispatch window=,stagedigest:OK~founded=true,COMPLETE
+CHECK=polity-window
+LOG_FORBID=["polity: daily reconciliation refused","polity: zone reconciliation refused","polity: active load reconciliation refused"," withdrawn: "]
+LOG_REQUIRE=[" continues with endpoint facts changed since it opened; no new dispatch until window "]
+SET=polity,native-regression
+TIMEOUT=1200

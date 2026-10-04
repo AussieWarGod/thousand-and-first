@@ -24,6 +24,12 @@ SPEC = importlib.util.spec_from_file_location(
 matrix = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(matrix)
 
+POLITY_SPEC = importlib.util.spec_from_file_location(
+    "persona_polity", ROOT / "Tools" / "personas" / "persona_polity.py"
+)
+polity = importlib.util.module_from_spec(POLITY_SPEC)
+POLITY_SPEC.loader.exec_module(polity)
+
 PROFILE_SPEC = importlib.util.spec_from_file_location(
     "scenario_profile", ROOT / "Tools" / "scenario_profile.py"
 )
@@ -386,6 +392,77 @@ class ForbiddenLogTest(unittest.TestCase):
             manifest, b"seal: settlement pass was not staged\r\nrest\r\n", "x"))
         with self.assertRaises(SystemExit):
             matrix.forbidden_log(matrix.parse_manifest(GREEN, "x"), clean, "x")
+
+
+class RequiredLogTest(unittest.TestCase):
+    """LOG_REQUIRE is the positive twin of LOG_FORBID and is bounded exactly as tightly."""
+
+    def manifest(self, lines):
+        return matrix.parse_manifest(
+            GREEN + "LOG_REQUIRE=" + json.dumps(lines) + "\n", "x.persona"
+        )
+
+    def test_optional_field_is_disabled_or_canonical_json(self):
+        self.assertNotIn("LOG_REQUIRE", matrix.parse_manifest(GREEN, "x"))
+        found = self.manifest(["a witness line", "another"])
+        self.assertEqual('["a witness line","another"]', found["LOG_REQUIRE"])
+
+    def test_malformed_shapes_duplicates_and_nonprintable_lines_are_refused(self):
+        bad = ["", "null", "{}", "[]", '"line"', "[1]", "[null]", '[""]',
+               '["same","same"]', json.dumps(["before\nafter"])]
+        for value in bad:
+            with self.subTest(value=value), self.assertRaises(SystemExit):
+                matrix.parse_manifest(GREEN + "LOG_REQUIRE=" + value + "\n", "x")
+        for lines in (["x" * 1025], [str(index) for index in range(5)]):
+            with self.subTest(lines=lines), self.assertRaises(SystemExit):
+                self.manifest(lines)
+
+    def test_every_required_substring_must_appear_on_some_line(self):
+        manifest = self.manifest([" continues with endpoint facts changed", "until window 47"])
+        drift = (b"[TAF] polity: dispatch window 46 continues with endpoint facts changed since it "
+                 b"opened; no new dispatch until window 47")
+        self.assertEqual([], matrix.required_log(manifest, b"[TAF] a\r\n" + drift + b"\r\n", "x"))
+        self.assertEqual(["until window 47"], matrix.required_log(
+            manifest, b"[TAF] polity: dispatch window 46 continues with endpoint facts changed\n",
+            "x"))
+        self.assertEqual([" continues with endpoint facts changed", "until window 47"],
+                         matrix.required_log(manifest, b"", "x"))
+        # A witness split across two lines is not the witness.
+        self.assertEqual(["until window 47"], matrix.required_log(
+            manifest, drift.replace(b"until window", b"until\nwindow") + b"\n", "x"))
+        with self.assertRaises(SystemExit):
+            matrix.required_log(matrix.parse_manifest(GREEN, "x"), drift, "x")
+
+    def test_cli_exports_the_field_and_fails_on_a_missing_witness(self):
+        with tempfile.TemporaryDirectory() as directory:
+            persona = pathlib.Path(directory) / "x.persona"
+            log = pathlib.Path(directory) / "Player.log"
+            persona.write_text(GREEN + 'LOG_REQUIRE=["drift witness"]\n', encoding="utf-8")
+            command = [sys.executable, str(SPEC.origin)]
+            fields = subprocess.run(
+                command + ["fields", str(persona)], capture_output=True, check=True
+            )
+            self.assertIn(b'log_require\t["drift witness"]\n', fields.stdout)
+            log.write_bytes(b"[TAF] the drift witness line\n")
+            present = subprocess.run(
+                command + ["required-log", str(persona), str(log)], capture_output=True,
+                check=False)
+            self.assertEqual((0, b""), (present.returncode, present.stdout))
+            log.write_bytes(b"[TAF] nothing to see\n")
+            absent = subprocess.run(
+                command + ["required-log", str(persona), str(log)], capture_output=True,
+                check=False)
+            self.assertEqual((1, b"missing: drift witness\n"), (absent.returncode, absent.stdout))
+            persona.write_text(GREEN, encoding="utf-8")
+            refused = subprocess.run(
+                command + ["required-log", str(persona), str(log)], capture_output=True,
+                check=False)
+            self.assertNotEqual(0, refused.returncode)
+            self.assertTrue(refused.stderr.startswith(b"persona: "))
+            fields = subprocess.run(
+                command + ["fields", str(persona)], capture_output=True, check=True
+            )
+            self.assertIn(b"log_require\t\n", fields.stdout)
 
 
 class ScriptGrammarTest(unittest.TestCase):
@@ -834,7 +911,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(108, len(self.personas()))
+        self.assertEqual(109, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1049,6 +1126,11 @@ class ShippedPersonaTest(unittest.TestCase):
                 self.assertGreater(boot_rows, 0, path.name)
                 expected = expected[boot_rows:]
                 sealed = sealed[1:]
+            # Every polity-window-check lands one polity-dispatch observation before its own row.
+            while matrix.POLITY_EVIDENCE_ROWS[0] in expected:
+                at = expected.index(matrix.POLITY_EVIDENCE_ROWS[0])
+                self.assertEqual(["polity-window-check"], expected[at + 1:at + 2], path.name)
+                del expected[at]
             # The shortage observation is emitted inside the supply verb; it has no dispatch line.
             if "guest-save-shortage" in expected:
                 self.assertIn("guest-save-supply", sealed, path.name)
@@ -1123,6 +1205,182 @@ class ShippedPersonaTest(unittest.TestCase):
             )
             self.assertIn(case, catalogue, scenario.attrib["Key"])
             self.assertEqual("{facing}", stage.attrib.get("Facing"))
+
+
+
+POLITY_PERSONA = "polity-window-native-check.persona"
+POLITY_REFUSALS = (
+    "polity: daily reconciliation refused",
+    "polity: zone reconciliation refused",
+    "polity: active load reconciliation refused",
+)
+# docs/polity-reconcile spec section 7.2: every family that refused in every archived process.
+TURN_CLEAN_PERSONAS = (
+    "water-maintenance-native-check", "paid-housing-native-check", "camp-heart-chain",
+    "first-guest-native-check", "guest-save-lifecycle-native-check",
+    "quickstart-housing-recovery-save", "teardown-native-check", "beta-economic-present",
+    "beta-economic-away", "home-map-native-check", "home-map-save-native-check",
+    "home-map-absent-save-native-check", "home-map-damage-native-check",
+)
+
+
+def polity_reading(window: int, revision: int, count: int = 1, mask: int = 1,
+                   intents: int = 0) -> str:
+    return "window=%d revision=%d count=%d mask=%d intents=%d" % (
+        window, revision, count, mask, intents)
+
+
+def polity_rows(start_day: int, days: int = 11) -> list[str]:
+    """A production-shaped journal: one daily pass per 1200-turn advance after a mid-day founding.
+
+    The first pass opens a window (revision 1); a new window commits one more revision; ordinary
+    in-window drift writes nothing. The founding day is the game's random start day.
+    """
+    rows = [row("stagedigest", "OK", "founded=false"), row("realize", "OK", "founded")]
+    window, revision = None, 0
+    for day in range(start_day + 1, start_day + 1 + days):
+        tick = day * 1200 + 1
+        if tick // 8400 != window:
+            window, revision = tick // 8400, revision + 1
+        reading = polity_reading(window, revision)
+        rows += [row("advance-guard", "OK", "start"), row("advance", "OK", "advancing"),
+                 row("advance-complete", "OK", "1200 turn(s)"),
+                 row("polity-dispatch", "OK", reading),
+                 row("polity-window-check", "OK",
+                     "polity-window-check recorded polity-dispatch " + reading)]
+    return rows + [row("stagedigest", "OK", "founded=true"), row("SCRIPT-COMPLETE", "OK", "done")]
+
+
+class PolityWindowWitnessTest(unittest.TestCase):
+    """#244/#257: the polity-dispatch rows, their positional law and the CHECK=polity-window story."""
+
+    def persona(self):
+        text = (ROOT / "Tools" / "personas" / POLITY_PERSONA).read_text(encoding="utf-8")
+        return matrix.parse_manifest(text, POLITY_PERSONA)
+
+    def story(self, rows):
+        return polity.assess(matrix.significant(matrix.read_journal(journal(*rows))))
+
+    def test_every_start_phase_of_the_window_meets_the_persona(self):
+        # A new game starts on a random day, so the first pass may fall on any of the seven days.
+        found = self.persona()
+        for start_day in range(70, 77):
+            with self.subTest(phase=(start_day + 1) % 7):
+                self.assertEqual([], matrix.assess(found, journal(*polity_rows(start_day)),
+                                                   POLITY_PERSONA))
+
+    def test_ten_daily_readings_would_miss_the_worst_start_phase(self):
+        # Phase 5: two passes close the first window and the next opens on reading 3, so two
+        # later-in-window passes and a further boundary need readings 3..10 plus one more.
+        self.assertEqual([], self.story(polity_rows(74, days=10)))
+        self.assertTrue(self.story(polity_rows(74, days=9)))
+
+    def test_observations_cannot_be_missing_repeated_or_refused(self):
+        found = self.persona()
+        rows = polity_rows(70)
+        indices = [index for index, item in enumerate(rows) if "\tpolity-dispatch\t" in item]
+        self.assertEqual(11, len(indices))
+        for index in indices:
+            with self.subTest(index=index):
+                missing = rows[:index] + rows[index + 1:]
+                repeated = rows[:index] + [rows[index]] + rows[index:]
+                refused = list(rows)
+                refused[index] = rows[index].replace("\tOK\t", "\tREFUSED\t")
+                for broken in (missing, repeated, refused):
+                    self.assertTrue(matrix.assess(found, journal(*broken), POLITY_PERSONA))
+                self.assertTrue(self.story(repeated))
+                self.assertTrue(self.story(refused))
+
+    def test_a_reading_must_match_the_grammar_and_its_confirming_row(self):
+        rows = polity_rows(70)
+        at = next(i for i, item in enumerate(rows) if "\tpolity-dispatch\t" in item)
+        for message in ("window=10 revision=1 count=1 mask=1", "window=10 revision=01 count=1 "
+                        "mask=1 intents=0", "window=10 revision=1 count=4 mask=1 intents=0",
+                        "window=10 revision=1 count=1 mask=3 intents=0",
+                        "window=10 revision=1 count=1 mask=1 intents=2 extra"):
+            with self.subTest(message=message):
+                changed = list(rows)
+                changed[at] = row("polity-dispatch", "OK", message)
+                changed[at + 1] = row("polity-window-check", "OK",
+                                      "polity-window-check recorded polity-dispatch " + message)
+                self.assertTrue(self.story(changed))
+        unconfirmed = list(rows)
+        unconfirmed[at + 1] = row("polity-window-check", "OK",
+                                  "polity-window-check recorded polity-dispatch "
+                                  + polity_reading(10, 2))
+        self.assertTrue(self.story(unconfirmed))
+
+    def replace_reading(self, rows, ordinal, reading):
+        indices = [index for index, item in enumerate(rows) if "\tpolity-dispatch\t" in item]
+        changed = list(rows)
+        changed[indices[ordinal]] = row("polity-dispatch", "OK", reading)
+        changed[indices[ordinal] + 1] = row(
+            "polity-window-check", "OK", "polity-window-check recorded polity-dispatch " + reading)
+        return changed
+
+    def test_drift_inside_a_window_must_not_write_rekey_mint_or_withdraw(self):
+        rows = polity_rows(70)  # first pass on day 71 = window 10, phase 1
+        self.assertEqual([], self.story(rows))
+        for reading in (polity_reading(10, 2), polity_reading(10, 1, count=2, mask=3),
+                        polity_reading(10, 1, mask=0, intents=1)):
+            with self.subTest(reading=reading):
+                problems = self.story(self.replace_reading(rows, 2, reading))
+                self.assertTrue(any("changed inside the window" in item for item in problems),
+                                problems)
+
+    def test_the_window_advances_by_one_with_a_newer_revision(self):
+        rows = polity_rows(70)
+        self.assertTrue(self.story(self.replace_reading(rows, 6, polity_reading(11, 1))))
+        jumped = self.story(self.replace_reading(rows, 10, polity_reading(13, 3)))
+        self.assertTrue(any("moved from 11 to 13" in item for item in jumped), jumped)
+        regressed = self.story(self.replace_reading(rows, 10, polity_reading(10, 2)))
+        self.assertTrue(any("moved from 11 to 10" in item for item in regressed), regressed)
+
+    def test_a_run_without_a_witnessed_window_and_advance_fails(self):
+        flat = polity_rows(70)
+        for ordinal in range(11):
+            flat = self.replace_reading(flat, ordinal, polity_reading(10, 1))
+        self.assertEqual(["no window was read 3 times in a row before a later window opened"],
+                         self.story(flat))
+        self.assertEqual(["polity-window needs at least 4 readings, found 3"],
+                         self.story(polity_rows(70, days=3)))
+        self.assertEqual(["polity-window needs at least 4 readings, found 0"], self.story([]))
+
+    def test_the_check_is_a_closed_choice(self):
+        self.assertIn("polity-window", matrix.CHECKS)
+        self.assertEqual(("polity-dispatch",), matrix.POLITY_EVIDENCE_ROWS)
+        self.assertEqual(polity.OBSERVATION, matrix.POLITY_EVIDENCE_ROWS[0])
+
+    def test_persona_watches_refusals_withdrawals_and_the_drift_line(self):
+        found = self.persona()
+        self.assertEqual("polity-window", found["CHECK"])
+        self.assertEqual(list(POLITY_REFUSALS) + [" withdrawn: "], json.loads(found["LOG_FORBID"]))
+        drift = (b"[TAF] polity: dispatch window 10 continues with endpoint facts changed since it "
+                 b"opened; no new dispatch until window 11\n")
+        self.assertEqual([], matrix.required_log(found, drift, POLITY_PERSONA))
+        self.assertTrue(matrix.required_log(found, b"[TAF] heart rung raised: 1\n", POLITY_PERSONA))
+        withdrawal = (b"[TAF] polity: window 10 Guard intent for taf:settlement:v1:c withdrawn: "
+                      b"its source facts changed after the window opened\n")
+        self.assertTrue(matrix.forbidden_log(found, withdrawal, POLITY_PERSONA))
+        self.assertLessEqual(int(found["TIMEOUT"]), matrix.MAX_TIMEOUT)
+
+    def test_turn_clean_personas_forbid_every_polity_reconciliation_refusal(self):
+        for name in TURN_CLEAN_PERSONAS:
+            with self.subTest(persona=name):
+                path = ROOT / "Tools" / "personas" / (name + ".persona")
+                found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+                forbidden = json.loads(found["LOG_FORBID"])
+                if name == "camp-heart-chain":
+                    # At the four-entry cap it keeps both #162 halts and one shared literal.
+                    self.assertEqual(["construction: founding heart recovery requires inspection",
+                                      "seal: settlement pass was not staged",
+                                      "reconciliation refused ("], forbidden)
+                else:
+                    self.assertEqual(list(POLITY_REFUSALS), forbidden)
+                for prefix in POLITY_REFUSALS:
+                    line = ("[TAF] " + prefix + " (open polity topology differs from its frozen "
+                            "facts)\n").encode("utf-8")
+                    self.assertTrue(matrix.forbidden_log(found, line, path.name), prefix)
 
 
 if __name__ == "__main__":
