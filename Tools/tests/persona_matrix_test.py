@@ -657,6 +657,41 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, outcome, "wrong physical result")
                 self.assertTrue(matrix.match(expected, changed))
 
+    def test_second_city_witnesses_are_required_once_in_order_with_their_verdicts(self):
+        name = "second-city-native-check.persona"
+        found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
+        expected = matrix.parse_expect(found["EXPECT"], name, found["VERBS"].split(","))
+        witnesses = [item[0] for item in expected if item[0] in matrix.SECOND_CITY_EVIDENCE_ROWS]
+        self.assertEqual(list(matrix.SECOND_CITY_EVIDENCE_ROWS), witnesses)
+        # Each row is journalled inside the verb call that writes it, so it sits immediately
+        # before that call: the site row in setup, the topology row in the found-second case.
+        verbs = [item[0] for item in expected]
+        for witness, writer, call in (("second-city-site", "second-city-setup", "cases=4 passed=0"),
+                                      ("second-city-topology", "second-city-check",
+                                       "case=found-second")):
+            following = expected[verbs.index(witness) + 1]
+            self.assertEqual(writer, following[0], witness)
+            self.assertIn(call, following[2], witness)
+        self.assertEqual({"second-city-site": ("OK", "adjacent=false"),
+                          "second-city-topology": ("OK", "settlements=2")},
+                         {verb: (outcome, wanted) for verb, outcome, wanted in expected
+                          if verb in witnesses})
+        rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, rows))
+        # Positional evidence, never filtered as bookkeeping or a tolerated diagnostic.
+        self.assertEqual(rows, matrix.significant(rows))
+        for index, (verb, outcome, wanted) in enumerate(rows):
+            if verb not in witnesses:
+                continue
+            with self.subTest(witness=verb):
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                changed = list(rows)
+                changed[index] = (verb, "REFUSED", wanted)
+                self.assertTrue(matrix.match(expected, changed))
+                changed[index] = (verb, outcome, "wrong second-city result")
+                self.assertTrue(matrix.match(expected, changed))
+
     def test_paid_handover_witnesses_cannot_be_missing_repeated_or_refused(self):
         witnesses = ("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
                      "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
