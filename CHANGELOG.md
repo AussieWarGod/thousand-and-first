@@ -24,16 +24,19 @@ records current acceptance.
   hotfix built from main. Source pins prove the frame, cold load, byte-identical re-save and
   first founding. A further pin writes and checks the durable books a fresh, unfounded
   `KingdomSystem` is constructed with, from an explicit list: the codec books and the city book
-  reload exactly, the other named-field books hold only values the engine's own field writer
-  saves, and the empty settlement topologies pass their write gate. It is not a field census: a
-  new `KingdomSystem` field leaves it green. The native unfounded-save persona performs a real
-  engine save of every serialized field and is the complete census for a release build;
-  `docs/RELEASING.md` requires that automated unfounded save and reload check for every
-  release, and an in-game reflection census is #281. The other save systems a new game creates
-  (`KingdomSeal`, `KingdomCivicMemorySystem` and the optional `KingdomSuccession` and
-  `KingdomInheritanceLifecycle`) and state that play writes before the first save are not
-  pinned (#275). The native unfounded save and cold-load personas are owed, and the Roleplay
-  checkpoint and starting-pet Quickstart routes are not driven natively (#274, #276).
+  reload exactly, and the other named-field books hold only values the engine's own field writer
+  saves. The empty settlement topologies are only checked to be empty, carry no opaque evidence
+  and pass their load check (`NormalizeCurrent`), whose ragged/bound predicate matches their
+  write gate today; that gate is compiled into neither test project, so a changed gate leaves
+  the pin green. It is not a field census: a new `KingdomSystem` field leaves it green. The
+  native unfounded-save persona performs a real engine save of every serialized field and is
+  the complete census for a release build; `docs/RELEASING.md` requires that automated
+  unfounded save and reload check for every release, and an in-game reflection census is #281.
+  The other save systems a new game creates (`KingdomSeal`, `KingdomCivicMemorySystem` and the
+  optional `KingdomSuccession` and `KingdomInheritanceLifecycle`) and state that play writes
+  before the first save are not pinned (#275). The native unfounded save and cold-load personas
+  are owed, and the Roleplay checkpoint and starting-pet Quickstart routes are not driven
+  natively (#274, #276).
 
 - Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. That
   build reports core `2.0.211.56` (marketing 1.0.5, save format 409) and removed

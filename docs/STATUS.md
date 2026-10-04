@@ -52,7 +52,10 @@ byte-identically and reload valid; the named-field books hold only values the en
 named-field writer serializes itself; the load normalization that the ledger, binding, job,
 founder-history and realm-transition books run in their own `Read`, called directly here,
 settles, and the normalized realm transition validates (the dispatch-state and resident-operation
-`Read`s normalize nothing); and the empty settlement topologies pass their write gate. On dev the
+`Read`s normalize nothing); and the two empty settlement topologies (main suite only) are empty,
+carry no opaque evidence and pass `NormalizeCurrent`, the load-time check whose ragged/bound
+predicate matches their write gate today; that gate is in `Write(SerializationWriter)`, which
+neither test project compiles, so the pin cannot run it (measured below). On dev the
 city book carries schema 5 (the residence column), so here its fields are also walked behind its
 load guard, and its written fields reload through the production load path (residence and
 subsidence migration, then validated normalization) to the identical field image. No listed book
@@ -68,8 +71,10 @@ and a realm-transition normalization that throws on a fresh transition, never se
 it invalid.
 
 The pin is not a field census. It reads no production source and calls no book's
-`Write(SerializationWriter)`, so a new `KingdomSystem` field and a changed city `Write` body each
-leave it green (both measured on scratch copies); it walks the named-field books and the city
+`Write(SerializationWriter)`, so a new `KingdomSystem` field, a changed city `Write` body and a
+changed settlement-topology write gate (its ragged/bound check inverted, so that `Write` refuses
+every consistent topology, including the two empty ones a fresh game saves) each leave it green
+(all three measured on scratch copies); it walks the named-field books and the city
 book with an emulation of the engine's named-field writer, and it does not run `KingdomSystem`'s
 own load normalization, which needs the engine. The native unfounded-save persona performs a real
 engine save of every serialized field and is the complete census for a release build;

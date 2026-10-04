@@ -16,9 +16,12 @@ namespace ThousandAndFirst.Tests
 	/// KingdomSystem is constructed with, from the explicit list in
 	/// FreshUnfoundedKingdomSystemEveryDurableBookIsWritable. Each is built exactly as its field
 	/// initializer builds it and checked through its production codec and load validator (codec
-	/// books), against an emulation of the engine's named-field writer (named-field books), or
-	/// against its write gate (the empty settlement topologies). It is not a field census: a field
-	/// added to KingdomSystem is not detected here, and no production source is read. The native
+	/// books) or against an emulation of the engine's named-field writer (named-field books). The
+	/// empty settlement topologies are only checked to be empty, to carry no opaque evidence and to
+	/// pass NormalizeCurrent, the load-time check whose ragged/bound predicate matches their write
+	/// gate today; that gate is in Write(SerializationWriter), which neither test project compiles,
+	/// so this pin cannot see a changed gate. It is not a field census: a field added to
+	/// KingdomSystem is not detected here, and no production source is read. The native
 	/// unfounded-save persona performs a real engine save of every serialized field and is the
 	/// complete census for a release build; docs/RELEASING.md requires that automated unfounded save
 	/// and reload check for every release, and an in-game reflection census is #281. The other save
@@ -30,7 +33,9 @@ namespace ThousandAndFirst.Tests
 		// How Walk treats each book type it can meet, from this fixture's own list. Named: written by
 		// the engine's named-field writer alone, so its fields are walked. Guarded: its own writer runs
 		// a load guard and then the named-field writer (the city book), so its fields are walked at
-		// top level. Codec: its own writer, exercised at top level by the book's validator only.
+		// top level. Codec: it has its own writer, so Walk does not descend; only its validator checks
+		// it, at top level. The settlement topologies' writer is compiled out of both test projects,
+		// so their validator is a load check.
 		private enum BookWriter { Named, Guarded, Codec }
 
 		private static readonly Dictionary<string, BookWriter> Writers = new Dictionary<string, BookWriter>
@@ -197,7 +202,10 @@ namespace ThousandAndFirst.Tests
 
 		private static string Topology(KingdomSettlementTopology topology)
 		{
-			// An empty topology writes only its marker, version and a zero count.
+			// Write(SerializationWriter), with its gate, is compiled out of both test projects
+			// (#if !TAF_TESTS). This checks the empty topology against NormalizeCurrent, the load-time
+			// check, whose ragged/bound predicate matches that gate today; an empty topology has no
+			// rows for the gate's per-row checks.
 			return topology.Count == 0 && !topology.HasOpaqueEvidence
 				&& topology.NormalizeCurrent(out string failure) ? null : "topology is not empty and canonical";
 		}
