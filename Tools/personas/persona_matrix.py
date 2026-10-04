@@ -24,6 +24,7 @@ import importlib.util
 import os
 import re
 import sys
+import unicodedata
 
 # Terminal tokens a persona may declare, and the journal verb each one names. Every unattended run
 # ends in exactly one of these rows, so exactly one is the last expectation.
@@ -161,6 +162,7 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-retry-removal", "camp-heart-chain-survey-stakes",
     "camp-heart-chain-renovation", "camp-heart-chain-renovation-refusals",
     "camp-heart-chain-renovation-cleared",
+    "camp-heart-chain-crown", "camp-heart-chain-exotics", "camp-heart-chain-arcology",
 )
 
 # The unfounded cold-load route (#272, #271): the save leg seals exactly this script and verb
@@ -188,6 +190,13 @@ def reload_start(value: str) -> bool:
 FRAMES_VERB = "yield-frames"
 MAX_YIELD_FRAMES = 240
 COUNTED_VERBS = {COUNTED_VERB: MAX_ADVANCE_TURNS, FRAMES_VERB: MAX_YIELD_FRAMES}
+
+# The most verbs one sealed script may declare. Must equal scenario_profile.MAX_SCRIPT_VERBS and
+# Harness/KingdomScenarioScriptRules.cs MaxVerbs. The runner counts LINES (runtime_verbs below),
+# so 'advance 1200' is one verb, and it refuses past the bound before its first verb: native run
+# 4ce2a6a1 sealed the heart's rung-5 persona at 35 verbs against the old 32 and spent a profile
+# learning it. Raised from 32 to 48 for that persona (#264).
+MAX_SCRIPT_VERBS = 48
 
 # Names the runtime dispatches itself, which no third-party provider may claim. Must equal
 # Harness/KingdomScenarioVerbProvider.cs KingdomScenarioVerbApi.Reserved.
@@ -243,7 +252,17 @@ OPTIONAL_KEYS = (
 SET_TAG = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
 
 DEFAULT_TIMEOUT = 300
-MAX_TIMEOUT = 3600
+# Raised from 3600 for the heart's fifth rung (issue #160), on measurement rather than hope: the
+# accepted paid 1->2->3->4 chain ran its 24-verb, 31200-turn script in 2283 s of wall time
+# (AUTOSTART 2026-09-14T09:04:24.946Z to SCRIPT-COMPLETE 09:42:27.844Z in
+# beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/run-scenario-journal.tsv), about 13.7
+# turns per second with a fifty-resident city. The rung-5 persona's 60000 turns extrapolate to
+# >= 4400 s before any growth slowdown, so 3600 could not have survived it. Nothing downstream
+# clamps a larger value: run-personas.sh reads the persona's own TIMEOUT (Tools/run-personas.sh:118,
+# :318) into both the wait loop (:372) and TAF_SCENARIO_TIMEOUT_SECONDS (:348), and every consumer
+# of that variable treats 3600 as a DEFAULT, not a ceiling (Tools/prepare-scenario.sh:185,
+# Tools/prepare-scenario-load.py:531; Tools/scenario_run_record.py:190,283 bound it only above zero).
+MAX_TIMEOUT = 7200
 
 DIGEST = re.compile(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
 
@@ -487,11 +506,57 @@ def parse_timeout(value: str, name: str) -> int:
     return seconds
 
 
+def dotnet_white_space(char: str) -> bool:
+    """Char.IsWhiteSpace. Must equal scenario_profile.dotnet_white_space (str.isspace would
+    also admit U+001C..U+001F, which String.Trim keeps)."""
+    return (
+        "\t" <= char <= "\r"
+        or char == "\x85"
+        or unicodedata.category(char) in ("Zs", "Zl", "Zp")
+    )
+
+
+def runtime_verbs(text: str) -> list[str]:
+    """The verbs Harness/KingdomScenarioScriptRules.cs TryParse reads from sealed script text:
+    lines split on CR LF, CR or LF, trimmed of .NET white space, blank and '#' lines dropped, every
+    other line one verb. Must count exactly as scenario_profile.runtime_verbs does."""
+    verbs: list[str] = []
+    for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        start, end = 0, len(line)
+        while start < end and dotnet_white_space(line[start]):
+            start += 1
+        while end > start and dotnet_white_space(line[end - 1]):
+            end -= 1
+        if start < end and line[start] != "#":
+            verbs.append(line[start:end])
+    return verbs
+
+
 def script_words(script: str, name: str, extra: tuple[str, ...] = ()) -> list[str]:
     """Semicolon-separated verbs to the shell words `Tools/prepare-scenario.sh` seals.
 
     A leading `@` names a sibling script file, one verb per line, for a persona whose verb list is
     long enough that a single line would hide a mistake.
+    """
+    return sealed_script(script, name, extra)[0]
+
+
+def script_lines(script: str, name: str, extra: tuple[str, ...] = ()) -> list[str]:
+    """The lines scenario_profile.parse_script seals for this SCRIPT, one per step, which are
+    the verbs the runner counts. Bounded by MAX_SCRIPT_VERBS like script_words."""
+    return sealed_script(script, name, extra)[1]
+
+
+def sealed_script(
+    script: str, name: str, extra: tuple[str, ...] = ()
+) -> tuple[list[str], list[str]]:
+    """Validated SCRIPT as (shell words, sealed lines), refused past the runner's verb bound.
+
+    Each step becomes exactly the line scenario_profile.parse_script writes: a counted verb's two
+    words fold into one line with the count normalised, and the Quickstart command's three words
+    stay one line. The runner counts those lines, so `load` and `fields` refuse a script past
+    MAX_SCRIPT_VERBS here, before a profile is sealed around it, rather than the runner refusing
+    it at the first player turn.
     """
     if script.startswith("@"):
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), script[1:])
@@ -505,6 +570,7 @@ def script_words(script: str, name: str, extra: tuple[str, ...] = ()) -> list[st
             ]
     else:
         steps = [step.strip() for step in script.split(";")]
+    lines: list[str] = []
     words: list[str] = []
     for index, step in enumerate(steps):
         if not step:
@@ -552,7 +618,17 @@ def script_words(script: str, name: str, extra: tuple[str, ...] = ()) -> list[st
                 % (name, step, ", ".join(SCRIPT_VERBS))
             )
         words.extend(parts)
-    return words
+        lines.append(
+            "%s %d" % (parts[0], int(parts[1])) if parts[0] in COUNTED_VERBS else " ".join(parts)
+        )
+    declared = len(runtime_verbs("\n".join(lines)))
+    if declared > MAX_SCRIPT_VERBS:
+        fail(
+            "%s SCRIPT declares %d verbs, over the %d-verb bound the in-game runner enforces "
+            "before its first verb (Harness/KingdomScenarioScriptRules.cs MaxVerbs); "
+            "'advance <turns>' counts as one verb" % (name, declared, MAX_SCRIPT_VERBS)
+        )
+    return words, lines
 
 
 def parse_expect(

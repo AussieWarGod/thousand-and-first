@@ -9,7 +9,7 @@ namespace ThousandAndFirst.Harness
 	internal static class KingdomCampHeartChainHandoverOccupancy
 	{
 		private static GameObject Resident;
-		private static string JobId, ResidentId, Materials;
+		private static string JobId, ResidentId, Materials, Successor;
 		private static bool Entered, Renovation;
 		private static long Tick;
 		private static int Water, DestinationCalls;
@@ -18,12 +18,16 @@ namespace ThousandAndFirst.Harness
 		internal static bool Proved;
 		internal static bool DenyDestinations;
 
-		internal static void Arm(GameObject Body, string PaidJob, bool Retained = false)
+		/// <summary>Arms the probe for one paid job. <paramref name="SuccessorKey"/> is the design
+		/// production hands that job's handover, so the probe can never arm for one rung and look
+		/// for another's key.</summary>
+		internal static void Arm(GameObject Body, string PaidJob, string SuccessorKey, bool Retained)
 		{
 			Require(Resident == null && !Entered || Proved && JobId != PaidJob,
 				"handover occupant probe armed twice or before its prior proof");
+			Require(!string.IsNullOrEmpty(SuccessorKey), "handover occupant probe armed without its successor design");
 			Entered = Proved = false; Renovation = Retained; Blocked = null; DestinationCalls = 0;
-			Resident = Body; ResidentId = Body.ID; JobId = PaidJob;
+			Resident = Body; ResidentId = Body.ID; JobId = PaidJob; Successor = SuccessorKey;
 		}
 
 		internal static bool Before(GameObject Owner, GameObject Target, string Key,
@@ -34,11 +38,11 @@ namespace ThousandAndFirst.Harness
 			var system = The.Game.GetSystem<KingdomSystem>();
 			Zone zone = Owner.CurrentZone;
 			Survey = KingdomSurvey.ActiveFor(zone);
-			Require(KingdomCampHeartChainTrace.Active(system) && Key == (Renovation ? "heartcourt" : "heartmoot")
+			Require(KingdomCampHeartChainTrace.Active(system) && Key == Successor
 				&& KingdomSurvey.ActiveFor(zone) != null && GameObject.Validate(Resident)
 				&& Resident.CurrentZone == zone && Resident.IsAlive
 				&& KingdomPlots.IsMovableEnvelopeOccupant(system, zone, Resident),
-				"handover probe lacks its paid city and eligible resident");
+				"handover probe lacks its paid city and eligible resident; key=" + Key + "; armed=" + Successor);
 			Require(KingdomArchitectureRuntime.TryRead(Owner, out var before, out string failure), failure);
 			Require(KingdomArchitectureStamper.TryNewBlockingCells(zone, before, Layout,
 				out var slots, out failure), failure);

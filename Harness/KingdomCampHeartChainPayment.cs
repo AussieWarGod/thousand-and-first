@@ -11,17 +11,29 @@ namespace ThousandAndFirst.Harness
 		{
 			private void SupplyChain(int Target)
 			{
-				Require(Target == 3 || Target == 4, "unknown heart chain target");
-				ChainTarget = Target; ChainFrom = Target == 3 ? "heartwaterstone" : "heartmoot";
-				ChainTo = Target == 3 ? "heartmoot" : "heartcourt";
-				ChainWater = Target == 3 ? 28 : 50;
+				Require(Target == 3 || Target == 4 || Target == 5, "unknown heart chain target");
+				Require(Target <= ChainFinalRung, "the sealed script does not drive this target rung");
+				ChainTarget = Target;
+				ChainFrom = KingdomCampHeartChainRules.PredecessorKey(Target);
+				ChainTo = KingdomCampHeartChainRules.SuccessorKey(Target);
+				ChainWater = Target == 3 ? 28 : Target == 4 ? 50 : 94;
 				ChainHeart = StandingHeart(); ChainHeartId = ChainHeart.IDIfAssigned;
 				Require(KingdomUpgrade.DesignKeyOf(ChainHeart) == ChainFrom
 					&& ChainStore?.Inventory != null && ChainStore.Inventory.Objects.Count == 0,
 					"supply requires its predecessor and empty dedicated supplemental store");
 				var tally = KingdomMaterials.UpgradeCostFor(ChainFrom);
-				Require(tally.Total() == (Target == 3 ? 25 : 121), "authored heart material quantity changed");
-				ChainSupplyClaim = new KingdomMaterialDebitCost(tally).ToClaimString();
+				Require(tally.Total() == (Target == 3 ? 25 : Target == 4 ? 121 : 133),
+					"authored heart material quantity changed");
+				// The arcology is the one improvement production prices as a COMPOSITE: its own
+				// Bits and Exotics are reserved beside the predecessor's UpgradeMaterials
+				// (Growth/KingdomUpgrade.14.Begin.cs:155-172). Every rung below it pays materials
+				// only, and a five-rung claim built from the plain tally would be short. The one
+				// cost built here is the one CheckChainPaid compares the paid job against.
+				ChainSupplyCost = new KingdomMaterialDebitCost(tally,
+					Target == 5 ? KingdomMaterials.BitCostFor(ChainTo) : null,
+					Target == 5 ? KingdomMaterials.ExoticCostFor(ChainTo) : null);
+				ChainSupplyClaim = ChainSupplyCost.ToClaimString();
+				ChainBitsBefore = null;
 				ChainSupplied.Clear();
 				foreach (KingdomMaterial material in Enum.GetValues(typeof(KingdomMaterial)))
 					for (int i = 0; i < tally.Get(material); i++)
@@ -34,12 +46,14 @@ namespace ThousandAndFirst.Harness
 							"synthetic chain material did not retain exact custody");
 						ChainSupplied.Add(unit);
 					}
+				if (Target == 5) SupplyChainHighCraft();
 				Require(KingdomMaterials.CanPayUpgrade(Zone, ChainFrom, out string failure), failure);
 				var assessment = AssessChain(out string context);
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 				if (Target == 3) { ProveChainEnvelopeOccupancy(); ProveChainRoadWear(); }
-				else { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
+				else if (Target == 4) { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
+				else { ProveChainRenovationOccupancy(); ProveChainRetainedStakes(); }
 			}
 
 			private void CheckChainPaid()
@@ -62,17 +76,57 @@ namespace ThousandAndFirst.Harness
 						+ "; assessment=" + assessment.Verdict + "; reason=" + assessment.Reason
 						+ "; " + context);
 				}
-				Require(found.Id != JobId && found.Id != ChainJobId
-					&& KingdomQuickstartBuildClaims.CleanFirstPayment(found.Claims, ChainWater,
-						new KingdomMaterialDebitCost(KingdomMaterials.UpgradeCostFor(ChainFrom)))
-					&& found.Claims.MaterialSpent == ChainSupplyClaim,
-					"chain improvement payment differs from its exact authored bill");
+				if (found.Id == JobId || found.Id == ChainJobId || !ChainPaidExactly(found.Claims)
+					|| found.Claims.MaterialSpent != ChainSupplyClaim)
+					Require(false, "chain improvement payment differs from its exact authored bill: "
+						+ ChainPaymentWitness(found.Claims));
 				ChainJobId = found.Id;
 				foreach (var supplied in ChainSupplied)
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
 				RequireChainFoundingRecovery("while the next paid heart improvement is working");
-				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTarget == 4);
+				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTo, ChainTarget >= 4);
+			}
+
+			/// <summary>The exact first payment of the one cost SupplyChain built. Rungs three and
+			/// four pay materials only, so theirs is the clean first-attempt predicate unchanged.
+			/// The arcology pays bits in whole bodies, and a body is broken up whole, so its physical
+			/// loss can exceed the price by the surplus on the bodies production chose
+			/// (Growth/KingdomMaterialDebitRules.Planning.cs, AddLost); that loss must equal the fall
+			/// in production's own bit tally across the payment, never a figure read off the claim.</summary>
+			private bool ChainPaidExactly(KingdomConstructionClaims Claims)
+			{
+				if (ChainTarget != 5)
+					return KingdomQuickstartBuildClaims.CleanFirstPayment(Claims, ChainWater, ChainSupplyCost);
+				return TryChainBitsLost(out var lost)
+					&& KingdomQuickstartBuildClaims.CleanFirstCompositePayment(Claims, ChainWater, ChainSupplyCost, lost);
+			}
+
+			private bool TryChainBitsLost(out KingdomBitTally Lost)
+			{
+				Lost = new KingdomBitTally();
+				if (ChainBitsBefore == null) return false;
+				var stock = KingdomMaterials.Stock(Zone);
+				// A stock read without exact routed-input authority tallies nothing, which would
+				// read as every bit lost; it is unreadable here, never a fall.
+				if (!stock.InputLeaseAuthorityExact) return false;
+				var after = stock.Bits;
+				for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
+				{
+					int fell = ChainBitsBefore.Get(tier) - after.Get(tier);
+					if (fell < 0) return false;
+					Lost.Set(tier, fell);
+				}
+				return true;
+			}
+
+			private string ChainPaymentWitness(KingdomConstructionClaims Claims)
+			{
+				string bits = ChainTarget != 5 ? "none" : TryChainBitsLost(out var lost) ? lost.Describe() : "unreadable";
+				return "expected=" + ChainSupplyClaim + "; requested=" + Claims?.MaterialRequested
+					+ "; spent=" + Claims?.MaterialSpent + "; lost=" + Claims?.MaterialLost
+					+ "; outstanding=" + Claims?.MaterialOutstanding + "; water=" + Claims?.WaterSpent
+					+ "/" + Claims?.WaterLost + "/" + ChainWater + "; bits-fell=" + bits;
 			}
 
 			private void CheckChainComplete()
@@ -98,7 +152,8 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(standing, Zone,
 					KingdomPlots.HeartBasinRole, out var basin, out failure)
 					&& ReferenceEquals(basin, ChainBasin)
-					&& BasinCapacity(standing) == (ChainTarget == 3 ? "160" : "512"),
+					&& BasinCapacity(standing) == (ChainTarget == 3 ? "160"
+						: ChainTarget == 4 ? "512" : "1024"),
 					"paid chain lost its original basin or expected capacity: " + failure);
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(standing, Zone,
 					StorageRole, out var store, out failure) && ReferenceEquals(store, Store), failure);

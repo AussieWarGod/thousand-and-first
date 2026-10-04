@@ -96,4 +96,66 @@ class AdvanceCheckTests(unittest.TestCase):
             with self.assertRaises(ValueError): check.bind_chain_clocks(changed, waits)
 
 
+    def chain_journal(self, persona):
+        """A clean journal for a sealed chain persona's own steps from camp-heart-chain-setup on:
+        every chain row carries the world clock, every wait its guarded rows (#264: the
+        five-rung chain adds a zero-turn capital seed and four anchors)."""
+        name = Path(persona).name
+        found = check.persona_matrix.parse_manifest(Path(persona).read_text(encoding='utf-8'), name)
+        steps = check.persona_matrix.script_lines(found['SCRIPT'], name, tuple(found['VERBS'].split(',')))
+        steps = steps[steps.index('camp-heart-chain-setup'):]
+        rows, counts, clock = [], [], 6003
+        for step in steps:
+            if step.startswith('advance '):
+                counts.append(int(step.split()[1]))
+                rows.extend(self.fixture((counts[-1],), extra=0))
+                clock += counts[-1]
+            elif step == 'camp-heart-chain-capital':
+                rows.append((step, 'OK', f'claimed-zones=4; no-turns=true; stage=City; turns={clock}'))
+            else:
+                rows.append((step, 'OK', f'stage=City; turns={clock}'))
+        return rows, tuple(counts), clock
+
+    def test_both_sealed_chain_forms_bind_their_world_clocks(self):
+        root = Path(check.__file__).resolve().parent / 'personas'
+        for persona, anchors in (('camp-heart-chain.persona', 8), ('camp-heart-rung5-native-check.persona', 12)):
+            rows, counts, clock = self.chain_journal(root / persona)
+            with self.subTest(persona=persona):
+                self.assertEqual(anchors, sum(row[0] in ('camp-heart-chain-setup', 'camp-heart-chain-supply',
+                                                         'camp-heart-chain-check') for row in rows))
+                proof = check.bind_chain_clocks(rows, check.judge(rows, counts))
+                self.assertEqual((6003, clock, sum(counts)),
+                                 (proof['chainStartTurns'], proof['chainEndTurns'], proof['elapsedTurns']))
+
+    def test_the_capital_seed_is_bound_once_in_its_slot_at_zero_turns(self):
+        root = Path(check.__file__).resolve().parent / 'personas'
+        rows, counts, _ = self.chain_journal(root / 'camp-heart-rung5-native-check.persona')
+        waits = check.judge(rows, counts)
+        seed = [row[0] for row in rows].index('camp-heart-chain-capital')
+        anchors = [index for index, row in enumerate(rows) if row[0] in (
+            'camp-heart-chain-setup', 'camp-heart-chain-supply', 'camp-heart-chain-check')]
+        self.assertEqual(anchors[7] + 1, seed)
+        self.assertEqual(seed + 1, anchors[8])
+        turns = int(check.field(rows[seed][2], 'turns'))
+        cases = {}
+        for delta in (-1, 1):
+            changed = list(rows)
+            changed[seed] = rows[seed][0], 'OK', rows[seed][2].replace(f'turns={turns}', f'turns={turns + delta}')
+            cases['clock %+d' % delta] = changed
+        cases['repeated'] = rows[:seed] + [rows[seed]] + rows[seed:]
+        cases['before the rung-four leg'] = rows[:anchors[7]] + [rows[seed], rows[anchors[7]]] + rows[seed + 1:]
+        cases['after its supply'] = rows[:seed] + [rows[seed + 1], rows[seed]] + rows[seed + 2:]
+        cases['absent'] = rows[:seed] + rows[seed + 1:]
+        four, four_counts, _ = self.chain_journal(root / 'camp-heart-chain.persona')
+        cases['on the four-rung chain'] = four[:-1] + [rows[seed]] + four[-1:]
+        for label, changed in cases.items():
+            counted = four_counts if label == 'on the four-rung chain' else counts
+            with self.subTest(case=label), self.assertRaises(ValueError):
+                check.bind_chain_clocks(changed, check.judge(changed, counted))
+        last = list(rows)
+        last[-1] = rows[-1][0], 'OK', rows[-1][2].replace('turns=', 'turns=1')
+        with self.assertRaises(ValueError):
+            check.bind_chain_clocks(last, waits)
+
+
 if __name__ == '__main__': unittest.main()

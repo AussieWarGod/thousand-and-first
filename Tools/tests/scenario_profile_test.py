@@ -891,5 +891,41 @@ class QuickstartBootPreparationTest(unittest.TestCase):
             profile.parse_quickstart_boot(["quickstart-save", "marsh", "yes"])
 
 
+
+class ScriptVerbBoundTest(unittest.TestCase):
+    """Execute script sealing only: the in-game runner refuses a script past its verb bound
+    (Harness/KingdomScenarioScriptRules.cs MaxVerbs) at the first player turn, so sealing must
+    refuse it first. Counted as the runner counts: header comments are not verbs and a counted
+    verb's two shell words are one."""
+
+    def setUp(self):
+        self.environment = mock.patch.dict(os.environ, {}, clear=True)
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
+        self.tmp = pathlib.Path(tempfile.mkdtemp(prefix="taf-script-bound-test."))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.script = self.tmp / "scenario-script.txt"
+
+    @staticmethod
+    def tokens(verbs):
+        return ["status"] * (verbs - 1) + ["advance", "1200"]
+
+    def test_exactly_the_runtime_bound_is_sealed(self):
+        self.assertEqual(48, profile.MAX_SCRIPT_VERBS)
+        profile.write_script(str(self.script), self.tokens(profile.MAX_SCRIPT_VERBS))
+        text = self.script.read_text(encoding="utf-8")
+        self.assertTrue(text.startswith(profile.SCRIPT_HEADER))
+        verbs = profile.runtime_verbs(text)
+        self.assertEqual(48, len(verbs))
+        self.assertEqual("advance 1200", verbs[-1])
+
+    def test_one_verb_past_the_runtime_bound_refuses_before_writing(self):
+        self.script.write_text("retained script", encoding="utf-8")
+        with self.assertRaises(SystemExit) as caught:
+            profile.write_script(str(self.script), self.tokens(profile.MAX_SCRIPT_VERBS + 1))
+        self.assertIn("declares 49 verbs, over the 48-verb bound", str(caught.exception))
+        self.assertEqual("retained script", self.script.read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

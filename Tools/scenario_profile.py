@@ -228,6 +228,13 @@ FRAMES_VERB = "yield-frames"
 MAX_YIELD_FRAMES = 240
 COUNTED_VERBS = {COUNTED_VERB: MAX_ADVANCE_TURNS, FRAMES_VERB: MAX_YIELD_FRAMES}
 
+# The most verbs one sealed script may declare. Must equal Harness/KingdomScenarioScriptRules.cs
+# MaxVerbs, which refuses the verb past it at the first player turn: after the profile is sealed
+# and launched, so a script over the bound would spend a whole non-retryable run finding out.
+# Counted the way the runtime counts (runtime_verbs below): one verb per non-blank, non-comment
+# line, so 'advance 1200' is one verb. Raised from 32 to 48 for the heart's fifth rung (#264).
+MAX_SCRIPT_VERBS = 48
+
 # These commands are not AutoRunner/provider verbs. They select real production embark options
 # before generation; the save variant additionally requests a real save after the boot checks.
 QUICKSTART_BOOT_VERB = "quickstart-boot"
@@ -439,6 +446,39 @@ def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
     return lines
 
 
+def dotnet_white_space(char: str) -> bool:
+    """Char.IsWhiteSpace: U+0009..U+000D, U+0085 and the Unicode separator categories.
+
+    Deliberately not str.isspace, which also admits U+001C..U+001F: String.Trim keeps those, so a
+    line Python would call blank is a verb to the runtime.
+    """
+    return (
+        "\t" <= char <= "\r"
+        or char == "\x85"
+        or unicodedata.category(char) in ("Zs", "Zl", "Zp")
+    )
+
+
+def runtime_verbs(text: str) -> list[str]:
+    """The verbs Harness/KingdomScenarioScriptRules.cs TryParse reads from sealed script text.
+
+    File.ReadAllLines splits on CR LF, a lone CR or LF; String.Trim strips .NET white space from
+    both ends; a blank line or one whose first character is '#' is not a verb; every other line is
+    exactly one verb, so 'advance 1200' counts once. Tools/personas/persona_matrix.py restates
+    this count and Tools/tests/persona_matrix_test.py proves the two agree.
+    """
+    verbs: list[str] = []
+    for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        start, end = 0, len(line)
+        while start < end and dotnet_white_space(line[start]):
+            start += 1
+        while end > start and dotnet_white_space(line[end - 1]):
+            end -= 1
+        if start < end and line[start] != "#":
+            verbs.append(line[start:end])
+    return verbs
+
+
 def write_script(destination: str, verbs: list[str]) -> None:
     extra = parse_extra_verbs(os.environ.get("TAF_SCENARIO_EXTRA_VERBS", ""))
     if extra:
@@ -468,8 +508,16 @@ def write_script(destination: str, verbs: list[str]) -> None:
           or any(verb in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()
                  for verb in QUICKSTART_LIFECYCLE_VERBS)):
         fail("Quickstart preparation is valid only for a standalone Quickstart command")
+    text = header + "\n".join(chosen) + "\n"
+    declared = len(runtime_verbs(text))
+    if declared > MAX_SCRIPT_VERBS:
+        fail(
+            "the scenario script declares %d verbs, over the %d-verb bound the in-game runner "
+            "enforces before its first verb (Harness/KingdomScenarioScriptRules.cs MaxVerbs); "
+            "'advance <turns>' counts as one verb" % (declared, MAX_SCRIPT_VERBS)
+        )
     with open(destination, "w", encoding="utf-8") as handle:
-        handle.write(header + "\n".join(chosen) + "\n")
+        handle.write(text)
     print("sealed scenario script: " + ", ".join(chosen))
 
 

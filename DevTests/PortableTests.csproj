@@ -46,8 +46,16 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainRules.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartHighCraftRules.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
+    <Compile Include="KingdomCampHeartRung5NativeSourceTests.cs" />
+    <Compile Include="KingdomCampHeartChainRulesTests.cs" />
+    <Compile Include="KingdomCampHeartHighCraftRulesTests.cs" />
+    <Compile Include="KingdomCampHeartHighCraftFillTests.cs" />
+    <Compile Include="KingdomQudBlueprintCorpus.cs" />
+    <Compile Include="KingdomCampHeartHighCraftCorpusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
     <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
@@ -1432,6 +1440,7 @@
 	<Compile Include="..\Harness\KingdomScenarioRowValidator.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioJournalRules.cs" />
+	<Compile Include="..\Harness\KingdomScenarioScriptRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
 	<Compile Include="..\Simulation\City\KingdomSemanticClockRules.cs" />
@@ -1471,6 +1480,7 @@
 	<Compile Include="KingdomScenarioKeySetDigestTests.cs" />
 	<Compile Include="KingdomScenarioRulesTests.cs" />
 	<Compile Include="KingdomScenarioJournalRulesTests.cs" />
+	<Compile Include="KingdomScenarioScriptRulesTests.cs" />
     <Compile Include="KingdomScenarioLoadRulesTests.cs" />
     <Compile Include="KingdomScenarioSaveLoadSourceTests.cs" />
     <Compile Include="KingdomResidentReceiptSerializationSourceTests.cs" />

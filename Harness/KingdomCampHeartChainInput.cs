@@ -14,8 +14,10 @@ namespace ThousandAndFirst
 
 		private void ArmChainInput()
 		{
+			// Either sealed form of the paid chain owns its dedicated game's input: the five-rung
+			// form is the same 24 steps plus the arcology leg, and isolation is the chain's law.
 			ChainInputOwned = Harness.KingdomScenarioScript.TryRead(out var script, out _)
-				&& Harness.KingdomCampHeartChainScript.Matches(script);
+				&& Harness.KingdomCampHeartChainScript.SealedTargetRung(script) > 0;
 		}
 
 		internal static KingdomScenarioAutoRunner ChainInputOwner()
@@ -32,7 +34,7 @@ namespace ThousandAndFirst
 
 		private bool VerifyChainInput()
 		{
-			if (!Harness.KingdomCampHeartChainScript.Matches(Verbs)) return true;
+			if (Harness.KingdomCampHeartChainScript.SealedTargetRung(Verbs) == 0) return true;
 			var target = AccessTools.Method(typeof(GameManager), nameof(GameManager.UpdateInput));
 			var patches = Harmony.GetPatchInfo(target);
 			var prefix = AccessTools.Method(typeof(Harness.KingdomCampHeartChainInputPatch), "Prefix");

@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,65 @@ PROFILE_SPEC = importlib.util.spec_from_file_location(
 )
 profile = importlib.util.module_from_spec(PROFILE_SPEC)
 PROFILE_SPEC.loader.exec_module(profile)
+
+HARNESS = ROOT / "Harness"
+# String and char literals and line comments, blanked to equal width before braces are matched,
+# so offsets into the blanked text are offsets into the source.
+CS_NOISE = re.compile(r'@?"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)\'|//[^\n]*')
+CS_JOURNAL_ROW = re.compile(r'KingdomScenarioJournal\.Append\("([a-z0-9-]+)"')
+
+
+def harness_method(name: str) -> str:
+    """The source body of the ONE Harness method declared `void <name>(`, braces balanced."""
+    hits = []
+    for path in sorted(HARNESS.glob("*.cs")):
+        text = path.read_text(encoding="utf-8")
+        for found in re.finditer(r"\bvoid\s+%s\s*\(" % re.escape(name), text):
+            hits.append((text, found.end()))
+    if len(hits) != 1:
+        raise AssertionError("%d Harness declarations of void %s(" % (len(hits), name))
+    text, start = hits[0]
+    blank = CS_NOISE.sub(lambda m: " " * len(m.group(0)), text)
+    opened = blank.index("{", start)
+    depth = 0
+    for index in range(opened, len(blank)):
+        depth += {"{": 1, "}": -1}.get(blank[index], 0)
+        if depth == 0:
+            return text[opened : index + 1]
+    raise AssertionError("void %s( never closes" % name)
+
+
+def supply_rows(target: int) -> list[str]:
+    """The observation rows SupplyChain(target) journals, in the order the harness writes them:
+    its per-rung probes in statement order, each resolved through its own journal Append. Derived
+    from Harness/KingdomCampHeartChainPayment.cs rather than restated, so a persona EXPECT that
+    lists them in any other order fails offline (#264 review: exotics is journalled first)."""
+    body = harness_method("SupplyChain")
+    calls = [
+        (found.start(), found.group(2))
+        for found in re.finditer(r"if \(Target == (\d)\) (\w+)\(\);", body)
+        if int(found.group(1)) == target
+    ]
+    chain = re.search(
+        r"if \(Target == 3\) \{([^{}]*)\}\s*else if \(Target == 4\) \{([^{}]*)\}"
+        r"\s*else \{([^{}]*)\}",
+        body,
+    )
+    if chain is None:
+        raise AssertionError("SupplyChain lost its per-rung probe chain")
+    group = {3: 1, 4: 2, 5: 3}[target]
+    calls.extend(
+        (chain.start(group) + found.start(), found.group(1))
+        for found in re.finditer(r"(\w+)\(\);", chain.group(group))
+    )
+    rows: list[str] = []
+    for _, method in sorted(calls):
+        journalled = CS_JOURNAL_ROW.findall(harness_method(method))
+        if not journalled:
+            raise AssertionError("%s journals no observation row" % method)
+        rows.extend(journalled)
+    return rows
+
 
 GREEN = (
     "REQUEST=arch-gallery-slice;facing=north\n"
@@ -120,6 +180,12 @@ class ManifestGrammarTest(unittest.TestCase):
 
     def test_timeout_bounds(self):
         self.assertEqual(60, matrix.parse_timeout("60", "x"))
+        # Both ends of the inclusive band, by value: the ceiling moved for the rung-5 persona and a
+        # test that only checked MAX_TIMEOUT + 1 would have passed at any ceiling at all.
+        self.assertEqual(7200, matrix.MAX_TIMEOUT)
+        self.assertEqual(1, matrix.parse_timeout("1", "x"))
+        self.assertEqual(matrix.MAX_TIMEOUT,
+                         matrix.parse_timeout(str(matrix.MAX_TIMEOUT), "x"))
         for bad in ("0", "-1", "abc", str(matrix.MAX_TIMEOUT + 1), "1.5"):
             with self.assertRaises(SystemExit):
                 matrix.parse_timeout(bad, "x")
@@ -429,6 +495,319 @@ class ScriptGrammarTest(unittest.TestCase):
         self.assertIn("frame", profile.RESERVED_VERBS)
 
 
+class ScriptVerbBoundTest(unittest.TestCase):
+    """The runner's sealed-script verb bound, mirrored so `load` and `fields` refuse a persona the
+    runner would refuse before its first verb (native run 4ce2a6a1: 35 verbs against the old 32)."""
+
+    RUNTIME = ROOT / "Harness" / "KingdomScenarioScriptRules.cs"
+    RUNG5 = ROOT / "Tools" / "personas" / "camp-heart-rung5-native-check.persona"
+
+    @staticmethod
+    def script(verbs: int) -> str:
+        # The last step is a counted verb: two shell words, one sealed line, ONE runtime verb.
+        return ";".join(["status"] * (verbs - 1) + ["advance 1200"])
+
+    @staticmethod
+    def manifest(verbs: int) -> str:
+        return (
+            "REQUEST=founding-first-city\nSCRIPT=%s\nEXPECT=status:OK,COMPLETE\n"
+            % ScriptVerbBoundTest.script(verbs)
+        )
+
+    def test_the_bound_is_one_value_in_the_runtime_and_both_tools(self):
+        declared = re.findall(
+            r"^\s*internal const int MaxVerbs = (\d+);\r?$",
+            self.RUNTIME.read_text(encoding="utf-8"),
+            re.M,
+        )
+        self.assertEqual(["48"], declared)
+        self.assertEqual(48, matrix.MAX_SCRIPT_VERBS)
+        self.assertEqual(matrix.MAX_SCRIPT_VERBS, profile.MAX_SCRIPT_VERBS)
+
+    def test_exactly_the_bound_is_accepted_and_advance_counts_once(self):
+        lines = matrix.script_lines(self.script(48), "x")
+        self.assertEqual(48, len(lines))
+        self.assertEqual("advance 1200", lines[-1])
+        self.assertEqual(49, len(matrix.script_words(self.script(48), "x")))
+        found = matrix.parse_manifest(self.manifest(48), "x")
+        self.assertEqual(49, len(found["SCRIPT_WORDS"].split()))
+
+    def test_one_verb_past_the_bound_is_refused_by_every_entry(self):
+        for call in (
+            lambda: matrix.script_words(self.script(49), "x"),
+            lambda: matrix.script_lines(self.script(49), "x"),
+            lambda: matrix.parse_manifest(self.manifest(49), "x"),
+        ):
+            with self.subTest(call=call), self.assertRaises(SystemExit) as caught:
+                call()
+            self.assertIn("declares 49 verbs, over the 48-verb bound", str(caught.exception))
+
+    def test_fields_refuses_a_persona_past_the_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            persona = pathlib.Path(directory) / "long.persona"
+            for verbs, code in ((48, 0), (49, 1)):
+                persona.write_text(self.manifest(verbs), encoding="utf-8")
+                result = subprocess.run(
+                    [sys.executable, str(SPEC.origin), "fields", str(persona)],
+                    capture_output=True,
+                    check=False,
+                )
+                with self.subTest(verbs=verbs):
+                    self.assertEqual(code, result.returncode, result.stderr)
+            self.assertIn(b"declares 49 verbs, over the 48-verb bound", result.stderr)
+            self.assertEqual(b"", result.stdout)
+
+    def test_the_rung_five_persona_seals_thirty_five_verbs(self):
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        extra = tuple(found["VERBS"].split(","))
+        lines = matrix.script_lines(found["SCRIPT"], self.RUNG5.name, extra)
+        self.assertEqual(35, len(lines))
+        sealed = profile.SCRIPT_HEADER + "\n".join(lines) + "\n"
+        self.assertEqual(lines, matrix.runtime_verbs(sealed))
+        self.assertEqual(lines, profile.runtime_verbs(sealed))
+        self.assertLessEqual(len(lines), matrix.MAX_SCRIPT_VERBS)
+
+    def test_the_count_reads_lines_exactly_as_the_runner_does(self):
+        for count in (matrix.runtime_verbs, profile.runtime_verbs):
+            with self.subTest(tool=count.__module__):
+                self.assertEqual(
+                    ["status", "advance 1200"],
+                    count("# header\n\n   \n  status  \r\nadvance 1200\r\t# indented\n"),
+                )
+                # .NET white space trims (NBSP, line separator, vertical tab, form feed) without
+                # splitting the line; U+001C stays a verb although str.isspace calls it white space.
+                self.assertEqual(["status"], count("\u00a0status\u2028\n"))
+                self.assertEqual(["status"], count("\x0bstatus\x0c"))
+                self.assertEqual(["\x1c"], count("\x1c\n"))
+                self.assertEqual(["a # b"], count(" a # b \n"))
+                self.assertEqual([], count(""))
+
+    def test_both_tools_agree_on_white_space_for_every_basic_plane_character(self):
+        for code in range(0x10000):
+            char = chr(code)
+            self.assertEqual(
+                profile.dotnet_white_space(char), matrix.dotnet_white_space(char), hex(code)
+            )
+
+    def test_every_shipped_persona_seals_the_lines_the_profile_tool_writes(self):
+        top = sorted((ROOT / "Tools" / "personas").glob("*.persona"))
+        cross = sorted((ROOT / "Tools" / "personas" / "cross-version").glob("*.persona"))
+        # The count itself is ShippedPersonaTest's one pin; this proves both trees are walked.
+        self.assertIn(self.RUNG5, top)
+        self.assertTrue(cross)
+        for path in top + cross:
+            found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+            if found.get("RELOAD"):
+                continue  # a reload seals the one fixed Quickstart save command
+            extra = tuple(verb for verb in found["VERBS"].split(",") if verb)
+            lines = matrix.script_lines(found["SCRIPT"], path.name, extra)
+            with self.subTest(persona=path.name):
+                self.assertEqual(profile.parse_script(found["SCRIPT_WORDS"].split(), extra), lines)
+                self.assertLessEqual(len(lines), matrix.MAX_SCRIPT_VERBS)
+
+
+class HarnessJournalOrderTest(unittest.TestCase):
+    """Observation-row orders read from the harness that writes them (#264 review: the rung-5
+    persona listed the supply rows in an order SupplyChain never journals, and the old host
+    table restated the persona, so a correct native run would have failed at row 41)."""
+
+    RUNG5 = ROOT / "Tools" / "personas" / "camp-heart-rung5-native-check.persona"
+
+    def test_the_derivation_reads_the_natively_accepted_four_rung_orders(self):
+        # Native30's accepted journal: spatial (HoldChainTent, before SupplyChain), occupancy,
+        # road-wear before supply 3; renovation, survey-stakes before supply 4.
+        self.assertEqual(["camp-heart-chain-occupancy", "camp-heart-chain-road-wear"], supply_rows(3))
+        self.assertEqual(["camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"], supply_rows(4))
+
+    def test_the_rung_five_supply_rows_follow_the_harness_call_order(self):
+        rows = supply_rows(5)
+        self.assertEqual(3, len(rows))
+        self.assertEqual(3, len(set(rows)))
+        payment = harness_method("SupplyChain")
+        self.assertLess(payment.index("if (Target == 5) SupplyChainHighCraft();"),
+                        payment.index("ProveChainRetainedStakes();"))
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        expected = matrix.parse_expect(found["EXPECT"], self.RUNG5.name,
+                                       tuple(found["VERBS"].split(",")))
+        supply = [index for index, item in enumerate(expected)
+                  if item[0] == "camp-heart-chain-supply" and item[2] == "target=5"]
+        self.assertEqual(1, len(supply))
+        start = supply[0] - len(rows)
+        self.assertEqual(rows, [item[0] for item in expected[start:supply[0]]])
+
+    def test_a_journal_in_harness_order_passes_and_the_old_order_fails(self):
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        expected = matrix.parse_expect(found["EXPECT"], self.RUNG5.name,
+                                       tuple(found["VERBS"].split(",")))
+        journal = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, journal))
+        rows = supply_rows(5)
+        at = [item[0] for item in journal].index(rows[0])
+        swapped = list(journal)
+        swapped[at : at + 3] = [journal[at + 1], journal[at + 2], journal[at]]
+        self.assertTrue(matrix.match(expected, swapped))
+
+    def test_the_method_reader_balances_braces_past_literals_and_comments(self):
+        body = harness_method("SupplyChainHighCraft")
+        self.assertTrue(body.startswith("{") and body.endswith("}"))
+        self.assertEqual(["camp-heart-chain-exotics"], CS_JOURNAL_ROW.findall(body))
+        with self.assertRaises(AssertionError):
+            harness_method("Require")  # declared by several harness classes: never guessed
+
+
+class HandoverWaitPlacementTest(unittest.TestCase):
+    """Which scripted wait each paid heart handover lands in, derived from the quoted ticks (#264
+    review: the rung-5 persona listed the arcology's renovation rows after a fourth 6600-turn
+    wait, while that handover falls inside the third, so a correct native run would have failed
+    its positional match about 32000 turns in).
+
+    The rule. A paid heart improvement is quoted its successor's authored Ticks at
+    KingdomUpgradeRules.BuildTicksPercent, after the district factor, which stays neutral because
+    only the charter assigns a district (Core/KingdomCharterPart.Civic.cs). The settlement pass
+    that begins it is the first daily boundary after the supply verb, so the paid check, which
+    closes the next `advance 1200`, comes 0..1200 turns after it. Receipt-bearing labour advances
+    only at daily passes (Growth/KingdomScaffold.cs TurnTick), so it completes at the first pass
+    at or after its due tick, and the handover, where the post-payment probe journals its witness
+    rows, runs at the pass after that. Native30 recorded exactly this for all three paid handovers.
+    """
+
+    PERSONAS = ("camp-heart-chain.persona", "camp-heart-rung5-native-check.persona")
+    # Native30 (beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/run-Player.log, relative
+    # to the evidence root): the semantic boundary each paid improvement began on ("improvement
+    # begun ... ticks=N" inside that boundary's pass), its quoted ticks, and the boundary whose
+    # pass logged "heart rung raised".
+    NATIVE30 = ((414000, 2250, 417600), (421200, 4500, 427200), (429600, 9000, 440400))
+    PAID = re.compile(r"paid-heart-chain paid; target=(\d)\Z")
+
+    @staticmethod
+    def constant(relative: str, pattern: str) -> int:
+        found = re.findall(pattern, (ROOT / relative).read_text(encoding="utf-8"))
+        if len(found) != 1:
+            raise AssertionError("%s: %d matches for %s" % (relative, len(found), pattern))
+        return int(found[0])
+
+    def day(self) -> int:
+        clock = (ROOT / "Simulation" / "City" / "KingdomSemanticClockRules.cs").read_text(encoding="utf-8")
+        self.assertIn("public const long CadenceTicks = KingdomRules.TicksPerDay;", clock)
+        return self.constant("Core/KingdomRules.Economy.cs", r"public const long TicksPerDay = (\d+)L;")
+
+    @staticmethod
+    def scale(ticks: int, percent: int) -> int:
+        # KingdomUpgradeRules.ScaleTicks, with production's integer floors.
+        return ticks // 100 * percent + ticks % 100 * percent // 100
+
+    def quoted(self, rung: int) -> int:
+        """BuildTicks of the paid improvement that raises the heart to `rung`."""
+        root = ET.parse(ROOT / "RuntimeData" / "KingdomBuildings.xml").getroot()
+        designs = {item.get("Key"): item for item in root.iter("building")}
+        chain, key = [], "heartbasin"
+        while key:
+            chain.append(key)
+            key = designs[key].get("UpgradesTo")
+        self.assertEqual(5, len(chain))
+        override = int(designs[chain[rung - 2]].get("UpgradeTicks") or 0)
+        if override > 0:
+            return override
+        neutral = self.constant("Core/KingdomRules.Districts.cs",
+                                r"public const int DistrictNeutralPercent = (\d+);")
+        percent = self.constant("Growth/KingdomUpgradeRules.cs",
+                                r"public const int BuildTicksPercent = (\d+);")
+        fresh = int(designs[chain[rung - 1]].get("Ticks"))
+        return max(1, self.scale(max(1, self.scale(fresh, neutral)), percent))
+
+    def handover_after_begin(self, ticks: int) -> int:
+        day = self.day()
+        return (-(-ticks // day) + 1) * day
+
+    def window(self, rung: int) -> tuple[int, int]:
+        """Earliest and latest handover, in turns after the paid check. The check closes an
+        `advance 1200` that may run 1201 turns, and a pass runs on the first turn at or after its
+        boundary, so one turn of slack is allowed at each end."""
+        latest = self.handover_after_begin(self.quoted(rung))
+        return latest - self.day() - 1, latest + 1
+
+    @staticmethod
+    def holding_wait(waits: list[int], earliest: int, latest: int) -> tuple[int, int, int]:
+        """(1-based wait, turns before, turns after) for the one wait holding the whole window."""
+        start = 0
+        for index, turns in enumerate(waits):
+            # Each earlier wait may run one turn long, so this one may start that much later.
+            late_start, end = start + index, start + turns
+            if late_start < earliest and latest < end:
+                return index + 1, earliest - late_start, end - latest
+            start = end
+        return 0, 0, 0
+
+    def placements(self, name: str) -> dict[int, tuple[list[int], int]]:
+        """Per paid rung: the script's waits between its paid and completion checks, and how many
+        of those waits the persona's EXPECT lists before the handover's witness rows."""
+        path = ROOT / "Tools" / "personas" / name
+        found = matrix.parse_manifest(path.read_text(encoding="utf-8"), name)
+        extra = tuple(found["VERBS"].split(","))
+        expected = matrix.parse_expect(found["EXPECT"], name, extra)
+        steps = matrix.script_lines(found["SCRIPT"], name, extra)
+        checks = [at for at, step in enumerate(steps) if step == "camp-heart-chain-check"]
+        rows = [at for at, item in enumerate(expected) if item[0] == "camp-heart-chain-check"]
+        self.assertEqual(len(checks), len(rows), name)
+        result = {}
+        for ordinal, at in enumerate(rows):
+            paid = self.PAID.search(expected[at][2])
+            if paid is None:
+                continue
+            rung = int(paid.group(1))
+            between = steps[checks[ordinal] + 1 : checks[ordinal + 1]]
+            self.assertTrue(between and all(step.startswith("advance ") for step in between), name)
+            listed = [item[0] for item in expected[at + 1 : rows[ordinal + 1]]]
+            witnesses = [index for index, verb in enumerate(listed) if verb != "advance"]
+            self.assertTrue(witnesses, "%s rung %d lists no handover witness" % (name, rung))
+            self.assertEqual(list(range(witnesses[0], witnesses[-1] + 1)), witnesses, name)
+            self.assertEqual(len(between), len(listed) - len(witnesses), name)
+            result[rung] = ([int(step.split()[1]) for step in between], witnesses[0])
+        return result
+
+    def test_the_rule_reproduces_native30s_three_paid_handovers(self):
+        for rung, (begin, ticks, raised) in zip((2, 3, 4), self.NATIVE30):
+            with self.subTest(rung=rung):
+                self.assertEqual(ticks, self.quoted(rung))
+                self.assertEqual(raised, begin + self.handover_after_begin(ticks))
+
+    def test_every_paid_handover_lands_inside_the_wait_its_witnesses_follow(self):
+        day = self.day()
+        seen = set()
+        for name in self.PERSONAS:
+            for rung, (waits, listed) in self.placements(name).items():
+                seen.add(rung)
+                earliest, latest = self.window(rung)
+                held, before, after = self.holding_wait(waits, earliest, latest)
+                with self.subTest(persona=name, rung=rung):
+                    self.assertNotEqual(0, held, "handover %d..%d straddles waits %r"
+                                        % (earliest, latest, waits))
+                    self.assertEqual(held, listed, "EXPECT lists the witnesses after wait %d; the "
+                                     "handover lands in wait %d of %r" % (listed, held, waits))
+                    # A daily pass of slack before the earliest handover, so no drift of the pass
+                    # phase can put the witnesses ahead of their wait's advance row; and when
+                    # another wait follows, a pass of slack after the latest one, so a labour
+                    # shortfall or a retry adding a pass cannot carry them past the next advance
+                    # row. After the last wait comes the completion check, which refuses an
+                    # unfinished handover by name.
+                    self.assertGreaterEqual(before, day)
+                    if held < len(waits):
+                        self.assertGreaterEqual(after, day)
+        self.assertEqual({3, 4, 5}, seen)
+
+    def test_the_fixture_assigns_no_district_so_the_quote_stays_neutral(self):
+        writes = re.compile(r"ZoneDistricts\s*(?:\[[^\]]*\]\s*=(?!=)|\.(?:Add|Remove|Clear)\(|=(?!=))")
+        for path in sorted(HARNESS.glob("*.cs")):
+            with self.subTest(shard=path.name):
+                self.assertIsNone(writes.search(path.read_text(encoding="utf-8")))
+        self.assertTrue(writes.search("System.ZoneDistricts[zone.ZoneID] = district;"))
+        self.assertIsNone(writes.search("System.ZoneDistricts != null && System.ZoneDistricts.Count == 0"))
+        self.assertIn("System.ZoneDistricts[zone.ZoneID] = district;",
+                      (ROOT / "Core" / "KingdomCharterPart.Civic.cs").read_text(encoding="utf-8"))
+        self.assertIn("// Receipt-bearing work advances only from KingdomConstruction.OnSettlementPass.",
+                      (ROOT / "Growth" / "KingdomScaffold.cs").read_text(encoding="utf-8"))
+
+
 class ExtraVerbTest(unittest.TestCase):
     def test_declared_third_party_verb_becomes_sealable(self):
         found = matrix.parse_manifest(
@@ -683,6 +1062,41 @@ class MatchingTest(unittest.TestCase):
         self.assertIn(refusal, matrix.significant(rows + [refusal]))
         self.assertTrue(matrix.match(expected, matrix.significant(rows[:1] + [trace] + rows[2:])))
 
+    def test_arcology_witnesses_cannot_be_missing_repeated_or_refused(self):
+        """The rung-5 persona's own EXPECT binds its three new observation rows - the crown seed's
+        book read, the high-craft supply and the arcology's preflight and standing reads - by
+        position, outcome and reading (#264 review; docs/DEVELOPMENT.md: test missing, duplicate
+        and refused evidence for every new observation row)."""
+        name = "camp-heart-rung5-native-check.persona"
+        found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(encoding="utf-8"), name)
+        expected = matrix.parse_expect(found["EXPECT"], name, tuple(found["VERBS"].split(",")))
+        rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, rows))
+        # Never bookkeeping and never a non-positional diagnostic, so a match sees every one.
+        self.assertEqual(rows, matrix.significant(rows))
+        new = ("camp-heart-chain-crown", "camp-heart-chain-exotics", "camp-heart-chain-arcology")
+        for verb in new:
+            self.assertIn(verb, matrix.CAMP_HEART_EVIDENCE_ROWS)
+        indices = [index for index, row in enumerate(rows) if row[0] in new]
+        self.assertEqual(list(new) + ["camp-heart-chain-arcology"], [rows[index][0] for index in indices])
+        for index in indices:
+            verb, outcome, wanted = rows[index]
+            with self.subTest(witness=verb, row=index + 1):
+                self.assertTrue(wanted, "the witness binds a reading, not only its name")
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                changed = list(rows)
+                changed[index] = (verb, "REFUSED", wanted)
+                self.assertTrue(matrix.match(expected, changed))
+                changed[index] = (verb, outcome, "unwitnessed")
+                self.assertTrue(matrix.match(expected, changed))
+        # The two arcology reads are not interchangeable: preflight at rung four, standing at five.
+        first, second = indices[2], indices[3]
+        swapped = list(rows)
+        swapped[first] = rows[first][:2] + (rows[second][2],)
+        swapped[second] = rows[second][:2] + (rows[first][2],)
+        self.assertTrue(matrix.match(expected, swapped))
+
     def green_journal(self):
         return journal(
             row("RUNNER-ARMED", "OK"),
@@ -834,7 +1248,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(110, len(self.personas()))
+        self.assertEqual(111, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1078,6 +1492,14 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
+                # The arcology leg: the crown seed, then the fifth rung's supply rows in the order
+                # SupplyChain journals them (derived from the harness, never restated), then the
+                # standing read before the final check.
+                (("camp-heart-chain-crown",), "camp-heart-chain-capital"),
+                (tuple(supply_rows(5)), "camp-heart-chain-supply"),
+                (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
+                 "camp-heart-chain-check"),
+                (("camp-heart-chain-arcology",), "camp-heart-chain-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),
