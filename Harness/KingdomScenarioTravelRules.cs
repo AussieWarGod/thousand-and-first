@@ -101,6 +101,16 @@ namespace ThousandAndFirst.Harness
 		internal static bool Clock(long Before, long After, long Now)
 			=> Before >= 0 && After >= Before && After <= Now;
 
+		// The engine completes an advance on the next player action opportunity, so a wait can
+		// observe one extra completed turn beyond the request (docs/DEVELOPMENT.md). Return is
+		// ready at the requested wait or exactly one turn past it; never more. The difference
+		// form cannot overflow: both operands are non-negative once Elapsed >= Required >= 0.
+		internal static bool ReturnReady(long Elapsed, long Required)
+			=> Required >= 0 && Elapsed >= Required && Elapsed - Required <= 1;
+
+		internal static string ReturnRefusal(long Elapsed)
+			=> "return requires " + WaitTurns + " or " + (WaitTurns + 1) + " completed advance turns; observed " + Elapsed;
+
 		internal static bool Budget(int Thirds, int Heavy)
 			=> Thirds >= 0 && Thirds <= 24 && Heavy >= 0 && Heavy <= 4;
 		internal static bool Schedule(long Before, int Ordinal, long After, int NextOrdinal)

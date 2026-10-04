@@ -47,6 +47,17 @@ def economic_rows(mode="away", **changes):
     return result
 
 
+def return_wait(fixture, mode, elapsed):
+    """A journal whose return wait completed at elapsed turns, reported as the harness does:
+    beta-return runs in the same action opportunity that completes the advance, so wait-turns
+    equals that advance's elapsed count."""
+    journal = fixture(mode, **{"wait-turns": str(elapsed)})
+    index = max(i for i, row in enumerate(journal)
+                if row[0] == "advance-complete" and row[2].endswith(" of 1200 requested"))
+    journal[index] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of 1200 requested")
+    return journal
+
+
 class TravelTests(unittest.TestCase):
     def test_local_pause_requires_daily_reconciliation_before_master_disable(self):
         for mode in ("present", "away"):
@@ -92,6 +103,28 @@ class TravelTests(unittest.TestCase):
                                                f"{elapsed} turn(s) elapsed of 1200 requested")
                             self.assertEqual(not valid, bool(
                                 travel.assess(mutated, mode, fixture is economic_rows)))
+
+    def test_return_wait_witness_accepts_one_turn_overshoot_and_names_both_numbers(self):
+        # Native beta-economic-present@a51c2fde completed its return wait at "1201 turn(s)
+        # elapsed of 1200 requested". Harness ReturnReady admits 1200 or 1201 and beta-check
+        # reports that count as wait-turns, so the witness holds the same band and no wider.
+        for fixture in (rows, economic_rows):
+            for mode in ("present", "away"):
+                for elapsed, valid in ((1200, True), (1201, True), (1202, False), (1199, False)):
+                    with self.subTest(fixture=fixture.__name__, mode=mode, elapsed=elapsed):
+                        expected = [] if valid else [
+                            f"travel wait requires 1200 or 1201 completed advance turns; observed {elapsed}"]
+                        self.assertEqual(travel.assess(return_wait(fixture, mode, elapsed), mode,
+                                                       fixture is economic_rows), expected)
+
+    def test_pair_reports_both_waits_when_one_leg_overshoots(self):
+        for fixture in (rows, economic_rows):
+            with self.subTest(fixture=fixture.__name__):
+                result = travel.compare(fixture("present"), return_wait(fixture, "away", 1201))
+                self.assertEqual((result["presentWaitTurns"], result["awayWaitTurns"]), (1200, 1201))
+                self.assertNotIn("waitTurns", result)
+                with self.assertRaisesRegex(ValueError, "observed 1202"):
+                    travel.compare(fixture("present"), return_wait(fixture, "away", 1202))
 
     def test_warmup_requires_a_real_day_before_observation(self):
         for fixture in (rows, economic_rows):

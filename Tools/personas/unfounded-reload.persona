@@ -1,0 +1,10 @@
+# #272/#271: unfounded real save, exact owned stop and cold load in a fresh sealed descendant
+# profile, then the production founding transaction and a second real save on the loaded world.
+# The host owns both processes; Tools/check-unfounded-results.py strictly checks both journals,
+# both Player.logs and the save artifacts. No script replay, graceful-Quit or ordinary-play claim.
+DESCRIPTION=save an unfounded world, cold reload it, found the first city and save again
+REQUEST=founding-first-city
+SCRIPT=reload-descendant unfounded 8.22@40,12
+EXPECT=RELOAD-COMPLETE
+SET=reload,save-load
+TIMEOUT=900
