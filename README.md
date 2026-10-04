@@ -4,11 +4,18 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.7 public Alpha playtest.**
-Public 0.3.7 is published and finalized; one subscribed installation was verified.
-See the linked release ledger for exact evidence and remaining coverage limits.
+**Status: 0.3.8 pre-release source (private Alpha candidate).**
+The 0.3.7 public Alpha playtest remains the published release. This hotfix candidate has not
+been uploaded or accepted.
 Back up saves before updating. Current evidence and remaining coverage limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
+
+This hotfix lets a game save before its kingdom is founded. Since 0.3.0, every save made before
+the first city was founded failed with "growth envelope is not bounded and writable": the
+Roleplay or Wander checkpoint on entering Joppa, Classic or Kingdom autosaves and manual saves,
+and a Kingdom Quickstart that stopped before founding. Founded saves are unchanged. The
+candidate also targets Caves of Qud core build 2.0.211.56, which Steam installed on 2026-09-25.
+Gameplay is otherwise unchanged from 0.3.7.
 
 This Alpha adds enclosed starter housing and measures room privacy from physical rooms,
 furniture and clear access. Beds and chairs reserve space even when Qud lets people walk over

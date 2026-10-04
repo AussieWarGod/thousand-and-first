@@ -1,5 +1,22 @@
 # Current implementation and release evidence
 
+## Isolated 0.3.8 hotfix back-merged into dev
+
+Main's isolated 0.3.8 hotfix (PR #278, merge commit `14256e35`) is merged into dev with a merge
+commit, so its private-candidate commit is reachable from dev before any `staging-v0.3.8` tag
+(docs/RELEASING.md). Production C# is dev's except the 0.3.8 release literal
+(`Core/KingdomReleaseInfo.cs`); `manifest.json`, the private staging `workshop.json` and the
+README status follow the hotfix. Dev keeps #277's unfounded-save harness and tests and its own
+`docs/STRUCTURE_REVIEW.json`. The 0.3.8 hotfix section below records main's isolated candidate;
+its census and structural review (`docs/STRUCTURE_REVIEW_0_3_8.md`) bind that inventory, not
+this combined dev inventory, which no semantic review binds. No tag, upload or release delivery
+is claimed here.
+
+Current census: 3123 staged C# files; 441,887 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3157 files.
+Inventory SHA-256: `3b909f98cb47433614fa010943764f352494423122efe6de790beeb61aa7b73b`.
+Engine gate passes for 3123 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Unfounded saves - source fix, native proof owed (#271, #272)
 
 Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
@@ -15,8 +32,12 @@ strict gate. Refusals keep their message as the exact prefix and gain the failin
 permanently on the lifecycle v5 read branch. No format bump: the dormant record is the historical
 v5 lifecycle record, which every 0.3.x lifecycle reader parses back into the same book
 (engine-free). Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
-refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
-hotfix built from main.
+refuse, so they do not load on those releases. Downgrade scope: loading a newer save with older
+mod code remains unsupported (PLAYTESTING.md, "Upgrade, rollback, and uninstall"); roll back by
+restoring the backed-up save with its matching package. Only the lifecycle and polity records
+of the isolated 0.3.8 hotfix have been checked against older readers, engine-free (0.3.8
+section below); no whole save has been loaded on an older build, and no kingdom has been
+founded in game there.
 
 Engine-free evidence only. `KingdomLifecycleDormantSaveTests` (35 cases, registered in both
 suites) pins the exact 139-byte dormant image, equal to the historical v5 fixture writer; cold
@@ -603,6 +624,136 @@ Development compile scope: 3107 sources, baseline and compatibility symbols. Cen
 Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
 Structural review was stale at that checkpoint; the current delta review is recorded above.
 No new release delivery is claimed.
+
+## 0.3.8 hotfix candidate: unfounded games can be saved (#271, #272)
+
+Private hotfix candidate built from main (public 0.3.7 plus this fix and the build re-pin); not
+yet uploaded or accepted. Public Alpha remains 0.3.7.
+
+Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
+identity-unbound growth book, and the strict growth writer gate had no branch for it, so every
+save before founding threw "growth envelope is not bounded and writable". The same code shipped
+in every 0.3.x release. `WriteLifecycle` now chooses the frame before writing any byte: a book
+that `DormantLifecycleWireExact` admits (identity-unbound, pristine growth, no lane operations,
+resources or proofs, a constructor-default raid ledger, and the pristine shape or the canonical
+unbound quarantine) is written in the growth-free lifecycle v5 frame, which the lifecycle
+reader (unchanged since v0.3.0) rebuilds into the same book. Every other book keeps the current
+frame and the unchanged strict gate. Refusals keep their message as the exact prefix and gain the
+failing check. The production writer now depends permanently on the lifecycle v5 read branch. No
+format bump. The four production files are byte-identical to dev PR #277.
+
+The first native unfounded save on this candidate then exposed a second defect behind the first.
+With the lifecycle book written, the engine save threw on the next `KingdomSystem` field:
+"Invalid polity authority: unobserved presentation option is noncanonical", from
+`KingdomPolityCodec.RequireEncodable` via `KingdomPolityLedger.Write`.
+`KingdomPolityOptions.FutureCauseFloorTick` defaulted to 0, so the constructor-default
+`PolityLedger` failed `ValidOptions`, which requires `long.MaxValue` while presentation is
+Unobserved. Only `KingdomPolityRules.Normalize` repaired it, and `KingdomSystem` normalizes on
+load and at founding, never before a fresh game's first save; the lifecycle failure hid it in
+every 0.3.x release. The initializer is now `long.MaxValue`, ported from dev commit 40477cb7
+(PR #250) with its two `KingdomPolityLedgerTests` cases, both files byte-identical to that
+commit; the founding-reputation feature in that PR is not ported. Every polity decoder takes the
+options from the wire, or the disabled default for wire v1 and opaque envelopes, so no saved
+ledger depends on the initializer. A fresh ledger is now field for field the ledger
+normalization produced, so founding binds the same bytes as before.
+
+Downgrade scope: loading a newer save with older mod code remains unsupported (PLAYTESTING.md,
+"Upgrade, rollback, and uninstall"); roll back by restoring the backed-up save with its matching
+package. Only the lifecycle and polity records have been checked against older readers.
+Engine-free probes outside the repository suites fed this writer's admitted dormant images to the
+unpatched v0.3.0 and v0.3.7 lifecycle readers, which rebuilt them field for field; the pristine
+books also passed first-founding preparation there, and 0.3.1 to 0.3.6 carry the same reader
+blobs. The polity record was probed against the unchanged 0.3.7 polity code: the fresh polity
+envelope this candidate writes decodes there as a valid unbound ledger, byte-identical to the
+ledger 0.3.7 normalizes in memory, and founding binds both to the same bytes; 38 polity envelopes
+taken from retained native-run saves (the 0.3.7 release source and dev builds) decode and
+re-encode identically on both. The rest of a 0.3.8 save is written by 0.3.7-era code (for example
+city book schema 4, where 0.3.0 knows schema 3). No whole save has been loaded on an older build,
+and no kingdom has been founded in game there. Releases 0.3.0 to 0.3.7 still cannot save an
+unfounded game.
+
+The candidate also re-pins main to Caves of Qud build 25520692 (core 2.0.211.56, save format
+409). It takes only the pins main's compile gate and Alpha release lane need from dev's re-pin
+(#273): the two removed managed references, the release target (the published 0.3.7 record keeps
+its true 2.0.211.51 target), the Workshop description, the SDK lock label (both SDK DLL hashes
+unchanged), the smoke launcher's save format and the release-record examples. The
+decompile-pinning test helper, the upgrade-observer and upgrade-profile engine pins and the
+architecture-quality reference stay as they were on main; no gate or Alpha release step reads
+them.
+
+Engine-free evidence. `KingdomLifecycleDormantSaveTests` (20 cases, both suites) pins the exact
+139-byte dormant image, equal to the historical v5 fixture writer; cold load, byte-identical
+re-save and first founding with the founded book back on frame 10; field-for-field round trips
+of the admitted quarantine states, including non-default counters, options and a
+4096-character fault; refusal of every non-dormant unbound state; the frozen serialized-field
+census; and the refusal reasons. With only the writer change reverted on a scratch copy of this
+candidate, 9 of the 20 cases fail with the #272 message and 11 pass.
+
+`KingdomFreshUnfoundedSaveTests` (1 case, both suites) writes and checks, from an explicit list,
+the durable books a fresh, unfounded `KingdomSystem` is constructed with, each built exactly as
+its field initializer builds it: the codec books (lifecycle, polity, trade, experience, carry)
+go through their production codecs, the encoder and decoder each book's `Write` and `Read`
+wrappers call, and round-trip byte-identically and reload valid; the named-field books,
+including the city book's fields, hold only values the engine's named-field writer serializes
+itself (checked against an engine-free emulation of that writer); the load normalization of the
+ledger, the binding and job registries, the founder history and the city book settles (the realm
+transition, whose `Read` also normalizes, is checked only by its validator); the city book also
+reloads through its production load path; and the empty settlement topologies pass the fixture's
+model of their write gate (16 books in the main suite, 11 in the portable kernel). The list, and
+whether it treats each book type as a named-field book or as a book with its own writer, are the
+fixture's own: neither is derived from `KingdomSystem`'s fields or checked against the
+production writers, so the fixture does not check a field added without extending the list.
+With only the polity initializer reverted on a scratch copy of this candidate, the pin fails on
+the polity ledger alone, with the native message, and the other 15 books pass (10 in the
+portable kernel). Mutations that revert the lifecycle writer change, add a field the engine
+cannot write to the city book or the ledger, make the city book's load path refuse a fresh book,
+nest a book with its own writer (the carry book or the city book) in the ledger, set the fresh
+experience option floor to 0 or lower the carry book's format version each turn it red. Not
+covered engine-free, because both test projects compile them out: each book's `Write` and `Read`
+wrappers and its `IComposite` and `WantFieldReflection` declarations (and so which writer kind
+each listed book actually uses), the topology writer, and `KingdomSystem`'s own `Write` and
+`Read`. The fixture also does not cover the engine's save hooks around `KingdomSystem.Write`
+(`BeforeSave`, the save-roster patch), state changed by events before the first save, or the
+mod's other save records (seal, civic memory, succession, object parts).
+
+Native checks of an unfounded save divide by side. The write side (each book's `Write` wrapper,
+its `IComposite` and `WantFieldReflection` declarations and so the writer kind it uses, the
+topology writer, `KingdomSystem.Write` with its header and the legacy projections it refreshes,
+the save hooks and the other records' writers) runs in the real engine save that
+`unfounded-save-native-check` performs and `unfounded-reload` repeats as its first leg. That save
+writes every serialized field, so for a release build it is the complete census of the fields an
+unfounded save writes, but it loads nothing (`unfounded-save-native-check` reports
+`cold-load=false`). The read side (each book's `Read` wrapper, `KingdomSystem.Read` with
+`RequireReadableSubsidenceStorage` and `NormalizeState`, the `AfterLoad` hooks, the save-roster
+load patches and the other records' readers) runs natively only in `unfounded-reload`'s cold
+load. docs/RELEASING.md requires both verdicts for every release. Each persona exercises only the
+state its own world holds when it saves. An in-game reflection census of the serialized fields
+is follow-up #281.
+
+Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
+engine save of an unfounded world with the SaveGameError witness armed; a run on the harness
+commit without the fix must refuse with the #272 text, and that failed run is retained as
+detection evidence), `unfounded-reload` (unfounded save, owned stop, fresh descendant cold load,
+production founding and a second real save, strictly checked by
+`Tools/check-unfounded-results.py`), and the founded regressions `quickstart-reload` and
+`camp-heart-save`. The reload host and checker are covered by fake-effect and synthetic-fixture
+tests only. Native runs so far: the detector on the harness commit refused with the #272 text, as
+required, and the first run on the earlier head 08d52956 refused on the polity ledger, which the
+change above fixes; both failed runs are retained. All four personas are owed on the final head.
+
+Disclosed gaps: the exact #271 route (the Roleplay engine checkpoint save on entering Joppa) and
+a Kingdom Quickstart stopped by a starting pet are not driven natively, because the harness can
+drive neither (#276). A Quickstart whose founder placement refuses a starting pet from the Pets
+of Harvest Dawn DLC or a Workshop pet mod can stay unfounded (static trace only, not reproduced
+natively); this fix makes that world saveable, but the unfounded Quickstart itself remains a
+separate gameplay defect (#274). The fix is state-based, so the unfounded save
+covers both routes once it passes natively. A reporter re-test on #271 is welcome but is never a
+release gate. A player-facing save-refusal preflight is out of scope (#275).
+
+Candidate census: 3108 staged C# files; 440,963 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Cold-install inventory: 3141 files.
+Inventory SHA-256: `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`.
+Engine gate passes for 3108 sources, baseline and compatibility symbols, plus both harness modes.
 
 ## Public 0.3.7 — published and finalized
 

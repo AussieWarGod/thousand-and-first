@@ -15,19 +15,26 @@ namespace ThousandAndFirst.Tests
 	/// needs the engine, so this pin writes and checks, engine-free, the durable books a fresh
 	/// KingdomSystem is constructed with, from the explicit list in
 	/// FreshUnfoundedKingdomSystemEveryDurableBookIsWritable. Each is built exactly as its field
-	/// initializer builds it and checked through its production codec and load validator (codec
-	/// books) or against an emulation of the engine's named-field writer (named-field books). The
+	/// initializer builds it and checked through its production codec (the encoder and decoder its
+	/// Write and Read wrappers call) and load validator (codec books) or against an emulation of the
+	/// engine's named-field writer (named-field books). The
 	/// fresh settlement topologies are only checked to be empty, to carry no opaque evidence and to
 	/// pass NormalizeCurrent, the load-time check whose ragged/bound predicate matches their write
 	/// gate today; that gate is in Write(SerializationWriter), which neither test project compiles,
 	/// so this pin cannot see a changed gate. It is not a field census: a field added to
-	/// KingdomSystem is not detected here, and no production source is read. The native
-	/// unfounded-save persona performs a real engine save of every serialized field and is the
-	/// complete census for a release build; docs/RELEASING.md requires that automated unfounded save
-	/// and reload check for every release, and an in-game reflection census is #281. The other save
-	/// systems a new game creates (KingdomSeal, KingdomCivicMemorySystem, and the optional succession
-	/// and inheritance systems) and state written by play before the first save are not covered
-	/// here (#275).</summary>
+	/// KingdomSystem is not detected here, and no production source is read. Compiled out of both
+	/// test projects, and so not run here: each book's Write and Read wrappers and its IComposite and
+	/// WantFieldReflection declarations, which writer kind each listed book actually uses, the
+	/// topology writer, and KingdomSystem's own Write and Read. On an unfounded save the write side
+	/// runs natively in the real engine save of unfounded-save-native-check, repeated as
+	/// unfounded-reload's first leg. That save writes every serialized field, so for a release build
+	/// it is the complete census of the fields an unfounded save writes, but it loads nothing
+	/// (cold-load=false). The read side (each book's Read wrapper, and KingdomSystem.Read with
+	/// RequireReadableSubsidenceStorage and NormalizeState) runs natively only in unfounded-reload's
+	/// cold load. docs/RELEASING.md requires both verdicts for every release, and an in-game
+	/// reflection census is #281. The other save systems a new game creates (KingdomSeal,
+	/// KingdomCivicMemorySystem, and the optional succession and inheritance systems) and state
+	/// written by play before the first save are not covered here (#275).</summary>
 	public class KingdomFreshUnfoundedSaveTests
 	{
 		// How Walk treats each book type it can meet, from this fixture's own list. Named: written by
