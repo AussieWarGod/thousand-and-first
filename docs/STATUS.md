@@ -64,33 +64,28 @@ of the admitted quarantine states, including non-default counters, options and a
 census; and the refusal reasons. With only the writer change reverted on a scratch copy of this
 candidate, 9 of the 20 cases fail with the #272 message and 11 pass.
 
-`KingdomFreshUnfoundedSaveTests` (3 cases, both suites) checks every durable book a fresh,
-unfounded `KingdomSystem` holds, built exactly as its field initializer builds it: the envelope
-codecs (lifecycle, polity, trade, experience, carry) round-trip byte-identically and reload
-valid; the named-field books, including the city book's fields, hold only values the engine's
-named-field writer serializes itself and their load normalization settles; the city book also
-reloads through its production load path; and the empty settlement topologies pass their write
-gate (16 books in the main suite, 11 in the portable kernel). A source census pins the 24
-`KingdomSystem` fields that reach mod serialization code, with their initializers; each book's
-whole writer body, with field reflection off and `IComposite` declared; and the three
-projections `KingdomSystem.Write` refreshes first. The census reads each `KingdomSystem` body as
-one stream of code, with comments, literals and directive lines removed, whatever the line
-layout: a member ends at its own `;` or body, and only a name right before `(` makes a method.
-A public member it cannot classify, a constructor, a base type other than `IPlayerSystem`,
-unbalanced braces or a string form it does not model fails the census; the third case pins
-this on 23 source probes, and the 204 serialized fields it parses match the compiled
-assembly. With only the polity initializer reverted on a scratch copy of this candidate, the
-pin fails on the polity ledger alone, with the native message, and the other 15 books pass.
-Mutations that break the city book (a field the engine cannot write, a load-path refusal),
-the experience ledger, the carry book, a named-field value, the census (also a space-indented
-field, a space-indented, file-scoped or one-line partial, a modifier before `public`, a
-tuple-typed field, a comment holding a parenthesis before the initializer, a field after a
-member body on the same line, a field holding a lambda, a mod base class holding a field, or a
-constructor), a writer body (also code after the topology loop), field reflection,
-`IComposite` or a projection each turn it red. The fixture does not cover the
-engine's save hooks around `KingdomSystem.Write` (`BeforeSave`, the save-roster patch), state
-changed by events before the first save, or the mod's other save records (seal, civic memory,
-succession, object parts); only the native unfounded save exercises those.
+`KingdomFreshUnfoundedSaveTests` (1 case, both suites) writes and checks, from an explicit list,
+the durable books a fresh, unfounded `KingdomSystem` is constructed with, each built exactly as
+its field initializer builds it: the envelope codecs (lifecycle, polity, trade, experience,
+carry) round-trip byte-identically and reload valid; the named-field books, including the city
+book's fields, hold only values the engine's named-field writer serializes itself (checked
+against an engine-free emulation of that writer) and their load normalization settles; the city
+book also reloads through its production load path; and the empty settlement topologies pass
+their write gate (16 books in the main suite, 11 in the portable kernel). The list is not
+derived from `KingdomSystem`'s fields, so the fixture does not check a field added without
+extending it. The native `unfounded-save-native-check` persona performs a real engine save of
+every serialized field and is the complete check for a release build; docs/RELEASING.md requires
+that automated unfounded save and reload check for every release. An in-game reflection census
+of the serialized fields is follow-up #281. With only the polity initializer reverted on a
+scratch copy of this candidate, the pin fails on the polity ledger alone, with the native
+message, and the other 15 books pass (10 in the portable kernel). Mutations that revert the
+lifecycle writer change, add a field the engine cannot write to the city book or the ledger,
+make the city book's load path refuse a fresh book, nest a book with its own writer (the carry
+book or the city book) in the ledger, set the fresh experience option floor to 0 or lower the
+carry book's format version each turn it red. The fixture does not cover the engine's save hooks
+around `KingdomSystem.Write` (`BeforeSave`, the save-roster patch), state changed by events
+before the first save, or the mod's other save records (seal, civic memory, succession, object
+parts); only the native unfounded save exercises those.
 
 Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
 engine save of an unfounded world with the SaveGameError witness armed; a run on the harness
