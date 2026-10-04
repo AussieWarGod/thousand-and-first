@@ -112,5 +112,90 @@ class RunLicensedSuitesWrapperTest(unittest.TestCase):
         )
 
 
+
+def make_env_capturing_powershell(directory):
+    """A stand-in powershell.exe that records the decompile hand-off it was given."""
+    stub = directory / "powershell.exe"
+    stub.write_text(
+        "#!/bin/sh\n"
+        'printf \'%s\\n\' "DECOMPILED=${TAF_QUD_DECOMPILED-<unset>}" "WSLENV=$WSLENV" '
+        '> "$TAF_STUB_CAPTURE"\n'
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return stub
+
+
+class RunLicensedSuitesDecompileHandOffTest(unittest.TestCase):
+    """The Windows leg cannot see the WSL home that holds the version-keyed decompile
+    archive, so the wrapper passes an explicit TAF_QUD_DECOMPILED, or the pinned core's
+    default archive when it exists, as a WSLENV-translated path, and nothing otherwise."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="taf-run-licensed-decompile-test-")
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.stub_dir = root / "bin"
+        self.stub_dir.mkdir()
+        make_env_capturing_powershell(self.stub_dir)
+        self.home = root / "home"
+        self.home.mkdir()
+        self.worktree = root / "worktree"
+        (self.worktree / "Tools").mkdir(parents=True)
+        (self.worktree / "Tools" / "workshop_metadata.py").write_text(
+            'GAME_MARKETING_VERSION = "1.0.5"\nGAME_CORE_BUILD = "9.8.7.6"\n',
+            encoding="utf-8",
+        )
+        self.capture = root / "capture.txt"
+        self.env = dict(os.environ)
+        self.env.pop("TAF_QUD_DECOMPILED", None)
+        self.env["HOME"] = str(self.home)
+        self.env["TAF_STUB_CAPTURE"] = str(self.capture)
+        self.env["PATH"] = str(self.stub_dir) + os.pathsep + self.env.get("PATH", "")
+
+    def archive(self, leaf):
+        path = self.home / "coq" / "qud_helper" / "game_base" / "decompiled" / leaf
+        path.mkdir(parents=True)
+        return path
+
+    def hand_off(self):
+        result = subprocess.run(
+            ["bash", str(WRAPPER_SCRIPT), str(self.worktree)],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        rows = self.capture.read_text(encoding="utf-8").splitlines()
+        return rows[0].split("=", 1)[1], rows[1].split("=", 1)[1].split(":")
+
+    def test_passes_the_pinned_cores_default_archive_as_a_translated_path(self):
+        default = self.archive("9.8.7.6-ilspy9.1")
+        decompiled, wslenv = self.hand_off()
+        self.assertEqual(str(default), decompiled)
+        self.assertIn("TAF_QUD_DECOMPILED/p", wslenv)
+
+    def test_never_passes_a_replaced_cores_archive(self):
+        self.archive("2.0.211.51-ilspy9.1")
+        self.archive("6000.0.41.4645959")
+        decompiled, wslenv = self.hand_off()
+        self.assertEqual("<unset>", decompiled)
+        self.assertNotIn("TAF_QUD_DECOMPILED/p", wslenv)
+
+    def test_an_explicit_root_wins_over_the_default(self):
+        self.archive("9.8.7.6-ilspy9.1")
+        self.env["TAF_QUD_DECOMPILED"] = "/explicit/decompile"
+        decompiled, wslenv = self.hand_off()
+        self.assertEqual("/explicit/decompile", decompiled)
+        self.assertIn("TAF_QUD_DECOMPILED/p", wslenv)
+
+    def test_keeps_the_existing_translated_inputs(self):
+        decompiled, wslenv = self.hand_off()
+        self.assertEqual("<unset>", decompiled)
+        self.assertEqual(["TAF_QUD_BASE_WIN/w", "TAF_TEST_SCRIPT_WIN/w"], wslenv)
+
+
 if __name__ == "__main__":
     unittest.main()

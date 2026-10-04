@@ -273,7 +273,7 @@ function Assert-GzipFile {
             $string = [BitConverter]::ToInt64($header, 52)
             $gameObjectCount = [BitConverter]::ToInt32($header, 60)
             $eventRegistryCount = [BitConverter]::ToInt32($header, 64)
-            if ($fileVersion -ne 408 -or $gameObjectCount -lt 0 -or $eventRegistryCount -lt 0 -or
+            if ($fileVersion -ne 409 -or $gameObjectCount -lt 0 -or $eventRegistryCount -lt 0 -or
                 $gameObject -lt 68 -or $eventRegistry -le $gameObject -or
                 $gameObjectReference -lt $eventRegistry -or $object -le $gameObjectReference -or
                 $tokenized -le $object -or $type -le $tokenized -or $string -le $type -or
@@ -383,7 +383,7 @@ function Assert-PrimaryJson {
             throw "Resume Primary.json has non-integer field ${name}: $Path"
         }
     }
-    if ($saveInfo.InfoVersion -ne 1 -or $saveInfo.SaveVersion -ne 408 -or
+    if ($saveInfo.InfoVersion -ne 1 -or $saveInfo.SaveVersion -ne 409 -or
         $saveInfo.Level -lt 1 -or $saveInfo.Turn -lt 0 -or
         $saveInfo.FColor -lt 0 -or $saveInfo.FColor -gt 65535 -or
         $saveInfo.DColor -lt 0 -or $saveInfo.DColor -gt 65535) {

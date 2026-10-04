@@ -248,7 +248,7 @@ namespace ThousandAndFirst.Tests
 			string root = LocateDecompiledQud();
 			if (root == null)
 			{
-				Assert.Ignore("Installed/decompiled Qud source is unavailable for native consumer proof.");
+				Assert.Ignore("Pinned-core Qud decompile is unavailable for native consumer proof.");
 				return;
 			}
 			string gameObject = File.ReadAllText(Path.Combine(root, "XRL", "World", "GameObject.cs"));
@@ -316,24 +316,9 @@ namespace ThousandAndFirst.Tests
 
 		private static string LocateDecompiledQud()
 		{
-			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
-			if (supplied != null)
-			{
-				if (string.IsNullOrWhiteSpace(supplied) || !File.Exists(Path.Combine(supplied,
-					"XRL", "World", "RelicGenerator.cs")))
-					throw new InvalidOperationException("TAF_QUD_DECOMPILED is set but lacks RelicGenerator.cs.");
-				return supplied;
-			}
-			string[] candidates = new[]
-			{
-				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
-				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1"
-			};
-			for (int i = 0; i < candidates.Length; i++)
-				if (!string.IsNullOrWhiteSpace(candidates[i])
-					&& File.Exists(Path.Combine(candidates[i], "XRL", "World",
-						"RelicGenerator.cs"))) return candidates[i];
-			return null;
+			// Only a decompile declaring the pinned core answers; see KingdomQudDecompiledSource.
+			return KingdomQudDecompiledSource.Locate(Path.Combine("XRL", "World",
+				"RelicGenerator.cs"));
 		}
 
 		private static string JoinValues(Type type)

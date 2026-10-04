@@ -6,10 +6,15 @@ a visual sign-off. Regenerate the ledger after any architecture edit.
 
 ## What “good” means here
 
-The primary reference is the installed, running Caves of Qud **2.0.211.51** corpus. This audit
-verified its assembly, population tables, object-blueprint corpus, and ten named settlement or
-institutional maps
-against `Tools/architecture-quality-reference.json`.
+The primary reference is the installed Caves of Qud **2.0.211.56** corpus. The retained ledger
+verified the earlier 2.0.211.51 assembly, `PopulationTables.xml`, the root `ObjectBlueprints.xml`
+and ten named settlement or institutional maps against `Tools/architecture-quality-reference.json`.
+After the 2026-09-25 Steam update the reference names the 2.0.211.56 assembly. Its other twelve
+pinned files hash identically on both builds: `PopulationTables.xml`, the ten `.rpm` maps and the
+root `ObjectBlueprints.xml`, which is an empty 67-byte merge root, so its match says nothing about
+blueprint content. The update modified files the reference does not pin, including
+`ObjectBlueprints/ZoneTerrain.xml` and `Options.xml` (both dated 2026-09-25), so this match does
+not carry blueprint-dependent 2.0.211.51 evidence over to 2.0.211.56.
 
 Vanilla supplies the minimum architectural grammar, not an aesthetic to copy:
 
@@ -179,5 +184,5 @@ python3 -m unittest Tools.tests.architecture_quality_audit_test
 The test pins all 144 catalogue entries, all 134 plotted entries, 89 palettes, 333 maps (187
 authored/source and 146 generated), 220 plans, 226 bindings, 262 tiers, 344 configurations, four
 poses per configuration, 1,376 total poses, all 18 auxiliary cases, zero static failures, verdict
-consistency, and the exact 2.0.211.51 reference identity. Native and human acceptance remain
+consistency, and the exact 2.0.211.56 reference identity. Native and human acceptance remain
 pending for every pose.

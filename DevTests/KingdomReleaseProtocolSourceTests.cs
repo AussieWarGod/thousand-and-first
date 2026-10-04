@@ -53,6 +53,11 @@ namespace ThousandAndFirst.Tests
 				Directory.CreateDirectory(Path.Combine(root, "XRL.UI"));
 				string path = Path.Combine(root, "XRL.UI", "TradeUI.cs");
 				File.WriteAllText(path, "owned partial source fixture");
+				// The partial root declares the pinned core, so only the missing file can refuse it.
+				Directory.CreateDirectory(Path.Combine(root, "Properties"));
+				File.WriteAllText(Path.Combine(root, "Properties", "AssemblyInfo.cs"),
+					"[assembly: AssemblyVersion(\"" + KingdomQudDecompiledSource.PinnedCoreBuild()
+					+ "\")]\n");
 				Environment.SetEnvironmentVariable("TAF_QUD_DECOMPILED", root);
 				InvalidOperationException failure = Assert.Throws<InvalidOperationException>(() =>
 					new KingdomShopStockSourceTests().InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade());
