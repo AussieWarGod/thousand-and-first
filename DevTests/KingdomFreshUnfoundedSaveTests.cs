@@ -237,7 +237,8 @@ namespace ThousandAndFirst.Tests
 
 		// Whole source files read by ReadSystemFields, with the rows they must yield
 		// (type|name|initializer, ';'-separated), or UNPARSED when at least one UNPARSED row must
-		// result. The first three are layouts the earlier line-based census silently dropped.
+		// result. The earlier line-based census silently dropped the field in the first three and
+		// in "field after a body on the same line".
 		private static readonly string[][] ParserProbes =
 		{
 			new[] { "one-line partial", "namespace N { public partial class KingdomSystem { public KingdomRealmArchive A"
@@ -252,8 +253,10 @@ namespace ThousandAndFirst.Tests
 				"KingdomRealmArchive|A|" },
 			new[] { "K&R braces and space indentation", "namespace N {\n    public partial class KingdomSystem {\n"
 				+ "        public KingdomRealmArchive A;\n    }\n}\n", "KingdomRealmArchive|A|" },
-			new[] { "file-scoped namespace", "namespace N;\npublic partial class KingdomSystem\n{\n\tpublic KingdomRealmArchive A;\n}\n",
-				"KingdomRealmArchive|A|" },
+			new[] { "file-scoped namespace", "namespace N;\npublic partial class KingdomSystem\n{\n\tpublic KingdomRealmArchive A;\n"
+				+ "\tpublic sealed class Inner\n\t{\n\t\tpublic KingdomRealmArchive X;\n\t}\n}\n", "KingdomRealmArchive|A|" },
+			new[] { "directive lines around a field", Partial("#region Archive's notes\n#pragma warning disable 618\n"
+				+ "\t\t[Obsolete(\"x\")] public KingdomRealmArchive A;\n#pragma warning restore 618\n#endregion"), "KingdomRealmArchive|A|" },
 			new[] { "attributes, modifier order and type spacing", Partial("\t\t[Obsolete(\"(x)\")] public KingdomRealmArchive A;\n"
 				+ "\t\t[NonSerialized] public KingdomRealmArchive B;\n\t\treadonly public KingdomRealmArchive C;\n"
 				+ "\t\tpublic Dictionary<string,int> D = new Dictionary<string,int>();"),
@@ -264,6 +267,7 @@ namespace ThousandAndFirst.Tests
 			new[] { "members that are not serialized fields", Partial("\t\tpublic KingdomRealmArchive P { get; set; } = new"
 				+ " KingdomRealmArchive();\n\t\tpublic int Q => 1;\n\t\tpublic T Get<T>() where T : new() { return new T(); }\n"
 				+ "\t\tpublic int this[int i] => i;\n\t\tpublic sealed class Inner { public KingdomRealmArchive X; }\n"
+				+ "\t\tpublic sealed class Box<T> { public T Value; }\n\t\tpublic delegate void D();\n"
 				+ "\t\tpublic static KingdomRealmArchive S;\n\t\tpublic const int C = 1;\n\t\tpublic event Action E;\n"
 				+ "\t\tprivate KingdomRealmArchive H;\n\t\tinternal KingdomRealmArchive I = new KingdomRealmArchive();")
 				+ "namespace M { public class KingdomSeal { public KingdomRealmArchive Z; } }\n", "" },
@@ -272,6 +276,8 @@ namespace ThousandAndFirst.Tests
 			new[] { "private constructor", Partial("\t\tprivate KingdomSystem(int x) { }"), "UNPARSED" },
 			new[] { "primary constructor", "namespace N { public partial class KingdomSystem(int x) { } }", "UNPARSED" },
 			new[] { "two declarators", Partial("\t\tpublic KingdomRealmArchive A, B;"), "UNPARSED" },
+			new[] { "initializer braces followed by a keyword", Partial("\t\tpublic KingdomRealmArchive A = new KingdomRealmArchive { }"
+				+ " as KingdomRealmArchive;"), "UNPARSED" },
 			new[] { "public after another token", Partial("\t\tKingdomRealmArchive public A;"), "UNPARSED" },
 			new[] { "unbalanced braces", "namespace N { public partial class KingdomSystem { public void F() { } }", "UNPARSED" },
 			new[] { "raw string literal", Partial("\t\tpublic string S = \"\"\"{\"\"\";"), "UNPARSED" },
