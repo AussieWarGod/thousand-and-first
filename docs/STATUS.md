@@ -67,15 +67,25 @@ candidate, 9 of the 20 cases fail with the #272 message and 11 pass.
 `KingdomFreshUnfoundedSaveTests` (2 cases, both suites) checks every durable book a fresh,
 unfounded `KingdomSystem` holds, built exactly as its field initializer builds it: the envelope
 codecs (lifecycle, polity, trade, experience, carry) round-trip byte-identically and reload
-valid, the named-field books hold only values the engine's named-field writer serializes itself
-and their load normalization settles, and the empty settlement topologies pass their write gate
-(16 books in the main suite, 11 in the portable kernel). A source census pins the 24
-`KingdomSystem` fields that reach mod serialization code, with their initializers, and each
-book's writer body; the 204 serialized fields it parses match the compiled assembly. With only
+valid; the named-field books, including the city book's fields, hold only values the engine's
+named-field writer serializes itself and their load normalization settles; the city book also
+reloads through its production load path; and the empty settlement topologies pass their write
+gate (16 books in the main suite, 11 in the portable kernel). A source census pins the 24
+`KingdomSystem` fields that reach mod serialization code, with their initializers; each book's
+whole writer body, with field reflection off and `IComposite` declared; and the three
+projections `KingdomSystem.Write` refreshes first. The census reads members by brace depth, so a
+field or partial in an unexpected layout is still counted, and a declaration it cannot read or a
+constructor fails it; the 204 serialized fields it parses match the compiled assembly. With only
 the polity initializer reverted on a scratch copy of this candidate, the pin fails on the polity
 ledger alone, with the native message, and the other 15 books pass. Mutations that break the
-city book, the experience ledger, the carry book, a named-field value, the census or a writer
-body each turn it red.
+city book (a field the engine cannot write, a load-path refusal), the experience ledger, the
+carry book, a named-field value, the census (also a space-indented field, a space-indented or
+file-scoped partial, a modifier before `public`, a field holding a lambda or a constructor), a
+writer body (also code after the topology loop), field reflection, `IComposite` or a projection
+each turn it red. The fixture does not cover the engine's save hooks around `KingdomSystem.Write`
+(`BeforeSave`, the save-roster patch), state changed by events before the first save, or the
+mod's other save records (seal, civic memory, succession, object parts); only the native
+unfounded save exercises those.
 
 Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
 engine save of an unfounded world with the SaveGameError witness armed; a run on the harness

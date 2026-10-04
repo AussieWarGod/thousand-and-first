@@ -13,9 +13,13 @@ using ThousandAndFirst.Simulation.City;
 namespace ThousandAndFirst.Tests
 {
 	/// <summary>#271/#272: a game that has not founded a city must be saveable. KingdomSystem
-	/// needs the engine, so its serialized field census and each book's writer are pinned from
-	/// source. Every durable book a fresh new game holds is built exactly as its field initializer
-	/// builds it and passed through its production writer and load validator engine-free.</summary>
+	/// needs the engine, so its serialized field census, each book's writer and the projections
+	/// its Write refreshes first are pinned from source. Every durable book a fresh KingdomSystem
+	/// holds is built exactly as its field initializer builds it and passed through its production
+	/// writer and load validator engine-free. Not covered here: the engine's save hooks around
+	/// KingdomSystem.Write (BeforeSave, the save-roster patch), state changed by events before the
+	/// first save, and the mod's other save records (seal, civic memory, succession, object parts);
+	/// only a native unfounded save exercises those.</summary>
 	public class KingdomFreshUnfoundedSaveTests
 	{
 		// Every serialized KingdomSystem field whose value reaches TAF serialization code, in

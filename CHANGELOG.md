@@ -39,10 +39,12 @@ candidate; not yet uploaded or accepted. Public Alpha remains 0.3.7.
   2.0.211.51, which that update replaced. Gameplay is otherwise unchanged from 0.3.7.
 
 Source tests save a fresh lifecycle book, cold-load it, re-save it byte-identically and found a
-first city from it, and now write and validate every durable record a fresh, unfounded game
-holds. Native checks of an unfounded save and its cold reload, with founded-save regressions, are
-required before publication; docs/STATUS.md records their status. Not covered in game: the exact
-Roleplay checkpoint trigger and a Quickstart stopped by a starting pet (#274, #276).
+first city from it, and now write and validate every durable book of the kingdom's main save
+record (KingdomSystem) in a fresh, unfounded game; the mod's other save records are exercised only
+by the native unfounded save. Native checks of an unfounded save and its cold reload, with
+founded-save regressions, are required before publication; docs/STATUS.md records their status.
+Not covered in game: the exact Roleplay checkpoint trigger and a Quickstart stopped by a starting
+pet (#274, #276).
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 
