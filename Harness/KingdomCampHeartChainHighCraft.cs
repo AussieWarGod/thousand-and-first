@@ -12,11 +12,14 @@ namespace ThousandAndFirst.Harness
 	/// plain tally alone (Growth/KingdomMaterials.06.InfrastructureAndDelivery.cs:141-156). A
 	/// fixture that stocked only the plain tally would preflight green and be refused at funding.
 	/// <para>
-	/// SYNTHETIC, DISCLOSED. Nothing is hand-valued: every minted body is classified by
-	/// PRODUCTION'S OWN readers - <c>KingdomMaterials.UnitBits</c> and
-	/// <c>KingdomMaterials.TryExoticOf</c> (Growth/KingdomMaterials.03.StockClassification.cs:96-121,
-	/// :157-185) - and the fixture keeps minting only while the production coverage predicates
-	/// still refuse. A blueprint that turns out to be worth nothing is skipped, not assumed.
+	/// SYNTHETIC, DISCLOSED. Nothing is hand-valued. The bit mint's whole decision procedure is the
+	/// engine-free <see cref="KingdomCampHeartHighCraftRules.Fill"/>: it re-reads production's own
+	/// stock (<c>KingdomMaterials.Stock</c>) before every body and mints only for a tier that
+	/// reading still finds short; a candidate is ordinary portable salvage chosen in factory order
+	/// (<see cref="KingdomCampHeartHighCraftRules.Refusal"/>); every created body is judged by
+	/// production's and the engine's own readers before it is stored, and kept only when the
+	/// stock reading rises by exactly its worth. A refused body is discarded and its blueprint
+	/// skipped, never assumed; mints and skips are bounded and journalled.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
@@ -26,14 +29,11 @@ namespace ThousandAndFirst.Harness
 		// authored bill names the KIND and the blueprint table is the production mapping.
 		internal const string IngotBlueprint = "Bronze Ingot";
 		internal const string GemBlueprint = "Gemstone";
-		private const int HighCraftScanCap = 4096;
-		private const int HighCraftMintCap = 64;
-		private const int HighCraftSkipCap = 32;
 
 		private sealed partial class Frame
 		{
 			private readonly List<GameObject> ChainHighCraft = new List<GameObject>();
-			private readonly List<string> ChainHighCraftSkipped = new List<string>();
+			private KingdomCampHeartHighCraftRules.Ledger ChainHighCraftLedger;
 			private string ChainHighCraftReport;
 
 			/// <summary>Fills the supplemental store until production's own composite coverage
@@ -41,21 +41,25 @@ namespace ThousandAndFirst.Harness
 			private void SupplyChainHighCraft()
 			{
 				ChainHighCraft.Clear();
-				ChainHighCraftSkipped.Clear();
+				ChainHighCraftLedger = new KingdomCampHeartHighCraftRules.Ledger();
 				var exotics = KingdomMaterials.ExoticCostFor(ChainTo);
 				var bits = KingdomMaterials.BitCostFor(ChainTo);
 				Require(!exotics.IsEmpty() && !bits.IsEmpty(),
 					"taf-camp-rung5-highcraft-absent: the arcology declares no bits or exotics");
 				MintExotic(IngotBlueprint, KingdomExotic.Ingot, exotics.Get(KingdomExotic.Ingot));
 				MintExotic(GemBlueprint, KingdomExotic.Gem, exotics.Get(KingdomExotic.Gem));
-				MintBits(bits);
+				string refused = KingdomCampHeartHighCraftRules.Fill(bits, ReadChainBits, ResolveChainBit,
+					OfferChainBit, RetractChainBit, ChainHighCraftLedger);
 				var stock = KingdomMaterials.Stock(Zone);
 				// Production's own bit tally once the mint is done: the payment check compares the
 				// bits the paid job reports lost against how far this reading falls.
 				ChainBitsBefore = stock.Bits.Copy();
-				ChainHighCraftReport = DescribeHighCraft(stock, bits, exotics);
-				Require(KingdomScenarioJournal.Append("camp-heart-chain-exotics", true,
+				ChainHighCraftReport = DescribeHighCraft(stock, bits, exotics, refused);
+				bool covered = refused == null && KingdomMaterialRules.CoversExotics(stock.Exotics, exotics)
+					&& KingdomMaterialRules.CoversBits(stock.Bits, bits);
+				Require(KingdomScenarioJournal.Append("camp-heart-chain-exotics", covered,
 					ChainHighCraftReport) == null, "high-craft supply journal unavailable");
+				Require(refused == null, refused + "; " + ChainHighCraftReport);
 				Require(KingdomMaterialRules.CoversExotics(stock.Exotics, exotics),
 					"taf-camp-rung5-exotics-short: " + ChainHighCraftReport);
 				Require(KingdomMaterialRules.CoversBits(stock.Bits, bits),
@@ -73,71 +77,78 @@ namespace ThousandAndFirst.Harness
 				}
 			}
 
-			/// <summary>One body per still-wanted bit, chosen by asking production what each
-			/// candidate blueprint is worth rather than by asserting a table of our own. The scan
-			/// is bounded and stops as soon as the tier is covered. A created body production would
-			/// NOT spend as bits of this tier - an ordinary material such as scrap, an exotic, or a
-			/// body worth nothing once created - is discarded and its blueprint skipped, never
-			/// assumed; the skips are bounded and journalled.</summary>
-			private void MintBits(KingdomBitTally Wanted)
+			/// <summary>Production's own bit reading of this ground, or null when the read has no
+			/// exact routed-input authority (it would then tally nothing and read as short). Each
+			/// read takes a fresh survey, so a body stored since the last read is in custody; a
+			/// bound pass would hand back its older survey, so one refuses the read by name.</summary>
+			private KingdomBitTally ReadChainBits()
 			{
-				for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
-				{
-					int owed = Wanted.Get(tier);
-					while (owed > 0)
-					{
-						Require(ChainHighCraft.Count < HighCraftMintCap,
-							"taf-camp-rung5-bits-unbounded: the bit mint exceeded its cap");
-						string blueprint = BlueprintWorthTier(tier);
-						Require(!string.IsNullOrEmpty(blueprint),
-							"taf-camp-rung5-bit-tier-unsourced: no scanned blueprint is worth a "
-								+ "tier-" + tier + " bit; skipped=" + string.Join(",", ChainHighCraftSkipped));
-						var unit = Create(blueprint);
-						var worth = KingdomMaterials.UnitBits(unit);
-						if (worth.Get(tier) <= 0 || KingdomMaterials.TryOrdinaryMaterialOf(unit, out _)
-							|| KingdomMaterials.TryExoticOf(unit, out _))
-						{
-							Require(ChainHighCraftSkipped.Count < HighCraftSkipCap,
-								"taf-camp-rung5-bits-unsourced: too many candidate bodies were not bit stock");
-							ChainHighCraftSkipped.Add(blueprint);
-							Owned.Remove(unit);
-							unit.Obliterate(null, Silent: true);
-							Require(!GameObject.Validate(unit), "skipped high-craft candidate was not discarded");
-							continue;
-						}
-						StoreHighCraft(unit);
-						owed -= worth.Get(tier);
-					}
-				}
+				Require(!KingdomSurvey.HasBoundPass, "high-craft stock read found an outstanding survey");
+				var stock = KingdomMaterials.Stock(Zone);
+				return stock.InputLeaseAuthorityExact ? stock.Bits.Copy() : null;
 			}
 
-			/// <summary>The first blueprint the engine's own factory offers that production reads
-			/// as worth a bit of this tier. Bounded, read-only, and nothing is created until a
-			/// candidate is found. UnitBits reads only a TinkerItem that can be disassembled, and
-			/// TinkerItem.GetBitCostFor logs an error and answers a made-up "1" for a part with no
-			/// Bits of its own (decompile XRL/World/Parts/TinkerItem.cs:133-158), so both are
-			/// skipped by their declared parameters before any cost is asked.</summary>
-			private string BlueprintWorthTier(int Tier)
+			/// <summary>The supply-time choice: the same factory walk as the setup preflight, but
+			/// worth is asked of the engine's realised bit cost (TinkerItem.GetBitCostFor), which a
+			/// world seed can rarely lower by one tier (BitType.ToRealBits); the walk then moves on.</summary>
+			private string ResolveChainBit(int Tier, ICollection<string> Skipped)
 			{
-				int scanned = 0;
-				foreach (var pair in GameObjectFactory.Factory.Blueprints)
+				return KingdomCampHeartHighCraftRules.Resolve(FactoryBlueprints(), Tier, Skipped,
+					HighCraftVocabulary(), RealisedBitWorth)?.Key;
+			}
+
+			/// <summary>One body of a candidate, judged by production's and the engine's own readers
+			/// in production's order of reading a stored body, and stored only when nothing refuses
+			/// it. The factory is asked directly so a substituted or placed body is discarded rather
+			/// than refusing the run.</summary>
+			private string OfferChainBit(string Key, int Tier, out KingdomBitTally Unit)
+			{
+				Unit = null;
+				GameObject body = GameObject.Create(Key);
+				if (!GameObject.Validate(body)) return "inexact";
+				Owned.Add(body);
+				body.SetIntProperty("NoLoot", 1);
+				var reading = new KingdomCampHeartHighCraftRules.BodyReading
 				{
-					if (++scanned > HighCraftScanCap) break;
-					var blueprint = pair.Value;
-					if (blueprint == null || blueprint.IsBaseBlueprint()
-						|| !blueprint.HasPart("TinkerItem") || ChainHighCraftSkipped.Contains(pair.Key)
-						|| (blueprint.TryGetPartParameter<bool>("TinkerItem", "CanDisassemble",
-							out bool disassembles) && !disassembles)
-						|| string.IsNullOrEmpty(blueprint.GetPartParameter<string>("TinkerItem", "Bits")))
-						continue;
-					string cost = XRL.World.Parts.TinkerItem.GetBitCostFor(pair.Key);
-					if (string.IsNullOrEmpty(cost)) continue;
-					var worth = new KingdomBitTally();
-					for (int i = 0; i < cost.Length; i++)
-						if (KingdomMaterialRules.TryBitTier(cost[i], out int read)) worth.Add(read, 1);
-					if (worth.Get(Tier) > 0) return pair.Key;
+					Exact = body.Blueprint == Key && body.Count == 1 && body.CurrentCell == null
+						&& body.InInventory == null,
+					Takeable = body.IsTakeable(),
+					Important = body.IsImportant(),
+					Empty = KingdomOrdinaryCustody.TryProveEmpty(body, out _),
+					Natural = body.IsNatural(),
+					Creature = body.IsCreature,
+					AlwaysStack = body.HasTag("AlwaysStack"),
+					Material = KingdomMaterials.TryOrdinaryMaterialOf(body, out _),
+					Exotic = KingdomMaterials.TryExoticOf(body, out _),
+					Unit = KingdomMaterials.UnitBits(body)
+				};
+				string refusal = KingdomCampHeartHighCraftRules.BodyRefusal(reading, Tier);
+				if (refusal != null)
+				{
+					DiscardHighCraft(body);
+					return refusal;
 				}
+				StoreHighCraft(body);
+				Unit = reading.Unit;
 				return null;
+			}
+
+			/// <summary>Takes back the body just stored when production did not count it exactly.</summary>
+			private void RetractChainBit()
+			{
+				Require(ChainHighCraft.Count > 0, "no stored high-craft body to retract");
+				GameObject body = ChainHighCraft[ChainHighCraft.Count - 1];
+				ChainHighCraft.RemoveAt(ChainHighCraft.Count - 1);
+				DiscardHighCraft(body);
+				Require(!ChainStore.Inventory.Objects.Contains(body),
+					"retracted high-craft body is still in the supplemental store");
+			}
+
+			private void DiscardHighCraft(GameObject Body)
+			{
+				Owned.Remove(Body);
+				Body.Obliterate(null, Silent: true);
+				Require(!GameObject.Validate(Body), "skipped high-craft candidate was not discarded");
 			}
 
 			private void StoreHighCraft(GameObject Unit)
@@ -152,8 +163,9 @@ namespace ThousandAndFirst.Harness
 			}
 
 			private string DescribeHighCraft(KingdomMaterials.MaterialStock Stock,
-				KingdomBitTally Bits, KingdomExoticTally Exotics)
+				KingdomBitTally Bits, KingdomExoticTally Exotics, string Refused)
 			{
+				var book = ChainHighCraftLedger;
 				var text = new StringBuilder();
 				text.Append("bill=").Append(KingdomScenarioRules.Bounded(ChainSupplyClaim))
 					.Append("; wanted-bits=").Append(KingdomScenarioRules.Bounded(Bits.Describe()))
@@ -161,7 +173,9 @@ namespace ThousandAndFirst.Harness
 					.Append("; held-bits=").Append(KingdomScenarioRules.Bounded(Stock.Bits.Describe()))
 					.Append("; held-exotics=").Append(KingdomScenarioRules.Bounded(Stock.Exotics.Describe()))
 					.Append("; minted=").Append(ChainHighCraft.Count)
-					.Append("; skipped=").Append(KingdomScenarioRules.Bounded(string.Join(",", ChainHighCraftSkipped)))
+					.Append("; bit-bodies=").Append(KingdomScenarioRules.Bounded(string.Join(",", book.Minted)))
+					.Append("; skipped=").Append(KingdomScenarioRules.Bounded(string.Join(",", book.Notes)))
+					.Append("; refused=").Append(KingdomScenarioRules.Bounded(Refused ?? "none"))
 					.Append("; stores=").Append(Stock.Stockpiles.Count)
 					.Append("; covers-bits=").Append(KingdomMaterialRules.CoversBits(Stock.Bits, Bits))
 					.Append("; covers-exotics=").Append(

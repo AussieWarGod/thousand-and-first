@@ -60,6 +60,7 @@ jobs:
             KingdomGatehouseNativeTests.V2FormsUseOnlyVerifiedWallsAndFunctionalWatchWrappers;
             KingdomLiquidRuntimeSourceTests.InstalledEngineStillProvidesChosenRenderAndInteractionSeams;
             KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomCampHeartHighCraftCorpusTests.TheInstalledCorpusSuppliesEveryArcologyBitTierAsStorableSalvage;
             KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
         run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
       - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
@@ -69,6 +70,7 @@ jobs:
             KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud;
             KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory;
             KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomCampHeartHighCraftCorpusTests.TheInstalledCorpusSuppliesEveryArcologyBitTierAsStorableSalvage;
             KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
         run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 

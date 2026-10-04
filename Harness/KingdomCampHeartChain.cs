@@ -45,6 +45,7 @@ namespace ThousandAndFirst.Harness
 					Require(ChainFinalRung == 4 || ChainFinalRung == 5,
 						"the sealed paid heart chain names no exact final rung");
 					if (ChainFinalRung == 5) PreflightChainTerritory();
+					if (ChainFinalRung == 5) PreflightChainHighCraft();
 					ChainHeart = StandingHeart();
 					Require(KingdomPlots.HeartRung(Zone) == 2, "chain did not start at paid rung two");
 					var blocked = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
@@ -62,7 +63,8 @@ namespace ThousandAndFirst.Harness
 						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true"
 						+ "; craft=" + KingdomZoning.Tech(System) + "; synthetic-store-identities=true"
 						+ "; housing-calendar-frontier=true; no-improvement-driven=true; "
-						+ (ChainTerritoryPreflight == null ? "" : ChainTerritoryPreflight + "; ") + ChainState();
+						+ (ChainTerritoryPreflight == null ? "" : ChainTerritoryPreflight + "; ")
+						+ (ChainHighCraftPreflight == null ? "" : ChainHighCraftPreflight + "; ") + ChainState();
 				}
 				if (Verb == KingdomCampHeartChainScript.Capital)
 				{

@@ -14,6 +14,7 @@ namespace ThousandAndFirst.Tests
 	{
 		[TestCase("KingdomPolityExpressionNativeTests", "LocateBase", "TAF_QUD_BASE")]
 		[TestCase("KingdomFrontierWallSourceTests", "LocateBase", "TAF_QUD_BASE")]
+		[TestCase("KingdomCampHeartHighCraftCorpusTests", "LocateBase", "TAF_QUD_BASE")]
 		[TestCase("KingdomLiquidRuntimeSourceTests", "LocateAssembly", "TAF_QUD_BASE")]
 		[TestCase("KingdomFounderHistoryRulesTests", "LocateDecompiledQud", "TAF_QUD_DECOMPILED")]
 		[TestCase("KingdomShopStockSourceTests", "LocateDecompiledQud", "TAF_QUD_DECOMPILED")]
@@ -78,6 +79,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud",
 				"KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory",
 				"KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract",
+				"KingdomCampHeartHighCraftCorpusTests.TheInstalledCorpusSuppliesEveryArcologyBitTierAsStorableSalvage",
 				"KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade" };
 			string[] fullOnly = {
 				"KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone",

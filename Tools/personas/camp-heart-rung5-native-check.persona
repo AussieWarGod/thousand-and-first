@@ -35,8 +35,14 @@
 #    (timber:1, stone:40, shapedstone:22, marble:8, workedmetal:30, scrap:32 = 133 units).
 #    CanPayUpgrade reads only the plain tally, so a fixture that stocked it alone would preflight
 #    green and be refused at funding. Every minted bit-bearing and exotic body is classified by
-#    production's own readers and the fixture mints only while the coverage predicates refuse; a
-#    candidate production would not spend as bits is discarded and its blueprint skipped.
+#    production's own readers. The bit mint re-reads production's own stock before every body and
+#    mints only for a tier that reading still finds short. Its candidates are ordinary portable
+#    salvage in factory order: takeable Item descendants that hold nothing and are no creature,
+#    natural gear, vessel, quest item, always-stack, material or exotic. A created body any
+#    production or engine reader refuses is discarded and its blueprint skipped, and one the stock
+#    does not count by exactly its worth is taken back out. At chain setup this persona resolves
+#    every tier of the arcology's Bits from declared blueprint data, so an unsourced tier refuses
+#    before the 1->4 prefix.
 #    Bits are paid in whole bodies, so the paid check requires the composite price answered
 #    exactly and the bits lost to equal the fall in production's own bit tally across payment.
 #

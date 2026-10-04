@@ -48,10 +48,15 @@
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainRules.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartHighCraftRules.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="KingdomCampHeartRung5NativeSourceTests.cs" />
     <Compile Include="KingdomCampHeartChainRulesTests.cs" />
+    <Compile Include="KingdomCampHeartHighCraftRulesTests.cs" />
+    <Compile Include="KingdomCampHeartHighCraftFillTests.cs" />
+    <Compile Include="KingdomQudBlueprintCorpus.cs" />
+    <Compile Include="KingdomCampHeartHighCraftCorpusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
     <Compile Include="..\Core\KingdomSealSpatialRules.cs" />

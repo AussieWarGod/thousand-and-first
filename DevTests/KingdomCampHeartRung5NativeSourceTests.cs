@@ -21,6 +21,7 @@ namespace ThousandAndFirst.Tests
 		private const string Chain = "Harness/KingdomCampHeartChain.cs";
 		private const string Capital = "Harness/KingdomCampHeartChainCapital.cs";
 		private const string HighCraft = "Harness/KingdomCampHeartChainHighCraft.cs";
+		private const string HighCraftFactory = "Harness/KingdomCampHeartChainHighCraftFactory.cs";
 		private const string Rung5 = "Harness/KingdomCampHeartChainRung5.cs";
 		private const string Payment = "Harness/KingdomCampHeartChainPayment.cs";
 		private const string Support = "Harness/KingdomCampHeartChainSupport.cs";
@@ -256,7 +257,7 @@ namespace ThousandAndFirst.Tests
 				"!ChainPaidExactly(found.Claims)" })
 				Assert.That(payment, Does.Contain(pin), pin);
 			Assert.That(payment, Does.Not.Contain("new KingdomMaterialDebitCost(KingdomMaterials.UpgradeCostFor(ChainFrom))"));
-			int mint = craft.IndexOf("MintBits(bits);", StringComparison.Ordinal);
+			int mint = craft.IndexOf("KingdomCampHeartHighCraftRules.Fill(bits,", StringComparison.Ordinal);
 			int before = craft.IndexOf("ChainBitsBefore = stock.Bits.Copy();", StringComparison.Ordinal);
 			Assert.That(before, Is.GreaterThan(mint));
 			Assert.That(craft.IndexOf("\"camp-heart-chain-exotics\"", StringComparison.Ordinal),
@@ -284,48 +285,95 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HighCraftIsClassifiedByProductionAndNeverByAHandWrittenTable()
 		{
-			string craft = Read(HighCraft);
+			string craft = Read(HighCraft), factory = Read(HighCraftFactory);
 			foreach (string reader in new[] {
 				"KingdomMaterials.TryExoticOf(unit, out var read)",
-				"KingdomMaterials.UnitBits(unit)",
 				"KingdomMaterialRules.CoversExotics(stock.Exotics, exotics)",
 				"KingdomMaterialRules.CoversBits(stock.Bits, bits)",
-				"XRL.World.Parts.TinkerItem.GetBitCostFor(pair.Key)",
-				"taf-camp-rung5-bits-unbounded" })
+				"string refused = KingdomCampHeartHighCraftRules.Fill(bits, ReadChainBits, ResolveChainBit," })
 				Assert.That(craft, Does.Contain(reader), reader);
-			Assert.That(craft, Does.Not.Contain("SetIntProperty(\"KingdomStockpile\""));
+			foreach (string table in new[] {
+				"XRL.World.Parts.TinkerItem.GetBitCostFor(Candidate.Key)",
+				"new KingdomCampHeartHighCraftRules.Vocabulary(KingdomMaterials.MaterialTag,",
+				"KingdomMaterials.ExoticTag, HighCraftScrapTag, KingdomMaterials.MaterialBlueprints, exotics);",
+				"foreach (string[] row in KingdomMaterials.ExoticBlueprints) exotics.AddRange(row);",
+				"internal const string HighCraftScrapTag = \"SemanticScrap\";" })
+				Assert.That(factory, Does.Contain(table), table);
+			// The scrap tag is production's own literal, read beside its own material tag.
+			Assert.That(Read("Growth/KingdomMaterials.03.StockClassification.cs"),
+				Does.Contain("Object.HasTag(\"SemanticScrap\")"));
+			Assert.That(craft + factory, Does.Not.Contain("SetIntProperty(\"KingdomStockpile\""));
 		}
 
-		/// <summary>Fix round of #264: a candidate production would not spend as bits - a
-		/// TinkerItem that cannot be disassembled, one with no Bits of its own (whose cost the
-		/// engine logs as an error and invents), an ordinary material such as scrap, or an
-		/// exotic - is skipped by its declared parameters or discarded once production's own
-		/// readers say so, never stored and never a refusal.</summary>
+		/// <summary>Fix rounds of #264: the bit mint's decisions execute in
+		/// KingdomCampHeartHighCraftRulesTests, KingdomCampHeartHighCraftFillTests and, against the
+		/// installed corpus, KingdomCampHeartHighCraftCorpusTests. This pins only the native wiring:
+		/// every created body is read by production's and the engine's own readers before anything
+		/// stores it, a refused body is discarded, the stock is production's own reading with its
+		/// routed-input authority, and a body production did not count leaves the store.</summary>
 		[Test]
-		public void TheBitMintSkipsCandidatesProductionWouldNotSpendAsBits()
+		public void TheBitMintJudgesEachBodyWithProductionsReadersBeforeStoringIt()
 		{
 			string craft = Read(HighCraft);
-			int worth = craft.IndexOf("private string BlueprintWorthTier(int Tier)", StringComparison.Ordinal);
-			int disassemble = craft.IndexOf(
-				"blueprint.TryGetPartParameter<bool>(\"TinkerItem\", \"CanDisassemble\",", worth, StringComparison.Ordinal);
-			int bits = craft.IndexOf(
-				"string.IsNullOrEmpty(blueprint.GetPartParameter<string>(\"TinkerItem\", \"Bits\"))", worth,
+			int offer = craft.IndexOf("private string OfferChainBit(string Key, int Tier, out KingdomBitTally Unit)",
 				StringComparison.Ordinal);
-			int cost = craft.IndexOf("XRL.World.Parts.TinkerItem.GetBitCostFor(pair.Key)", worth, StringComparison.Ordinal);
-			Assert.That(disassemble, Is.GreaterThan(worth));
-			Assert.That(bits, Is.GreaterThan(worth));
-			Assert.That(cost, Is.GreaterThan(Math.Max(disassemble, bits)), "parameters are read before any cost");
-			int mint = craft.IndexOf("private void MintBits(KingdomBitTally Wanted)", StringComparison.Ordinal);
-			int skip = craft.IndexOf("KingdomMaterials.TryOrdinaryMaterialOf(unit, out _)", mint, StringComparison.Ordinal);
-			Assert.That(skip, Is.GreaterThan(mint));
-			Assert.That(craft.IndexOf("KingdomMaterials.TryExoticOf(unit, out _)", mint, StringComparison.Ordinal),
-				Is.GreaterThan(mint));
-			Assert.That(craft.IndexOf("ChainHighCraftSkipped.Add(blueprint);", skip, StringComparison.Ordinal),
-				Is.LessThan(craft.IndexOf("StoreHighCraft(unit);", skip, StringComparison.Ordinal)));
-			Assert.That(craft, Does.Contain("unit.Obliterate(null, Silent: true);"));
-			Assert.That(craft, Does.Contain("taf-camp-rung5-bits-unsourced"));
-			Assert.That(craft, Does.Contain(".Append(\"; skipped=\")"));
-			Assert.That(craft, Does.Not.Contain("taf-camp-rung5-bit-misclassified"));
+			int judged = craft.IndexOf("string refusal = KingdomCampHeartHighCraftRules.BodyRefusal(reading, Tier);",
+				offer, StringComparison.Ordinal);
+			int stored = craft.IndexOf("StoreHighCraft(body);", offer, StringComparison.Ordinal);
+			Assert.That(offer, Is.GreaterThan(0));
+			foreach (string reader in new[] { "GameObject body = GameObject.Create(Key);",
+				"Exact = body.Blueprint == Key && body.Count == 1 && body.CurrentCell == null",
+				"Takeable = body.IsTakeable(),", "Important = body.IsImportant(),",
+				"Empty = KingdomOrdinaryCustody.TryProveEmpty(body, out _),", "Natural = body.IsNatural(),",
+				"Creature = body.IsCreature,", "AlwaysStack = body.HasTag(\"AlwaysStack\"),",
+				"Material = KingdomMaterials.TryOrdinaryMaterialOf(body, out _),",
+				"Exotic = KingdomMaterials.TryExoticOf(body, out _),", "Unit = KingdomMaterials.UnitBits(body)" })
+			{
+				int at = craft.IndexOf(reader, offer, StringComparison.Ordinal);
+				Assert.That(at, Is.GreaterThan(offer), reader);
+				Assert.That(at, Is.LessThan(judged), reader + " is read before the body is judged");
+			}
+			Assert.That(stored, Is.GreaterThan(judged));
+			Assert.That(craft.IndexOf("DiscardHighCraft(body);", judged, StringComparison.Ordinal),
+				Is.LessThan(stored), "a refused body is discarded, never stored");
+			foreach (string pin in new[] { "var stock = KingdomMaterials.Stock(Zone);",
+				"return stock.InputLeaseAuthorityExact ? stock.Bits.Copy() : null;",
+				"Require(!ChainStore.Inventory.Objects.Contains(body),", "Body.Obliterate(null, Silent: true);",
+				".Append(\"; skipped=\").Append(KingdomScenarioRules.Bounded(string.Join(\",\", book.Notes)))",
+				".Append(\"; bit-bodies=\")" })
+				Assert.That(craft, Does.Contain(pin), pin);
+			// The production readers the body reading mirrors, where production states them.
+			string authority = Read("Growth/KingdomConstructionInputLeaseAuthority.cs");
+			foreach (string fact in new[] { "&& KingdomOrdinaryCustody.TryProveEmpty(item, out _)",
+				"&& !item.IsImportant() && item.Equipped == null && item.IsTakeable();" })
+				Assert.That(authority, Does.Contain(fact), fact);
+			Assert.That(Read("Growth/KingdomConstruction.InputObservationRegistry.cs"),
+				Does.Contain("|| !item.IsTakeable() || item.HasTag(\"AlwaysStack\")"));
+		}
+
+		/// <summary>Fix round of #264: the five-rung form resolves every tier of the arcology's
+		/// bits from declared data at chain setup and creates nothing, so an unsourced tier refuses
+		/// before the 1->4 prefix rather than after it. The resolution itself executes against the
+		/// installed corpus in KingdomCampHeartHighCraftCorpusTests.</summary>
+		[Test]
+		public void TheFiveRungFormResolvesItsBitTiersAtSetupWithoutCreatingABody()
+		{
+			string chain = Read(Chain), factory = Read(HighCraftFactory);
+			int setup = chain.IndexOf("if (Verb == KingdomCampHeartChainScript.Setup)", StringComparison.Ordinal);
+			int preflight = chain.IndexOf("if (ChainFinalRung == 5) PreflightChainHighCraft();", setup,
+				StringComparison.Ordinal);
+			Assert.That(preflight, Is.GreaterThan(setup));
+			Assert.That(chain.IndexOf("SeedChainSupport();", setup, StringComparison.Ordinal), Is.GreaterThan(preflight));
+			Assert.That(chain, Does.Contain("+ (ChainHighCraftPreflight == null ? \"\" : ChainHighCraftPreflight + \"; \")"));
+			int method = factory.IndexOf("private void PreflightChainHighCraft()", StringComparison.Ordinal);
+			Assert.That(method, Is.GreaterThan(0));
+			string body = factory.Substring(method);
+			foreach (string read in new[] { "KingdomCampHeartChainRules.SuccessorKey(5)",
+				"KingdomMaterials.BitCostFor(arcology)", "vocabulary, KingdomCampHeartHighCraftRules.DeclaredWorth);",
+				"taf-camp-rung5-highcraft-infeasible", "GameObjectFactory.Factory.Blueprints.ContainsKey(IngotBlueprint)" })
+				Assert.That(body, Does.Contain(read), read);
+			Assert.That(body, Does.Not.Contain("RealisedBitWorth"), "the preflight asks the engine for no realised cost");
+			Assert.That(factory, Does.Not.Contain("GameObject.Create("), "the factory shard creates nothing");
 		}
 
 		[Test]
@@ -447,7 +495,9 @@ namespace ThousandAndFirst.Tests
 			foreach (string line in new[] { "node:arclight", "FOUR claimed zones", "THE CROWN",
 				"COMPOSITE bill", "SAME-FOOTPRINT RENOVATION", "BUDGET, DISCLOSED AND MEASURED",
 				"no save/load", "# Physical input isolated for this exact dedicated game, through owned shutdown.",
-				"KingdomCity.OnSuspending", "five more disk lessons", "WITHOUT building any zone" })
+				"KingdomCity.OnSuspending", "five more disk lessons", "WITHOUT building any zone",
+				"The bit mint re-reads production's own stock before every body",
+				"does not count by exactly its worth is taken back out" })
 				Assert.That(persona, Does.Contain(line), line);
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart recovery requires inspection\""));
 			Assert.That(persona, Does.Contain("TIMEOUT=7000"));
