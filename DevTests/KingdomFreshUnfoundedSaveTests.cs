@@ -197,10 +197,77 @@ namespace ThousandAndFirst.Tests
 		/// <summary>Serialized KingdomSystem fields (type, name, initializer) in declaration order:
 		/// public instance fields that are not static, const or [NonSerialized], as
 		/// SerializationWriter.WriteNamedFields selects them (decompiled 2.0.211.56
-		/// XRL/World/SerializationWriter.cs:2981-3008), from every production partial.</summary>
+		/// XRL/World/SerializationWriter.cs:2981-3008), from every production partial. Members are
+		/// found by brace depth, whatever their indentation; a declaration this parser cannot read,
+		/// a constructor, or unbalanced braces becomes an UNPARSED row, which fails the census.</summary>
 		private static List<string[]> SystemFields()
 		{
 			List<string[]> fields = new List<string[]>();
+			Regex field = new Regex(@"^public\s+(?:readonly\s+)?(?<type>[\w.]+(?:<[\w.,\s]+>)?)\s+(?<name>\w+)\s*(?:=\s*(?<init>.+))?;$");
+			foreach (string file in ProductionFiles())
+			{
+				string[] lines = Lines(file), code = CodeOnly(lines);
+				bool[] inside = new bool[lines.Length], member = new bool[lines.Length];
+				int depth = 0, body = -1;
+				bool open = false, system = false;
+				for (int i = 0; i < lines.Length; i++)
+				{
+					inside[i] = body > 0;
+					member[i] = body > 0 && depth == body;
+					if (Regex.IsMatch(code[i], @"\bclass\s+KingdomSystem\b")) open = system = true;
+					foreach (char c in code[i])
+					{
+						if (c == '{')
+						{
+							depth++;
+							if (open) { body = depth; open = false; }
+						}
+						else if (c == '}' && --depth < body) body = -1;
+					}
+				}
+				if (system && (depth != 0 || open || body != -1))
+					fields.Add(new[] { "UNPARSED braces in " + file, "", "" });
+				bool skip = false;
+				for (int i = 0; i < lines.Length; i++)
+				{
+					string text = code[i].Trim();
+					// Conventional member indentation inside a nested block means the depth count is off.
+					if (inside[i] && !member[i] && lines[i].StartsWith("\t\tpublic ", StringComparison.Ordinal))
+						fields.Add(new[] { "UNPARSED " + file + ":" + (i + 1) + " " + text, "", "" });
+					if (!member[i] || text.Length == 0) continue;
+					if (text.StartsWith("[", StringComparison.Ordinal))
+					{
+						skip |= Regex.IsMatch(text, @"\bNonSerialized(Attribute)?\b");
+						if (Regex.IsMatch(text, @"\bpublic\b")) fields.Add(new[] { "UNPARSED " + text, "", "" });
+						continue;
+					}
+					// A constructor would change the fresh state the census reads from initializers.
+					bool constructor = Regex.IsMatch(text, @"(?<!\bnew\s+)\bKingdomSystem\s*\(");
+					if (constructor || !text.StartsWith("public ", StringComparison.Ordinal))
+					{
+						if (constructor || Regex.IsMatch(text, @"\bpublic\b")) fields.Add(new[] { "UNPARSED " + text, "", "" });
+						skip = false;
+						continue;
+					}
+					string declaration = Regex.Replace(lines[i].Trim(), @";\s*//.*$", ";");
+					while (!declaration.EndsWith(";", StringComparison.Ordinal) && !declaration.Contains("{")
+						&& !declaration.Contains("(") && i + 1 < lines.Length) declaration += " " + lines[++i].Trim();
+					string head = declaration.Split('=')[0];
+					// "=>" right after the name is an expression-bodied member; a field may hold a lambda.
+					bool arrow = declaration.Length > head.Length + 1 && declaration[head.Length + 1] == '>';
+					bool instance = !head.Contains("(") && !head.Contains("{") && !arrow
+						&& !Regex.IsMatch(head, @"^public\s+(static|const|event|override|virtual|abstract|class|enum|struct|interface|delegate|sealed|partial)\b");
+					Match match = field.Match(declaration);
+					if (instance && !skip) fields.Add(match.Success ? new[] { match.Groups["type"].Value,
+						match.Groups["name"].Value, match.Groups["init"].Value } : new[] { "UNPARSED " + declaration, "", "" });
+					skip = false;
+				}
+			}
+			return fields;
+		}
+
+		private static List<string> ProductionFiles()
+		{
 			List<string> files = new List<string>();
 			foreach (string file in Directory.GetFiles(TestMain.RepositoryRoot, "*.cs", SearchOption.AllDirectories))
 			{
@@ -209,44 +276,38 @@ namespace ThousandAndFirst.Tests
 					&& !relative.StartsWith("Tools/", StringComparison.Ordinal)) files.Add(relative);
 			}
 			files.Sort(StringComparer.Ordinal);
-			Regex field = new Regex(@"^public\s+(?:readonly\s+)?(?<type>[\w.]+(?:<[\w.,\s]+>)?)\s+(?<name>\w+)\s*(?:=\s*(?<init>.+))?;$");
-			foreach (string file in files)
+			return files;
+		}
+
+		/// <summary>Each line with comments removed and string and character literals blanked, so
+		/// braces and keywords are read from code only.</summary>
+		private static string[] CodeOnly(string[] lines)
+		{
+			string[] code = new string[lines.Length];
+			bool block = false, verbatim = false;
+			for (int n = 0; n < lines.Length; n++)
 			{
-				string[] lines = TestMain.ReadRepositoryText(file).Replace("\r\n", "\n").Split('\n');
-				bool inside = false, skip = false;
-				for (int i = 0; i < lines.Length; i++)
+				StringBuilder kept = new StringBuilder();
+				string line = lines[n];
+				for (int i = 0; i < line.Length; i++)
 				{
-					string line = lines[i];
-					if (!inside)
+					char c = line[i], next = i + 1 < line.Length ? line[i + 1] : '\0';
+					if (block) { if (c == '*' && next == '/') { block = false; i++; } continue; }
+					if (verbatim) { if (c == '"' && next == '"') i++; else if (c == '"') verbatim = false; continue; }
+					if (c == '/' && next == '/') break;
+					if (c == '/' && next == '*') { block = true; i++; continue; }
+					if (c == '@' && next == '"') { verbatim = true; i++; kept.Append(' '); continue; }
+					if (c == '"' || c == '\'')
 					{
-						inside = Regex.IsMatch(line, @"^\t(public |internal )?(sealed )?partial class KingdomSystem\b");
+						for (i++; i < line.Length && line[i] != c; i++) if (line[i] == '\\') i++;
+						kept.Append(' ');
 						continue;
 					}
-					if (line == "\t}") { inside = false; continue; }
-					if (line.StartsWith("\t\t[", StringComparison.Ordinal))
-					{
-						skip |= line.Contains("NonSerialized");
-						if (Regex.IsMatch(line, @"\]\s*public\s")) fields.Add(new[] { "UNPARSED " + line.Trim(), "", "" });
-						continue;
-					}
-					if (!line.StartsWith("\t\tpublic ", StringComparison.Ordinal))
-					{
-						if (line.Trim().Length > 0 && !line.TrimStart().StartsWith("//", StringComparison.Ordinal)) skip = false;
-						continue;
-					}
-					string declaration = Regex.Replace(line.Trim(), @";\s*//.*$", ";");
-					while (!declaration.EndsWith(";", StringComparison.Ordinal) && !declaration.Contains("{")
-						&& !declaration.Contains("(")) declaration += " " + lines[++i].Trim();
-					string head = declaration.Split('=')[0];
-					bool member = !head.Contains("(") && !head.Contains("{") && !declaration.Contains("=>")
-						&& !Regex.IsMatch(head, @"^public\s+(static|const|event|override|virtual|abstract|class|enum|struct|interface|delegate|sealed|partial)\b");
-					Match match = field.Match(declaration);
-					if (member && !skip) fields.Add(match.Success ? new[] { match.Groups["type"].Value,
-						match.Groups["name"].Value, match.Groups["init"].Value } : new[] { "UNPARSED " + declaration, "", "" });
-					skip = false;
+					kept.Append(c);
 				}
+				code[n] = kept.ToString();
 			}
-			return fields;
+			return code;
 		}
 
 		private static string WriteBody(string path, string type)
