@@ -17,6 +17,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Txn = "0123456789abcdef0123456789abcdef";
 		private const string Refusal = "growth envelope is not bounded and writable";
+		private const string OpaqueRefusal = "opaque growth envelope is malformed";
 		private const string BindFault = "lifecycle authority quarantined by an unbound fault";
 
 		// The exact 139-byte v5 image of new KingdomLifecycleBook(); every reader since v0.3.0
@@ -172,6 +173,92 @@ namespace ThousandAndFirst.Tests
 						path + "." + field.Name, depth + 1);
 		}
 
+		private static KingdomLifecycleBook UnboundQuarantine()
+		{
+			return new KingdomLifecycleBook { Quarantined = true, Fault = BindFault };
+		}
+
+		/// <summary>The dormant predicate refuses the state, and the strict writer throws rather
+		/// than truncate it into the growth-free v5 frame.</summary>
+		private static void Refuse(string name, KingdomLifecycleBook book)
+		{
+			ClassicAssert.IsFalse(KingdomLifecycleRules.DormantLifecycleWireExact(book), name);
+			Assert.Throws<InvalidDataException>(() => Write(book), name);
+		}
+
+		/// <summary>What the historical v5 frame alone would carry back for this book.</summary>
+		private static KingdomLifecycleBook V5Image(KingdomLifecycleBook book)
+		{
+			using (MemoryStream stream = new MemoryStream())
+			{
+				KingdomLifecycleWireCodec.WriteLifecycleV5Fixture(new BinaryWriter(stream), book);
+				return Read(stream.ToArray());
+			}
+		}
+
+		/// <summary>Production-minted raid authority: TryApply mints one grievance and its live
+		/// incident from an authored warning (the KingdomRaidIncidentRulesTests shape); a source
+		/// cancellation then resolves it and leaves no active incident.</summary>
+		private static KingdomRaidLedger RaidHistory(bool resolved)
+		{
+			KingdomLifecycleOperation warning = new KingdomLifecycleOperation
+			{
+				Lane = KingdomLifecycleLane.Raid, Action = KingdomLifecycleAction.RaidWarning,
+				SettlementId = "city-raid-history", ZoneId = "zone-a", Origin = "source-a",
+				ObjectName = "authored act", Faction = "Snapjaws", DisplayFaction = "salt-road scouts",
+				Creed = "explicit-slight", Detail = "specific authored evidence",
+				ArrivalText = "zone-source", Target = 1, Count = 2, CreatedTick = 10L,
+				DepartTick = 110L, PlunderRequested = 6, Kind = 24, Blueprint = "snapjaw-foragers"
+			};
+			warning.ObjectId = KingdomRaidIncidentRules.GrievanceId("source-a");
+			warning.ObjectMarker = KingdomRaidIncidentRules.IncidentId(warning.ObjectId);
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.TryApply(new KingdomRaidLedger(), warning,
+				out KingdomRaidLedger ledger), "authored warning mints a grievance and an incident");
+			ClassicAssert.NotNull(ledger.ActiveIncidentId);
+			if (!resolved) return ledger;
+			KingdomRaidIncident incident = KingdomRaidIncidentRules.Active(ledger);
+			KingdomLifecycleOperation cancel = new KingdomLifecycleOperation
+			{
+				Id = KingdomLifecycleRules.ChildId(incident.Id,
+					"test-response-" + (byte)KingdomLifecycleAction.RaidCancel, 0),
+				Lane = KingdomLifecycleLane.Raid, Action = KingdomLifecycleAction.RaidCancel,
+				SettlementId = incident.SettlementId, ZoneId = incident.TargetZoneId,
+				ObjectId = incident.Id, Faction = incident.AttackerFactionId, CreatedTick = 40L,
+				Kind = (int)KingdomRaidResolution.SourceInvalid
+			};
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.TryApply(ledger, cancel, out ledger),
+				"source cancellation resolves the only incident");
+			ClassicAssert.IsNull(ledger.ActiveIncidentId);
+			ClassicAssert.AreEqual(1, ledger.Incidents.Count);
+			return ledger;
+		}
+
+		/// <summary>A value different from the current one; unsupported field types fail loudly so
+		/// a new field cannot slip past the reflective dormant-frame pin.</summary>
+		private static object NonDefault(Type type, object current)
+		{
+			if (type == typeof(bool)) return !(bool)current;
+			if (type == typeof(int)) return (int)current + 1;
+			if (type == typeof(long)) return (long)current + 1L;
+			if (type == typeof(ulong)) return (ulong)current + 1UL;
+			if (type == typeof(string)) return current == null ? "x" : (string)current + "x";
+			if (type == typeof(byte[])) return current == null ? new byte[] { 1 } : null;
+			if (type.IsEnum)
+			{
+				foreach (object value in Enum.GetValues(type))
+					if (!value.Equals(current)) return value;
+			}
+			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+			{
+				IList list = (IList)Activator.CreateInstance(type);
+				Type element = type.GetGenericArguments()[0];
+				list.Add(element.IsValueType ? Activator.CreateInstance(element) : null);
+				return list;
+			}
+			else if (type.IsClass) return current == null ? Activator.CreateInstance(type, true) : null;
+			throw new NotSupportedException("no non-default value for " + type.Name);
+		}
+
 		[Test]
 		public void NewGameDormantLifecycleSavesAndColdLoadsPristine()
 		{
@@ -278,10 +365,17 @@ namespace ThousandAndFirst.Tests
 			refuse("growth clock", b => b.Growth.OptionTick = 1L);
 			refuse("growth fault", b => b.Growth.Fault = "x");
 			refuse("raid ledger revision", b => b.RaidLedger.StateRevision = 1L);
-			refuse("raid ledger future", b => b.RaidLedger.OpaqueFuturePayload = new byte[] { 1 });
+			// A payload on a current-version ledger is malformed (ValidLedger); the genuine future
+			// ledger is pinned by GenuineFutureRaidLedgerIsNeverDroppedIntoTheV5Frame.
+			refuse("malformed raid ledger payload", b => b.RaidLedger.OpaqueFuturePayload = new byte[] { 1 });
 			refuse("quarantine without fault", b => b.Quarantined = true);
 			refuse("settlement id without binding", b => b.SettlementId = "city");
 			refuse("wire rejected", b => b.WireRejected = true);
+			// The predicate runs on every save: absent parts are refused, never dereferenced.
+			refuse("null growth", b => b.Growth = null);
+			refuse("null raid ledger", b => b.RaidLedger = null);
+			refuse("null resource rows", b => b.Resources = null);
+			refuse("null proof rows", b => b.RecentProofs = null);
 			refuse("locus option set", b =>
 			{
 				b.LocusOption = KingdomLifecycleOptionState.Enabled;
@@ -294,12 +388,161 @@ namespace ThousandAndFirst.Tests
 				b.Fault = BindFault;
 				b.RaidLedger.StateRevision = 1L;
 			});
-			refuse("quarantined future raid ledger", b =>
+			refuse("quarantined malformed raid ledger payload", b =>
 			{
 				b.Quarantined = true;
 				b.Fault = BindFault;
 				b.RaidLedger.OpaqueFuturePayload = new byte[] { 1 };
 			});
+		}
+
+		[TestCase(false)]
+		[TestCase(true)]
+		public void GenuineFutureRaidLedgerIsNeverDroppedIntoTheV5Frame(bool quarantined)
+		{
+			// KingdomRaidLedger.cs:23-24: an older build keeps a newer framed ledger byte-exact.
+			// ValidLedger admits it and PristineLifecycleBook never tests Version or the payload, so
+			// only ConstructorDefaultRaidLedger keeps it out of the ledger-free v5 frame.
+			KingdomLifecycleBook book = quarantined ? UnboundQuarantine() : new KingdomLifecycleBook();
+			book.RaidLedger.Version = KingdomRaidLedger.CurrentVersion + 1;
+			book.RaidLedger.OpaqueFuturePayload = new byte[] { 4, 2 };
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger), "genuine future ledger");
+			Refuse("genuine future raid ledger", book);
+			AssertSameFields(new KingdomRaidLedger(), V5Image(book).RaidLedger, "v5 image drops it", 0);
+		}
+
+		[Test]
+		public void NonDefaultRaidLedgerOnAnUnboundQuarantineIsNeverDropped()
+		{
+			// CanonicalLifecycleQuarantine accepts any ValidLedger, so on this arm only
+			// ConstructorDefaultRaidLedger keeps raid authority out of the ledger-free v5 frame.
+			Action<string, Action<KingdomLifecycleBook>> refuse = (name, change) =>
+			{
+				KingdomLifecycleBook book = UnboundQuarantine();
+				change(book);
+				ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger), name + ": valid");
+				Refuse(name, book);
+				AssertSameFields(new KingdomRaidLedger(), V5Image(book).RaidLedger,
+					name + ": the v5 image drops it", 0);
+			};
+			refuse("schedule revision", b => b.RaidLedger.ScheduleRevision = 1L);
+			refuse("archived legacy evidence", b => b.RaidLedger.LegacyEvidenceArchived = true);
+			refuse("archived legacy raid values", b =>
+			{
+				b.RaidLedger.LegacyEvidenceArchived = true;
+				b.RaidLedger.LegacyRaidState = 2;
+				b.RaidLedger.LegacyFaction = "Snapjaws";
+				b.RaidLedger.LegacyDueTick = 100L;
+				b.RaidLedger.LegacyLastTick = 90L;
+				b.RaidLedger.LegacyTimesDeferred = 1;
+			});
+			refuse("live raid incident", b => b.RaidLedger = RaidHistory(false));
+			refuse("resolved raid history", b =>
+			{
+				// Zeroed revisions leave the grievance and incident counts as the only difference.
+				KingdomRaidLedger history = RaidHistory(true);
+				history.StateRevision = 0L;
+				history.ScheduleRevision = 0L;
+				b.RaidLedger = history;
+			});
+		}
+
+		[Test]
+		public void NonCanonicalUnboundQuarantineIsNeverRedirected()
+		{
+			// TryStageGrowthMigrationFromV5 rebuilds an unbound v5 book only through
+			// PristineLifecycleBook or CanonicalLifecycleQuarantine, so any other quarantine
+			// written in that frame would save and then refuse to load.
+			KingdomLifecycleOperation operation = KingdomLifecycleRules.PrepareOperation(
+				Bound("city-dormant-operation"), KingdomLifecycleLane.PlainGuest,
+				KingdomLifecycleAction.Spawn, 1L);
+			ClassicAssert.NotNull(operation, "production lane-operation fixture");
+			Action<string, Action<KingdomLifecycleBook>> refuse = (name, change) =>
+			{
+				KingdomLifecycleBook book = UnboundQuarantine();
+				change(book);
+				Refuse(name, book);
+				Assert.Throws<InvalidDataException>(() => V5Image(book), name + ": v5 image never loads");
+			};
+			refuse("identity proof without binding", b => b.IdentityProof = "proof");
+			refuse("settlement id without binding", b => b.SettlementId = "city");
+			refuse("legacy identity without binding", b =>
+			{
+				b.LegacyIdentity = true;
+				b.LegacyMigrationKey = "legacy-key";
+			});
+			refuse("legacy key without legacy identity", b => b.LegacyMigrationKey = "legacy-key");
+			refuse("broken lane counter", b =>
+			{
+				b.NotableGuestNextSequence = 5L;
+				b.NotableGuestRetiredThrough = 2L;
+			});
+			refuse("unknown option", b => b.NotableOption = (KingdomLifecycleOptionState)250);
+			refuse("negative option tick", b => b.RaidOptionTick = -1L);
+			refuse("overlong fault", b => b.Fault = new string('q', KingdomLifecycleRules.MaxTextChars + 1));
+			refuse("lane operation", b => b.PlainGuest = operation);
+		}
+
+		[Test]
+		public void OuterRowsOnAnUnboundQuarantineKeepTheStrictGate()
+		{
+			// The dormant frame admits only an empty outer registry. These valid rows would survive
+			// the v5 frame, but they are not dormant state, so the book keeps the strict gate.
+			KingdomLifecycleOperation operation = KingdomLifecycleRules.PrepareOperation(
+				Bound("city-dormant-proof"), KingdomLifecycleLane.PlainGuest,
+				KingdomLifecycleAction.Spawn, 1L);
+			ClassicAssert.NotNull(operation, "production lane-operation fixture");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPlanHash(operation, out string planHash));
+			KingdomLifecycleBook resource = CountersAndOptions(BindFault);
+			resource.Resources.Add(new KingdomLifecycleResourceRevision
+			{
+				Kind = KingdomLifecycleResourceKind.Population, ScopeId = "realm-scope",
+				SubjectId = "population", Revision = 3L,
+				Key = KingdomLifecycleRules.ResourceKey(KingdomLifecycleResourceKind.Population,
+					"realm-scope", "population")
+			});
+			KingdomLifecycleBook proof = CountersAndOptions(BindFault);
+			proof.RecentProofs.Add(new KingdomLifecycleProof
+			{
+				Sequence = 1L, Lane = KingdomLifecycleLane.PlainGuest,
+				Action = KingdomLifecycleAction.Spawn, Tick = 1L, PlanHash = planHash,
+				Id = KingdomLifecycleRules.OperationId(null, KingdomLifecycleLane.PlainGuest, 1L)
+			});
+			foreach (KeyValuePair<string, KingdomLifecycleBook> row in new[]
+			{
+				new KeyValuePair<string, KingdomLifecycleBook>("resource row", resource),
+				new KeyValuePair<string, KingdomLifecycleBook>("recent proof", proof)
+			})
+			{
+				AssertSameFields(row.Value, V5Image(row.Value), row.Key + ": valid and representable", 0);
+				Refuse(row.Key, row.Value);
+			}
+		}
+
+		[TestCase("growth", false)]
+		[TestCase("growth", true)]
+		[TestCase("raid ledger", false)]
+		[TestCase("raid ledger", true)]
+		public void EveryNonDefaultFieldValueIsRefusedByTheDormantFrame(string part, bool quarantined)
+		{
+			// Field-level pin of PristineGrowthBook and ConstructorDefaultRaidLedger: neither
+			// survives the v5 frame, which rebuilds both as constructor defaults.
+			bool growth = part == "growth";
+			Type type = growth ? typeof(KingdomGrowthBook) : typeof(KingdomRaidLedger);
+			int fields = 0;
+			foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+			{
+				if (Attribute.IsDefined(field, typeof(NonSerializedAttribute))) continue;
+				KingdomLifecycleBook book = quarantined ? UnboundQuarantine() : new KingdomLifecycleBook();
+				ClassicAssert.IsTrue(KingdomLifecycleRules.DormantLifecycleWireExact(book), "baseline");
+				object owner = growth ? (object)book.Growth : book.RaidLedger;
+				field.SetValue(owner, NonDefault(field.FieldType, field.GetValue(owner)));
+				ClassicAssert.IsFalse(KingdomLifecycleRules.DormantLifecycleWireExact(book),
+					type.Name + "." + field.Name);
+				fields++;
+			}
+			ClassicAssert.AreEqual(growth ? GrowthFields.Length : RaidLedgerFields.Length, fields,
+				type.Name + " field census");
 		}
 
 		[TestCase("quarantined")]
@@ -378,23 +621,33 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(5, states);
 		}
 
-		[TestCase("pristine-unbound", "identity-unbound")]
-		[TestCase("altered-proof", "identity-proof")]
-		[TestCase("older-format", "format")]
-		[TestCase("field-cap", "collections")]
-		[TestCase("lone-surrogate", "root-shape")]
-		[TestCase("unknown-option", "root-shape")]
-		public void RefusalReasonNamesTheFailingCheck(string shape, string reason)
+		/// <summary>The refusal fixture for each reason token, from the root of the gate order.</summary>
+		private static KingdomGrowthBook RefusalFixture(string shape)
 		{
-			KingdomGrowthBook book = shape == "pristine-unbound" || shape == "older-format"
-				|| shape == "field-cap" ? new KingdomGrowthBook() : Bound("city-" + shape).Growth;
-			ClassicAssert.IsTrue(shape == "pristine-unbound" || shape == "older-format"
-				|| shape == "field-cap" || KingdomLifecycleRules.GrowthEnvelopeWritable(book),
-				"bound fixture starts writable");
+			switch (shape)
+			{
+				case "absent": return null;
+				case "pristine-unbound": return new KingdomGrowthBook();
+				case "older-format":
+					return new KingdomGrowthBook { FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion - 1 };
+				case "overlong-fault":
+					return new KingdomGrowthBook { Fault = new string('q', KingdomLifecycleRules.MaxTextChars + 1) };
+				case "malformed-opaque":
+					return new KingdomGrowthBook { Quarantined = true, Fault = "growth evidence quarantined",
+						OpaquePayload = new byte[] { 1 } };
+				case "opaque-version-without-payload": return new KingdomGrowthBook { OpaqueWireVersion = 1 };
+				case "field-cap":
+					KingdomGrowthBook capped = new KingdomGrowthBook();
+					for (int i = 0; i <= KingdomLifecycleRules.MaxGrowthFields; i++) capped.FieldOps.Add(null);
+					return capped;
+				case "staged-without-source": return new KingdomGrowthBook { MigrationPending = true };
+				case "quarantine-without-fault": return new KingdomGrowthBook { Quarantined = true };
+			}
+			KingdomGrowthBook book = Bound("city-" + shape).Growth;
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthEnvelopeWritable(book), "bound fixture starts writable");
+			ClassicAssert.AreEqual("unknown", KingdomLifecycleRules.GrowthEnvelopeRefusalReason(book),
+				"a writable book reproduces no refusal");
 			if (shape == "altered-proof") book.IdentityProof = book.IdentityProof + "0";
-			if (shape == "older-format") book.FormatVersion = KingdomLifecycleRules.CurrentGrowthFormatVersion - 1;
-			if (shape == "field-cap")
-				for (int i = 0; i <= KingdomLifecycleRules.MaxGrowthFields; i++) book.FieldOps.Add(null);
 			if (shape == "lone-surrogate")
 			{
 				book.PendingCrop = 1;
@@ -402,11 +655,33 @@ namespace ThousandAndFirst.Tests
 				book.PendingCropZoneId = "zone-a";
 			}
 			if (shape == "unknown-option") book.OptionState = (KingdomLifecycleOptionState)250;
+			return book;
+		}
+
+		[TestCase("absent", "absent")]
+		[TestCase("pristine-unbound", "identity-unbound")]
+		[TestCase("altered-proof", "identity-proof")]
+		[TestCase("older-format", "format")]
+		[TestCase("overlong-fault", "fault-text")]
+		[TestCase("malformed-opaque", "opaque-evidence")]
+		[TestCase("opaque-version-without-payload", "opaque-wire-version")]
+		[TestCase("field-cap", "collections")]
+		[TestCase("staged-without-source", "staged-shape")]
+		[TestCase("quarantine-without-fault", "quarantine-shape")]
+		[TestCase("lone-surrogate", "root-shape")]
+		[TestCase("unknown-option", "root-shape")]
+		public void RefusalReasonNamesTheFailingCheck(string shape, string reason)
+		{
+			KingdomGrowthBook book = RefusalFixture(shape);
 			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthEnvelopeWritable(book), "verdict unchanged");
 			ClassicAssert.AreEqual(reason, KingdomLifecycleRules.GrowthEnvelopeRefusalReason(book));
 			InvalidDataException refused = Assert.Throws<InvalidDataException>(() =>
 				KingdomLifecycleWireCodec.GrowthPayloadForWrite(book));
-			ClassicAssert.AreEqual(Refusal + " (" + reason + ")", refused.Message);
+			// An absent book is refused before any reason is computed; the opaque branch keeps its
+			// own prefix.
+			string expected = book == null ? "growth authority is absent"
+				: (book.OpaquePayload != null ? OpaqueRefusal : Refusal) + " (" + reason + ")";
+			ClassicAssert.AreEqual(expected, refused.Message);
 			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthEnvelopeWritable(book), "reason never repairs");
 		}
 	}
