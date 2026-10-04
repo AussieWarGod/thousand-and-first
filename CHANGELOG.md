@@ -18,7 +18,8 @@ records current acceptance.
   architecture reference assembly hash now name `2.0.211.56`; the published 0.3.7 candidate record
   keeps its true `2.0.211.51` target. The two decompile-backed installed-Qud source checks now
   read only a decompile declaring the pinned core, by default the version-keyed `2.0.211.56`
-  archive, and refuse a decompile or installed engine of any other build. All four engine compile
+  archive. They refuse a decompile of any other build, and an install of another build named by
+  `TAF_QUD_BASE`; without `TAF_QUD_BASE` they compare no installed engine. All four engine compile
   modes with the exact Hearthpyre 2.2.3 ABI proof and both full licensed suites (15,130 and 5,997
   cases, zero skips) pass on the installed build. No native acceptance or release native stage has
   run on `2.0.211.56`. A developer Quickstart smoke (new game, first save, cold reload) passed

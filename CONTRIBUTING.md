@@ -102,9 +102,10 @@ with guessed base content. The two decompile-backed cases read an ILSpy decompil
 pinned core (`GAME_CORE_BUILD` in `Tools/workshop_metadata.py`): `TAF_QUD_DECOMPILED`, or by
 default `~/coq/qud_helper/game_base/decompiled/<core>-ilspy9.1`. A decompile whose
 `Properties/AssemblyInfo.cs` declares another version, or a `TAF_QUD_BASE` install of another core,
-fails them; a missing default is a skip. A release run accepts no skips: `DevTests/test.ps1` sets
-the zero-skip policy, and `Tools/release-check.sh` supplies the exact base. Licensed runtime checks
-still require a local Caves of Qud installation:
+fails them; without `TAF_QUD_BASE` no installed engine is compared, and a missing default is a
+skip. A release run accepts no skips: `DevTests/test.ps1` sets the zero-skip policy, and
+`Tools/release-check.sh` supplies the exact base. Licensed runtime checks still require a local
+Caves of Qud installation:
 
 ```powershell
 dotnet run --project DevTests/TafTests.csproj -v q --nologo

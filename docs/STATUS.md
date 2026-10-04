@@ -26,13 +26,16 @@ The two decompile-backed installed-Qud source checks (history consumers in relic
 generation, and the trade market sink) previously read the `2.0.211.51` and `2.0.210.24`
 decompiles. They now read only a decompile whose `Properties/AssemblyInfo.cs` declares the pinned
 core, by default the archived, version-keyed `2.0.211.56` decompile. A decompile of another
-engine, or an installed engine other than the pinned core, fails them; an absent archive is a
-skip, which every zero-skip licensed run refuses.
+engine fails them, as does an install of another core named by `TAF_QUD_BASE`, which the
+release check always sets. Without `TAF_QUD_BASE` they compare no installed engine, so passing
+them then does not show that the installed engine matches the pin. An absent archive is a skip,
+which every zero-skip licensed run refuses.
 
 All four engine compile modes pass (3117/3121 ordinary and 3444/3448 dev-harness sources), and
-both full licensed suites pass on the installed base: 15,130 main and 5,997 portable cases, zero
-skips. No native acceptance or release native stage has run on `2.0.211.56`. Native evidence
-below ran on `2.0.211.51`, and docs/DEVELOPMENT.md requires the same engine binding for reuse.
+both full licensed suites pass with `TAF_QUD_BASE` naming the installed base: 15,130 main and
+5,997 portable cases, zero skips. No native acceptance or release native stage has run on
+`2.0.211.56`. Native evidence below ran on `2.0.211.51`, and docs/DEVELOPMENT.md requires the
+same engine binding for reuse.
 
 Developer native smoke on `2.0.211.56` (2026-10-04): persona `quickstart-reload` passed for the
 `v0.3.7` tag (`de8317db`) and for dev `1f8f91ed`, the re-pin's base, whose runtime C# and XML
