@@ -655,6 +655,7 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, "REFUSED", wanted)
                 self.assertTrue(matrix.match(expected, changed))
                 changed[index] = (verb, outcome, "wrong physical result")
+                self.assertTrue(matrix.match(expected, changed))
 
     def test_higher_heart_save_requires_preflight_and_actual_save_witnesses(self):
         names = ("camp-heart-chain-next-preflight", "camp-heart-chain-save")
