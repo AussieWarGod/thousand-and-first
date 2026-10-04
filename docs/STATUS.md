@@ -49,27 +49,32 @@ checks the durable books a fresh, unfounded `KingdomSystem` is constructed with,
 list (16 books in the main suite, 11 in the portable kernel), each built as its field initializer
 builds it: the envelope codecs (lifecycle, polity, trade, experience, carry) round-trip
 byte-identically and reload valid; the named-field books hold only values the engine's
-named-field writer serializes itself, and their load normalization settles; and the empty
-settlement topologies pass their write gate. On dev the city book carries schema 5 (the residence
-column), so here its fields are also walked behind its load guard, and its written fields reload
-through the production load path (residence and subsidence migration, then validated
-normalization) to the identical field image. No listed book fails on this head. With only the
-writer change reverted on a scratch copy, the pin fails on the lifecycle book alone, with the
-#272 message, and the other 15 books pass (10 in the portable kernel). With only the polity
-ledger's `FutureCauseFloorTick` initializer reverted, it fails on the polity ledger alone with
-"unobserved presentation option is noncanonical", the second defect the hotfix's first native
-unfounded save hit; dev has carried that initializer since PR #250. Each of these mutations turns
-it red: the city book's residence column left null, its schema version set to 4, a non-native
-field added to it, its residence load check inverted or off by one, and a book with its own
-writer nested inside the city book or inside a listed named-field book.
+named-field writer serializes itself; the load normalization that the ledger, binding, job,
+founder-history and realm-transition books run in their own `Read`, called directly here,
+settles, and the normalized realm transition validates (the dispatch-state and resident-operation
+`Read`s normalize nothing); and the empty settlement topologies pass their write gate. On dev the
+city book carries schema 5 (the residence column), so here its fields are also walked behind its
+load guard, and its written fields reload through the production load path (residence and
+subsidence migration, then validated normalization) to the identical field image. No listed book
+fails on this head. With only the writer change reverted on a scratch copy, the pin fails on the
+lifecycle book alone, with the #272 message, and the other 15 books pass (10 in the portable
+kernel). With only the polity ledger's `FutureCauseFloorTick` initializer reverted, it fails on
+the polity ledger alone with "unobserved presentation option is noncanonical", the second defect
+the hotfix's first native unfounded save hit; dev has carried that initializer since PR #250.
+Each of these mutations turns it red: the city book's residence column left null, its schema
+version set to 4, a non-native field added to it, its residence load check inverted or off by
+one, a book with its own writer nested inside the city book or inside a listed named-field book,
+and a realm-transition normalization that throws on a fresh transition, never settles, or leaves
+it invalid.
 
 The pin is not a field census. It reads no production source and calls no book's
 `Write(SerializationWriter)`, so a new `KingdomSystem` field and a changed city `Write` body each
 leave it green (both measured on scratch copies); it walks the named-field books and the city
-book with an emulation of the engine's named-field writer. The native unfounded-save persona
-performs a real engine save of every serialized field and is the complete census for a release
-build; `docs/RELEASING.md` requires that automated unfounded save and reload check for every
-release. An in-game reflection census is follow-up #281.
+book with an emulation of the engine's named-field writer, and it does not run `KingdomSystem`'s
+own load normalization, which needs the engine. The native unfounded-save persona performs a real
+engine save of every serialized field and is the complete census for a release build;
+`docs/RELEASING.md` requires that automated unfounded save and reload check for every release. An
+in-game reflection census is follow-up #281.
 
 Also not covered by this pin: the other save systems a new game creates (`KingdomSeal` and
 `KingdomCivicMemorySystem`, both mandatory, and the optional `KingdomSuccession` and
