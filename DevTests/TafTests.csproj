@@ -1510,6 +1510,7 @@
 	<Compile Include="..\Experience\KingdomGrowthLifecycleOutboxValidationRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthLifecycleLookupRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
+	<Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleArithmeticHashRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
