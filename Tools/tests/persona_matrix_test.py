@@ -1354,6 +1354,32 @@ class PolityWindowWitnessTest(unittest.TestCase):
                 self.assertEqual(11, len(problems), problems)
                 self.assertTrue(all("outside its frozen slots" in item for item in problems))
 
+    def test_the_matrix_verdict_runs_the_window_story(self):
+        # persona_matrix.assess is what run-personas.sh calls. Each journal below satisfies the
+        # persona's positional EXPECT row for row, so only its CHECK=polity-window branch can see
+        # that the readings tell the wrong story; the verdict must be exactly that story's faults.
+        found = self.persona()
+        rows = polity_rows(70)  # window 10 read six times, then window 11 five times
+        changed = self.replace_reading(rows, 2, polity_reading(10, 2))
+        stale = flat = rows
+        for ordinal in range(6, 11):
+            stale = self.replace_reading(stale, ordinal, polity_reading(11, 1))
+        for ordinal in range(11):
+            flat = self.replace_reading(flat, ordinal, polity_reading(10, 1))
+        cases = (
+            (changed, "window 10 receipt changed inside the window: "
+                      "window=10 revision=1 count=1 mask=1 intents=0 then "
+                      "window=10 revision=2 count=1 mask=1 intents=0"),
+            (stale, "window 11 opened without a newer revision (1 after 1)"),
+            (flat, "no window was read 3 times in a row before a later window opened"),
+        )
+        self.assertEqual([], matrix.assess(found, journal(*rows), POLITY_PERSONA))
+        for broken, problem in cases:
+            with self.subTest(problem=problem):
+                problems = matrix.assess(found, journal(*broken), POLITY_PERSONA)
+                self.assertIn(problem, problems)
+                self.assertEqual(self.story(broken), problems)
+
     def test_a_run_without_a_witnessed_window_and_advance_fails(self):
         flat = polity_rows(70)
         for ordinal in range(11):
@@ -1373,10 +1399,19 @@ class PolityWindowWitnessTest(unittest.TestCase):
         found = self.persona()
         self.assertEqual("polity-window", found["CHECK"])
         self.assertEqual(list(POLITY_REFUSALS) + [" withdrawn: "], json.loads(found["LOG_FORBID"]))
+        rung, witness = json.loads(found["LOG_REQUIRE"])
         drift = (b"[TAF] polity: dispatch window 10 continues with endpoint facts changed since it "
                  b"opened; no new dispatch until window 11\n")
-        self.assertEqual([], matrix.required_log(found, drift, POLITY_PERSONA))
-        self.assertTrue(matrix.required_log(found, b"[TAF] heart rung raised: 1\n", POLITY_PERSONA))
+        # Growth/KingdomCeremonyHeart.cs logs the heart's first rung when the rite ground stands:
+        # the work row whose daily readings make the camp's facts drift.
+        raised = b"[TAF] heart rung raised: 1 (heartbasin)\n"
+        self.assertEqual([], matrix.required_log(found, raised + drift, POLITY_PERSONA))
+        # A world whose rite slot is liquid raises no rung and has no drifting work row: the
+        # witness must fail there even if a drift line appears for another reason.
+        self.assertEqual([rung], matrix.required_log(found, drift, POLITY_PERSONA))
+        self.assertEqual([witness], matrix.required_log(found, raised, POLITY_PERSONA))
+        self.assertEqual([rung], matrix.required_log(
+            found, b"[TAF] heart rung raised: 2 (hearthall)\n" + drift, POLITY_PERSONA))
         withdrawal = (b"[TAF] polity: window 10 Guard intent for taf:settlement:v1:c withdrawn: "
                       b"its source facts changed after the window opened\n")
         self.assertTrue(matrix.forbidden_log(found, withdrawal, POLITY_PERSONA))
