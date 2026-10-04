@@ -23,14 +23,15 @@ suites) pins the exact 139-byte dormant image, equal to the historical v5 fixtur
 load, byte-identical re-save and first founding with the founded book back on frame 10;
 field-for-field round trips of the admitted quarantine states, including non-default counters,
 options and a 4096-character fault; current-frame retention for an unbound quarantine carrying
-quarantined or staged growth; the frozen serialized-field census; and every refusal reason
-except `aggregate-cap`. Refusal by both the predicate and the strict writer is pinned for the
-listed non-dormant unbound states: absent parts; growth, option and lane-operation state; a
-genuine future raid ledger on both arms; raid-ledger state, identity remnants, a broken lane
-counter, an unknown option, a negative tick and an overlong fault on the unbound quarantine,
-whose v5 image would drop the ledger or fail to load; and valid resource and proof rows there,
-which the v5 frame would carry but the dormant frame excludes. A reflective pin makes the
-predicate refuse a non-default value of every growth and raid-ledger field.
+quarantined or staged growth; a frozen reflective census of the lifecycle, growth and
+raid-ledger fields; and every refusal reason except `aggregate-cap`. Refusal by both the
+predicate and the strict writer is pinned for the listed non-dormant unbound states: absent
+parts; growth, option and lane-operation state; a genuine future raid ledger on both arms;
+raid-ledger state, identity remnants, a broken lane counter, an unknown option, a negative tick
+and an overlong fault on the unbound quarantine, whose v5 image would drop the ledger or fail to
+load; and valid resource and proof rows there, which the v5 frame would carry but the dormant
+frame excludes. A reflective pin makes the predicate refuse a non-default value of every growth
+and raid-ledger field.
 
 On a scratch copy with the writer and the two messages reverted, 21 of the 35 cases fail (the
 writer cases with the #272 message, and the message pins); the 14 refusal, current-frame, census
@@ -43,40 +44,34 @@ ledger's Version, payload, ActiveIncidentId, either count or legacy-value check 
 which both arms apply, ties each to a check that remains). The eleventh survivor drops the
 `aggregate-cap` reason, which no pin reaches.
 
-`KingdomFreshUnfoundedSaveTests` (3 cases, both suites), ported from hotfix PR #278, checks every
-durable book a fresh, unfounded `KingdomSystem` holds, built exactly as its field initializer
+`KingdomFreshUnfoundedSaveTests` (1 case, both suites), ported from hotfix PR #278, writes and
+checks the durable books a fresh, unfounded `KingdomSystem` is constructed with, from an explicit
+list (16 books in the main suite, 11 in the portable kernel), each built as its field initializer
 builds it: the envelope codecs (lifecycle, polity, trade, experience, carry) round-trip
 byte-identically and reload valid; the named-field books hold only values the engine's
 named-field writer serializes itself, and their load normalization settles; and the empty
-settlement topologies pass their write gate (16 books in the main suite, 11 in the portable
-kernel). Dev's city book is the one book whose shape differs from the hotfix base (schema 5 adds
-the residence column), so here its fields are also walked behind its load guard, and its written
-fields reload through the production load path (residence and subsidence migration, then
-validated normalization) to the identical field image. A source census pins the 24
-`KingdomSystem` fields that reach mod serialization code, with their initializers, and each
-book's writer body; the 204 serialized fields it parses match the compiled assembly. No book
-fails on this head. With only the writer change reverted on a scratch copy, the pin fails on the
-lifecycle book alone, with the #272 message, and the other 15 books pass (10 in the portable
-kernel). With only the polity ledger's `FutureCauseFloorTick` initializer reverted, it fails on
-the polity ledger alone with "unobserved presentation option is noncanonical", the second defect
-the hotfix's first native unfounded save hit; dev has carried that initializer since PR #250.
-Mutations that break the city book's residence column, schema version, writer body, field types
-or load path, or the census, each turn it red; four of them (a non-native and a nested-codec city
-field, two residence-load mutants) stayed green before the city adaptation.
+settlement topologies pass their write gate. On dev the city book carries schema 5 (the residence
+column), so here its fields are also walked behind its load guard, and its written fields reload
+through the production load path (residence and subsidence migration, then validated
+normalization) to the identical field image. No listed book fails on this head. With only the
+writer change reverted on a scratch copy, the pin fails on the lifecycle book alone, with the
+#272 message, and the other 15 books pass (10 in the portable kernel). With only the polity
+ledger's `FutureCauseFloorTick` initializer reverted, it fails on the polity ledger alone with
+"unobserved presentation option is noncanonical", the second defect the hotfix's first native
+unfounded save hit; dev has carried that initializer since PR #250. Each of these mutations turns
+it red: the city book's residence column left null, its schema version set to 4, a non-native
+field added to it, its residence load check inverted or off by one, and a book with its own
+writer nested inside the city book or inside a listed named-field book.
 
-The census parser fails closed. Review of `f17105cc` showed that a one-line attributed
-declaration (`[NonSerialized] private bool X;`) hid the next public field from the census: a new
-durable book compiled clean and both full suites stayed green. Now only an attribute alone on its
-line that names `NonSerialized` skips a declaration, and a declaration on the attribute's line
-consumes it. An unreadable attribute line, a public member outside the two-tab layout, another
-`KingdomSystem` declaration form or a lambda-initialized field fails the census as UNPARSED. A
-self-test pins the parser on nine synthetic partials. On scratch copies, the review's three probes
-(the one-line form in a new partial and in an existing one, and the two-line control) each turn
-the census red; the previous parser fails seven of the nine rows; and each of eleven single-guard
-mutants fails its row. The parser still reads the same 204 serialized fields as the compiled
-assembly, in order.
+The pin is not a field census. It reads no production source and calls no book's
+`Write(SerializationWriter)`, so a new `KingdomSystem` field and a changed city `Write` body each
+leave it green (both measured on scratch copies); it walks the named-field books and the city
+book with an emulation of the engine's named-field writer. The native unfounded-save persona
+performs a real engine save of every serialized field and is the complete census for a release
+build; `docs/RELEASING.md` requires that automated unfounded save and reload check for every
+release. An in-game reflection census is follow-up #281.
 
-Not covered by this pin: the other save systems a new game creates (`KingdomSeal` and
+Also not covered by this pin: the other save systems a new game creates (`KingdomSeal` and
 `KingdomCivicMemorySystem`, both mandatory, and the optional `KingdomSuccession` and
 `KingdomInheritanceLifecycle`), whose save blocks need the engine and are compiled into neither
 test project, and state that play writes before the first save (for example a remembered water

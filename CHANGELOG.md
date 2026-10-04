@@ -22,14 +22,18 @@ records current acceptance.
   accepts. Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
   refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
   hotfix built from main. Source pins prove the frame, cold load, byte-identical re-save and
-  first founding. They also check every durable book a fresh, unfounded `KingdomSystem` is
-  constructed with: the codec books and the city book reload exactly, the other named-field
-  books hold only values the engine's own field writer saves, and the empty settlement
-  topologies pass their write gate. The other save systems a new game creates (`KingdomSeal`,
-  `KingdomCivicMemorySystem` and the optional `KingdomSuccession` and
+  first founding. A further pin writes and checks the durable books a fresh, unfounded
+  `KingdomSystem` is constructed with, from an explicit list: the codec books and the city book
+  reload exactly, the other named-field books hold only values the engine's own field writer
+  saves, and the empty settlement topologies pass their write gate. It is not a field census: a
+  new `KingdomSystem` field leaves it green. The native unfounded-save persona performs a real
+  engine save of every serialized field and is the complete census for a release build;
+  `docs/RELEASING.md` requires that automated unfounded save and reload check for every
+  release, and an in-game reflection census is #281. The other save systems a new game creates
+  (`KingdomSeal`, `KingdomCivicMemorySystem` and the optional `KingdomSuccession` and
   `KingdomInheritanceLifecycle`) and state that play writes before the first save are not
-  pinned (#275); they rely on the owed native unfounded save and cold-load personas. The
-  Roleplay checkpoint and starting-pet Quickstart routes are not driven natively (#274, #276).
+  pinned (#275). The native unfounded save and cold-load personas are owed, and the Roleplay
+  checkpoint and starting-pet Quickstart routes are not driven natively (#274, #276).
 
 - Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. That
   build reports core `2.0.211.56` (marketing 1.0.5, save format 409) and removed
