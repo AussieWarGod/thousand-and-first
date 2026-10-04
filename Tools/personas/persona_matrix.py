@@ -163,6 +163,11 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-renovation-cleared",
 )
 
+# Evidence rows the second-city family writes beside its automatic verb rows: the resolved
+# site (home, bordering zone and its GroundIsTooClose verdict, chosen non-adjacent site)
+# and the published two-city topology. Not callable verbs.
+SECOND_CITY_EVIDENCE_ROWS = ("second-city-site", "second-city-topology")
+
 # The unfounded cold-load route (#272, #271): the save leg seals exactly this script and verb
 # (Harness/KingdomUnfoundedSave.cs) on the requested start; the host then cold-loads the save in a
 # fresh descendant profile (Tools/persona_reload.py). The start is the canonical
@@ -592,6 +597,7 @@ def parse_expect(
             and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
+            and verb not in SECOND_CITY_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))

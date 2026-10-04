@@ -56,6 +56,12 @@
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
     <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
+    <Compile Include="KingdomSecondCityNativeSourceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteRulesTests.cs" />
+    <Compile Include="KingdomSecondCitySiteEvidenceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteAdjacencyTests.cs" />
+    <Compile Include="..\Harness\KingdomSecondCityScript.cs" />
+    <Compile Include="..\Harness\KingdomSecondCitySiteRules.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />

@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -657,6 +658,102 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, outcome, "wrong physical result")
                 self.assertTrue(matrix.match(expected, changed))
 
+    def test_second_city_witnesses_are_required_once_in_order_with_their_verdicts(self):
+        name = "second-city-native-check.persona"
+        found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
+        expected = matrix.parse_expect(found["EXPECT"], name, found["VERBS"].split(","))
+        witnesses = [item[0] for item in expected if item[0] in matrix.SECOND_CITY_EVIDENCE_ROWS]
+        self.assertEqual(list(matrix.SECOND_CITY_EVIDENCE_ROWS), witnesses)
+        # Each row is journalled inside the verb call that writes it, so it sits immediately
+        # before that call: the site row in setup, the topology row in the found-second case.
+        verbs = [item[0] for item in expected]
+        for witness, writer, call in (("second-city-site", "second-city-setup", "cases=4 passed=0"),
+                                      ("second-city-topology", "second-city-check",
+                                       "case=found-second")):
+            following = expected[verbs.index(witness) + 1]
+            self.assertEqual(writer, following[0], witness)
+            self.assertIn(call, following[2], witness)
+        self.assertEqual({"second-city-site": ("OK", "adjacent=false"),
+                          "second-city-topology": ("OK", "settlements=2")},
+                         {verb: (outcome, wanted) for verb, outcome, wanted in expected
+                          if verb in witnesses})
+        rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, rows))
+        # Positional evidence, never filtered as bookkeeping or a tolerated diagnostic.
+        self.assertEqual(rows, matrix.significant(rows))
+        for index, (verb, outcome, wanted) in enumerate(rows):
+            if verb not in witnesses:
+                continue
+            with self.subTest(witness=verb):
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                changed = list(rows)
+                changed[index] = (verb, "REFUSED", wanted)
+                self.assertTrue(matrix.match(expected, changed))
+                changed[index] = (verb, outcome, "wrong second-city result")
+                self.assertTrue(matrix.match(expected, changed))
+
+    def test_second_city_forbids_every_refusal_production_only_logs(self):
+        name = "second-city-native-check.persona"
+        manifest = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
+        forbidden = json.loads(manifest["LOG_FORBID"])
+        self.assertEqual(["founding heart: reserved identity audit refused",
+                          "plot effects: active-zone legacy recovery refused",
+                          "reconciliation refused",
+                          "construction: founding heart recovery requires inspection"], forbidden)
+
+        def body(path, signature):
+            text = (ROOT / path).read_text(encoding="utf-8")
+            start = text.index(signature)
+            return text[start:text.index("\n\t\t}\n", start)]
+
+        # Every refusal the zone-activation handler only logs, in production's own words: each is
+        # covered by exactly one literal, and the handler logs no refusal outside this list.
+        handler = body("Core/KingdomSystem.z20.Events.cs",
+                       "public override bool HandleEvent(ZoneActivatedEvent E)")
+        refusals = re.findall(r'KingdomLog\.Log\("([^"]*refused[^"]*)"', handler)
+        self.assertEqual(["founding heart: reserved identity audit refused",
+                          "plot effects: active-zone legacy recovery refused",
+                          "hosted authority: activation reconciliation refused (",
+                          "hosted interior: activation reconciliation refused (",
+                          "polity: zone reconciliation refused ("], refusals)
+        for text in refusals:
+            self.assertEqual(1, sum(entry in text for entry in forbidden), text)
+        # The fourth literal: the attended settlement pass that handler dispatches.
+        self.assertIn("AttendSeatedSemantics);", handler)
+        attended = body("Core/KingdomSystem.z21.SemanticPass.cs",
+                        "private bool AttendSeatedSemantics(Zone Z)")
+        self.assertIn("KingdomConstruction.OnSettlementPass(this, Z, survey);", attended)
+        construction = body("Growth/KingdomConstruction.Settlement.cs",
+                            "public static void OnSettlementPass(")
+        self.assertEqual(1, construction.count(
+            'KingdomLog.Log("construction: founding heart recovery requires inspection");'))
+        lines = ["[TAF] founding heart: reserved identity audit refused",
+                 "[TAF] plot effects: active-zone legacy recovery refused",
+                 "[TAF] hosted authority: activation reconciliation refused (ambiguous loaded shell)",
+                 "[TAF] hosted interior: activation reconciliation refused (unproved loaded"
+                 " authority)",
+                 "[TAF] polity: zone reconciliation refused (open polity topology differs from its"
+                 " frozen facts)",
+                 "[TAF] construction: founding heart recovery requires inspection"]
+        clean = "[TAF] survey: zone=JoppaWorld.8.22.1.1.10 classifications=1\r\n[TAF] seat\r\n"
+        self.assertEqual([], matrix.forbidden_log(manifest, clean.encode(), name))
+        for line in lines:
+            with self.subTest(line=line):
+                found = matrix.forbidden_log(manifest, (clean + line + "\r\n").encode(), name)
+                self.assertEqual(1, len(found), found)
+                self.assertTrue(found[0].startswith("line 3: "), found)
+        dirty = clean + "\r\n".join(lines) + "\r\n"
+        self.assertEqual(4, len(matrix.forbidden_log(manifest, dirty.encode(), name)))
+        # The ordinary Player.log check passes every one of them: only LOG_FORBID stops the run.
+        with tempfile.TemporaryDirectory() as folder:
+            log = pathlib.Path(folder) / "Player.log"
+            log.write_text(dirty, encoding="utf-8")
+            result = subprocess.run(["bash", str(ROOT / "Tools/check-player-log.sh"), str(log)],
+                                    env={**os.environ, "TAF_LOG_ALLOW": ""},
+                                    capture_output=True, text=True, timeout=30)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_paid_handover_witnesses_cannot_be_missing_repeated_or_refused(self):
         witnesses = ("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
                      "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
@@ -834,7 +931,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(110, len(self.personas()))
+        self.assertEqual(111, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1078,6 +1175,8 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
+                (("second-city-site",), "second-city-setup"),
+                (("second-city-topology",), "second-city-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),
