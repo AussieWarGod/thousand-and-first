@@ -782,6 +782,7 @@
 	<Compile Include="KingdomExternalOwnershipDigestTests.cs" />
 	<Compile Include="KingdomPropertyRulesTests.cs" />
 	<Compile Include="KingdomStandingRulesTests.cs" />
+	<Compile Include="KingdomQudDecompiledSource.cs" />
 	<Compile Include="KingdomFounderHistoryRulesTests.cs" />
 	<Compile Include="KingdomNamedCookRulesTests.cs" />
 	<Compile Include="KingdomStasisVaultRulesTests.cs" />

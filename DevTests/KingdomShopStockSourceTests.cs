@@ -339,7 +339,7 @@ namespace ThousandAndFirst.Tests
 			string root = LocateDecompiledQud();
 			if (root == null)
 			{
-				Assert.Ignore("Installed/decompiled Qud source is unavailable for market proof.");
+				Assert.Ignore("Pinned-core Qud decompile is unavailable for market proof.");
 				return;
 			}
 			string trade = Native(root, "XRL.UI/TradeUI.cs", "XRL/UI/TradeUI.cs");
@@ -651,21 +651,8 @@ namespace ThousandAndFirst.Tests
 
 		private static string LocateDecompiledQud()
 		{
-			string supplied = Environment.GetEnvironmentVariable("TAF_QUD_DECOMPILED");
-			if (supplied != null)
-			{
-				if (string.IsNullOrWhiteSpace(supplied) || !Directory.Exists(supplied))
-					throw new InvalidOperationException("TAF_QUD_DECOMPILED is set but is not a source directory.");
-				return supplied;
-			}
-			string[] roots = new[] {
-				"/home/r/coq/qud_helper/game_base/decompiled/6000.0.41.4645959",
-				"/home/r/coq/qud_helper/game_base/decompiled/2.0.211.51-ilspy9.1",
-				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\6000.0.41.4645959",
-				@"\\wsl.localhost\Ubuntu\home\r\coq\qud_helper\game_base\decompiled\2.0.211.51-ilspy9.1" };
-			for (int i = 0; i < roots.Length; i++)
-				if (Directory.Exists(roots[i])) return roots[i];
-			return null;
+			// Only a decompile declaring the pinned core answers; see KingdomQudDecompiledSource.
+			return KingdomQudDecompiledSource.Locate(null);
 		}
 
 		private static string Native(string root, string dotted, string nested)
