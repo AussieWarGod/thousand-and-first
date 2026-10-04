@@ -76,17 +76,18 @@ whole writer body, with field reflection off and `IComposite` declared; and the 
 projections `KingdomSystem.Write` refreshes first. The census reads each `KingdomSystem` body as
 one stream of code, with comments, literals and directive lines removed, whatever the line
 layout: a member ends at its own `;` or body, and only a name right before `(` makes a method.
-A public member it cannot classify, a constructor, unbalanced braces or a string form it does
-not model fails the census; the third case pins this on 22 source probes, and the 204
-serialized fields it parses match the compiled assembly. With only the polity initializer
-reverted on a scratch copy of this candidate, the pin fails on the polity ledger alone, with
-the native message, and the other 15 books pass. Mutations that break the city book (a field
-the engine cannot write, a load-path refusal), the experience ledger, the carry book, a
-named-field value, the census (also a space-indented field, a space-indented, file-scoped or
-one-line partial, a modifier before `public`, a tuple-typed field, a comment holding a
-parenthesis before the initializer, a field after a member body on the same line, a field
-holding a lambda or a constructor), a writer body (also code after the topology loop), field
-reflection, `IComposite` or a projection each turn it red. The fixture does not cover the
+A public member it cannot classify, a constructor, a base type other than `IPlayerSystem`,
+unbalanced braces or a string form it does not model fails the census; the third case pins
+this on 23 source probes, and the 204 serialized fields it parses match the compiled
+assembly. With only the polity initializer reverted on a scratch copy of this candidate, the
+pin fails on the polity ledger alone, with the native message, and the other 15 books pass.
+Mutations that break the city book (a field the engine cannot write, a load-path refusal),
+the experience ledger, the carry book, a named-field value, the census (also a space-indented
+field, a space-indented, file-scoped or one-line partial, a modifier before `public`, a
+tuple-typed field, a comment holding a parenthesis before the initializer, a field after a
+member body on the same line, a field holding a lambda, a mod base class holding a field, or a
+constructor), a writer body (also code after the topology loop), field reflection,
+`IComposite` or a projection each turn it red. The fixture does not cover the
 engine's save hooks around `KingdomSystem.Write` (`BeforeSave`, the save-roster patch), state
 changed by events before the first save, or the mod's other save records (seal, civic memory,
 succession, object parts); only the native unfounded save exercises those.
