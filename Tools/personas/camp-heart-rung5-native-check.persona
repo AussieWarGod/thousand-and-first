@@ -35,7 +35,8 @@
 #    (timber:1, stone:40, shapedstone:22, marble:8, workedmetal:30, scrap:32 = 133 units).
 #    CanPayUpgrade reads only the plain tally, so a fixture that stocked it alone would preflight
 #    green and be refused at funding. Every minted bit-bearing and exotic body is classified by
-#    production's own readers and the fixture mints only while the coverage predicates refuse.
+#    production's own readers and the fixture mints only while the coverage predicates refuse; a
+#    candidate production would not spend as bits is discarded and its blueprint skipped.
 #    Bits are paid in whole bodies, so the paid check requires the composite price answered
 #    exactly and the bits lost to equal the fall in production's own bit tally across payment.
 #

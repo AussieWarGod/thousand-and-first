@@ -154,6 +154,40 @@ namespace ThousandAndFirst.Tests
 				Assert.That(capital, Does.Contain(field), field);
 		}
 
+		/// <summary>Review of #264: the read the seed makes is production's own path, and every fact
+		/// the fix relies on is pinned where production states it - the suspend handler calls
+		/// OnSuspending, which checks out only a claimed zone from a fresh survey; check-out
+		/// rebuilds that zone's work rows (blueprint column, other zones' rows kept) and publishes
+		/// the book; the crown reads the seat's book and surveys only the active zone; and the
+		/// crown's answer is cached per tick, which is why the seed clears it.</summary>
+		[Test]
+		public void TheCrownBookReadIsProductionsOwnSuspendTimeCheckOut()
+		{
+			string checkOut = Read("Simulation/City/KingdomCity.z02.CheckOut.cs");
+			int suspending = checkOut.IndexOf("public static void OnSuspending(KingdomSystem System, Zone Z)",
+				StringComparison.Ordinal);
+			Assert.That(suspending, Is.GreaterThan(0));
+			Assert.That(checkOut.IndexOf("!System.ClaimedZones.Contains(Z.ZoneID)", suspending, StringComparison.Ordinal),
+				Is.GreaterThan(suspending));
+			Assert.That(checkOut, Does.Contain(
+				"CheckOut(System, Z, KingdomSurvey.Take(Z, System), (The.Game != null) ? The.Game.TimeTicks : 0L);"));
+			int works = checkOut.IndexOf("written = ReadWorks(written, Z, Survey);", StringComparison.Ordinal);
+			Assert.That(works, Is.GreaterThan(0));
+			Assert.That(checkOut.IndexOf("Publish(System, written);", works, StringComparison.Ordinal),
+				Is.GreaterThan(works));
+			string read = Read("Simulation/City/KingdomCity.z09.WorksAndAudit.cs");
+			Assert.That(read, Does.Contain("!string.Equals(row.ZoneId, Z.ZoneID, StringComparison.Ordinal)"));
+			Assert.That(read, Does.Contain("work.Blueprint ?? \"\","));
+			Assert.That(Read("Core/KingdomSystem.z20.Events.cs"), Does.Contain(
+				"Simulation.City.KingdomCity.OnSuspending(this, E.Zone);"));
+			string discovery = Read("Growth/KingdomCrownDiscovery.cs");
+			Assert.That(discovery, Does.Contain("AddIfKeeping(found, System.SeatName, System.City, blueprint);"));
+			Assert.That(discovery, Does.Contain("KingdomSurvey.ActiveFor(Active)"));
+			string crown = Read("Growth/KingdomCrown.cs");
+			Assert.That(crown, Does.Contain("if (CacheTick == now && string.Equals(CacheZone, here))"));
+			Assert.That(crown, Does.Contain("internal static void ClearCache()"));
+		}
+
 		/// <summary>Review of #264: the five-rung form refuses an impossible territory at chain
 		/// setup from what is known WITHOUT building a zone, never after the 1->4 prefix.</summary>
 		[Test]
