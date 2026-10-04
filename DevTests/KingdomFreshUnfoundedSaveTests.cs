@@ -174,7 +174,7 @@ namespace ThousandAndFirst.Tests
 		/// <summary>Serialized KingdomSystem fields (type, name, initializer) in declaration order:
 		/// public instance fields that are not static, const or [NonSerialized], as
 		/// SerializationWriter.WriteNamedFields selects them (decompiled 2.0.211.56
-		/// XRL/World/SerializationWriter.cs:2981-3006), from every production partial.</summary>
+		/// XRL/World/SerializationWriter.cs:2981-3008), from every production partial.</summary>
 		private static List<string[]> SystemFields()
 		{
 			List<string[]> fields = new List<string[]>();
@@ -249,7 +249,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		// Mirrors SerializationWriter.WriteObject (decompiled 2.0.211.56
-		// XRL/World/SerializationWriter.cs:715-1232) for what a fresh book holds: engine-native
+		// XRL/World/SerializationWriter.cs:715-1236) for what a fresh book holds: engine-native
 		// values, collections of them and named-field composites, recursively. Any other object
 		// would reach the engine's BinaryFormatter fallback, so it fails here.
 		private static string Walk(object value, string path, int depth, StringBuilder image)
@@ -279,7 +279,7 @@ namespace ThousandAndFirst.Tests
 			// A book with its own writer is exercised only at top level, by its validator.
 			if (writer[2] != Named) return depth == 0 ? null : path + " nests a book with its own writer";
 			// SerializationWriter.WriteNamedFields selects public instance fields that are not
-			// static, literal or NotSerialized (decompiled XRL/World/SerializationWriter.cs:2981-3006).
+			// static, literal or NotSerialized (decompiled XRL/World/SerializationWriter.cs:2981-3008).
 			foreach (FieldInfo field in value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public))
 				if (!field.IsLiteral && !Attribute.IsDefined(field, typeof(NonSerializedAttribute))
 					&& Walk(field.GetValue(value), path + "." + field.Name, depth + 1, image) is string failure) return failure;
