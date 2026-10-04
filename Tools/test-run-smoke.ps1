@@ -111,7 +111,7 @@ function Write-GzipPayload {
 }
 
 function Write-QudGzip {
-    param([string]$Path, [int]$FileVersion = 408)
+    param([string]$Path, [int]$FileVersion = 409)
 
     $payload = New-Object byte[] 80
     Set-LittleEndianInt32 $payload 0 $FileVersion
@@ -154,7 +154,7 @@ function New-PrimaryData {
 
     return [ordered]@{
         InfoVersion = 1
-        SaveVersion = 408
+        SaveVersion = 409
         GameVersion = $GameVersion
         ID = $Id
         Name = 'Smoke'
@@ -801,7 +801,7 @@ try {
 
     $profile = New-TestProfile
     Add-ResumeSave $profile $script:GameVersion
-    Write-QudGzip $profile.Save.PrimaryGzip 407
+    Write-QudGzip $profile.Save.PrimaryGzip 408
     Invoke-ExpectedFailure 'wrong Qud serialization version' $profile `
         "Resume save gzip has an invalid Qud serialization header: $($profile.Save.PrimaryGzip)" -Resume
 
@@ -846,7 +846,7 @@ try {
 
     $profile = New-TestProfile
     Add-ResumeSave $profile $script:GameVersion
-    $profile.Save.Data.SaveVersion = 407
+    $profile.Save.Data.SaveVersion = 408
     Write-PrimaryData $profile.Save
     Invoke-ExpectedFailure 'wrong Primary.json SaveVersion' $profile `
         "Resume Primary.json has out-of-range numeric fields: $($profile.Save.PrimaryJson)" -Resume
