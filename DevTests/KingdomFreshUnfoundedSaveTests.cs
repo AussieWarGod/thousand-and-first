@@ -252,7 +252,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomRealmArchive|A|" },
 			new[] { "K&R braces and space indentation", "namespace N {\n    public partial class KingdomSystem {\n"
 				+ "        public KingdomRealmArchive A;\n    }\n}\n", "KingdomRealmArchive|A|" },
-			new[] { "file-scoped namespace", "namespace N;\npublic partial class KingdomSystem\n{\n\tpublic KingdomRealmArchive A;\n"
+			new[] { "file-scoped namespace", "namespace N;\npublic partial class KingdomSystem : IPlayerSystem\n{\n\tpublic KingdomRealmArchive A;\n"
 				+ "\tpublic sealed class Inner\n\t{\n\t\tpublic KingdomRealmArchive X;\n\t}\n}\n", "KingdomRealmArchive|A|" },
 			new[] { "directive lines around a field", Partial("#region Archive's notes\n#pragma warning disable 618\n"
 				+ "\t\t[Obsolete(\"x\")] public KingdomRealmArchive A;\n#pragma warning restore 618\n#endregion"), "KingdomRealmArchive|A|" },
@@ -274,6 +274,8 @@ namespace ThousandAndFirst.Tests
 			new[] { "static constructor", Partial("\t\tstatic KingdomSystem() { }"), "UNPARSED" },
 			new[] { "private constructor", Partial("\t\tprivate KingdomSystem(int x) { }"), "UNPARSED" },
 			new[] { "primary constructor", "namespace N { public partial class KingdomSystem(int x) { } }", "UNPARSED" },
+			new[] { "base type other than IPlayerSystem", "namespace N { public partial class KingdomSystem : KingdomSystemBase { }"
+				+ " public abstract class KingdomSystemBase : IPlayerSystem { public KingdomRealmArchive A; } }", "UNPARSED" },
 			new[] { "two declarators", Partial("\t\tpublic KingdomRealmArchive A, B;"), "UNPARSED" },
 			new[] { "initializer braces followed by a keyword", Partial("\t\tpublic KingdomRealmArchive A = new KingdomRealmArchive { }"
 				+ " as KingdomRealmArchive;"), "UNPARSED" },
@@ -304,10 +306,10 @@ namespace ThousandAndFirst.Tests
 		/// <summary>Adds the serialized fields of every KingdomSystem body in one source file. A body
 		/// is read as one stream of code, whatever its line layout: comments, literals and directive
 		/// lines are removed, each member ends at its own ';' or at the end of its own body, and
-		/// nested bodies fold to "{}" (classified by <see cref="ClassifyMember"/>). A string form
-		/// <see cref="CodeOnly"/> does not model, unbalanced braces, a primary constructor, or
-		/// conventional member indentation inside a nested block becomes an UNPARSED row, which
-		/// fails the census.</summary>
+		/// nested bodies fold to "{}" (classified by <see cref="ClassifyMember"/>). A class header
+		/// other than "class KingdomSystem", optionally ": IPlayerSystem", a string form
+		/// <see cref="CodeOnly"/> does not model, unbalanced braces, or conventional member
+		/// indentation inside a nested block becomes an UNPARSED row, which fails the census.</summary>
 		private static void ReadSystemFields(string file, string source, List<string[]> fields)
 		{
 			if (!source.Contains("KingdomSystem")) return;
@@ -317,7 +319,7 @@ namespace ThousandAndFirst.Tests
 			if (classes.Count == 0) return;
 			if (unread) fields.Add(Unparsed(file, "a string literal form this reader does not model"));
 			List<string> members = new List<string>();
-			StringBuilder member = new StringBuilder();
+			StringBuilder member = new StringBuilder(), header = new StringBuilder();
 			int depth = 0, body = -1, next = 0, line = 0;
 			bool open = false, broken = false;
 			for (int p = 0; p < text.Length; p++)
@@ -332,14 +334,21 @@ namespace ThousandAndFirst.Tests
 				{
 					broken |= body >= 0;
 					open = true;
+					header.Clear();
 					next++;
 				}
 				if (open)
 				{
-					// The class body opens at its first brace; a primary constructor or a missing
-					// body is not read.
-					if (c == '{') { body = ++depth; open = false; member.Clear(); }
-					else if (c == '(' || c == ';' || c == '}') broken = true;
+					if (c != '{') { header.Append(c); continue; }
+					// WriteNamedFields also writes inherited public fields. The only base read is
+					// IPlayerSystem, whose one inherited public instance field is the engine-native bool
+					// Removed (decompiled 2.0.211.56 XRL/IPlayerSystem.cs:7, XRL/IGameSystem.cs:30). Any
+					// other header (a base type, type parameters, a primary constructor) is not read.
+					if (!Regex.IsMatch(header.ToString(), @"^class\s+KingdomSystem(\s*:\s*IPlayerSystem)?\s*$"))
+						fields.Add(Unparsed(file, Regex.Replace(header.ToString(), @"\s+", " ").Trim()));
+					body = ++depth;
+					open = false;
+					member.Clear();
 					continue;
 				}
 				if (body < 0)
