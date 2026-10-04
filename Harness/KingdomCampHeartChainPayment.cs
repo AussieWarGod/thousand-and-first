@@ -106,7 +106,11 @@ namespace ThousandAndFirst.Harness
 			{
 				Lost = new KingdomBitTally();
 				if (ChainBitsBefore == null) return false;
-				var after = KingdomMaterials.Stock(Zone).Bits;
+				var stock = KingdomMaterials.Stock(Zone);
+				// A stock read without exact routed-input authority tallies nothing, which would
+				// read as every bit lost; it is unreadable here, never a fall.
+				if (!stock.InputLeaseAuthorityExact) return false;
+				var after = stock.Bits;
 				for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
 				{
 					int fell = ChainBitsBefore.Get(tier) - after.Get(tier);

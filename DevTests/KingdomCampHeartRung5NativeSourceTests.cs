@@ -217,7 +217,8 @@ namespace ThousandAndFirst.Tests
 				"ChainSupplyClaim = ChainSupplyCost.ToClaimString();",
 				"return KingdomQuickstartBuildClaims.CleanFirstPayment(Claims, ChainWater, ChainSupplyCost);",
 				"&& KingdomQuickstartBuildClaims.CleanFirstCompositePayment(Claims, ChainWater, ChainSupplyCost, lost);",
-				"var after = KingdomMaterials.Stock(Zone).Bits;",
+				"if (!stock.InputLeaseAuthorityExact) return false;",
+				"var after = stock.Bits;",
 				"!ChainPaidExactly(found.Claims)" })
 				Assert.That(payment, Does.Contain(pin), pin);
 			Assert.That(payment, Does.Not.Contain("new KingdomMaterialDebitCost(KingdomMaterials.UpgradeCostFor(ChainFrom))"));
@@ -259,6 +260,38 @@ namespace ThousandAndFirst.Tests
 				"taf-camp-rung5-bits-unbounded" })
 				Assert.That(craft, Does.Contain(reader), reader);
 			Assert.That(craft, Does.Not.Contain("SetIntProperty(\"KingdomStockpile\""));
+		}
+
+		/// <summary>Fix round of #264: a candidate production would not spend as bits - a
+		/// TinkerItem that cannot be disassembled, one with no Bits of its own (whose cost the
+		/// engine logs as an error and invents), an ordinary material such as scrap, or an
+		/// exotic - is skipped by its declared parameters or discarded once production's own
+		/// readers say so, never stored and never a refusal.</summary>
+		[Test]
+		public void TheBitMintSkipsCandidatesProductionWouldNotSpendAsBits()
+		{
+			string craft = Read(HighCraft);
+			int worth = craft.IndexOf("private string BlueprintWorthTier(int Tier)", StringComparison.Ordinal);
+			int disassemble = craft.IndexOf(
+				"blueprint.TryGetPartParameter<bool>(\"TinkerItem\", \"CanDisassemble\",", worth, StringComparison.Ordinal);
+			int bits = craft.IndexOf(
+				"string.IsNullOrEmpty(blueprint.GetPartParameter<string>(\"TinkerItem\", \"Bits\"))", worth,
+				StringComparison.Ordinal);
+			int cost = craft.IndexOf("XRL.World.Parts.TinkerItem.GetBitCostFor(pair.Key)", worth, StringComparison.Ordinal);
+			Assert.That(disassemble, Is.GreaterThan(worth));
+			Assert.That(bits, Is.GreaterThan(worth));
+			Assert.That(cost, Is.GreaterThan(Math.Max(disassemble, bits)), "parameters are read before any cost");
+			int mint = craft.IndexOf("private void MintBits(KingdomBitTally Wanted)", StringComparison.Ordinal);
+			int skip = craft.IndexOf("KingdomMaterials.TryOrdinaryMaterialOf(unit, out _)", mint, StringComparison.Ordinal);
+			Assert.That(skip, Is.GreaterThan(mint));
+			Assert.That(craft.IndexOf("KingdomMaterials.TryExoticOf(unit, out _)", mint, StringComparison.Ordinal),
+				Is.GreaterThan(mint));
+			Assert.That(craft.IndexOf("ChainHighCraftSkipped.Add(blueprint);", skip, StringComparison.Ordinal),
+				Is.LessThan(craft.IndexOf("StoreHighCraft(unit);", skip, StringComparison.Ordinal)));
+			Assert.That(craft, Does.Contain("unit.Obliterate(null, Silent: true);"));
+			Assert.That(craft, Does.Contain("taf-camp-rung5-bits-unsourced"));
+			Assert.That(craft, Does.Contain(".Append(\"; skipped=\")"));
+			Assert.That(craft, Does.Not.Contain("taf-camp-rung5-bit-misclassified"));
 		}
 
 		[Test]

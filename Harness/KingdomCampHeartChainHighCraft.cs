@@ -28,10 +28,12 @@ namespace ThousandAndFirst.Harness
 		internal const string GemBlueprint = "Gemstone";
 		private const int HighCraftScanCap = 4096;
 		private const int HighCraftMintCap = 64;
+		private const int HighCraftSkipCap = 32;
 
 		private sealed partial class Frame
 		{
 			private readonly List<GameObject> ChainHighCraft = new List<GameObject>();
+			private readonly List<string> ChainHighCraftSkipped = new List<string>();
 			private string ChainHighCraftReport;
 
 			/// <summary>Fills the supplemental store until production's own composite coverage
@@ -39,6 +41,7 @@ namespace ThousandAndFirst.Harness
 			private void SupplyChainHighCraft()
 			{
 				ChainHighCraft.Clear();
+				ChainHighCraftSkipped.Clear();
 				var exotics = KingdomMaterials.ExoticCostFor(ChainTo);
 				var bits = KingdomMaterials.BitCostFor(ChainTo);
 				Require(!exotics.IsEmpty() && !bits.IsEmpty(),
@@ -72,7 +75,10 @@ namespace ThousandAndFirst.Harness
 
 			/// <summary>One body per still-wanted bit, chosen by asking production what each
 			/// candidate blueprint is worth rather than by asserting a table of our own. The scan
-			/// is bounded and stops as soon as the tier is covered.</summary>
+			/// is bounded and stops as soon as the tier is covered. A created body production would
+			/// NOT spend as bits of this tier - an ordinary material such as scrap, an exotic, or a
+			/// body worth nothing once created - is discarded and its blueprint skipped, never
+			/// assumed; the skips are bounded and journalled.</summary>
 			private void MintBits(KingdomBitTally Wanted)
 			{
 				for (int tier = 0; tier < KingdomMaterialRules.BitTierCount; tier++)
@@ -85,12 +91,20 @@ namespace ThousandAndFirst.Harness
 						string blueprint = BlueprintWorthTier(tier);
 						Require(!string.IsNullOrEmpty(blueprint),
 							"taf-camp-rung5-bit-tier-unsourced: no scanned blueprint is worth a "
-								+ "tier-" + tier + " bit");
+								+ "tier-" + tier + " bit; skipped=" + string.Join(",", ChainHighCraftSkipped));
 						var unit = Create(blueprint);
 						var worth = KingdomMaterials.UnitBits(unit);
-						Require(worth.Get(tier) > 0,
-							"taf-camp-rung5-bit-misclassified: " + blueprint + " lost its tier-"
-								+ tier + " worth once created");
+						if (worth.Get(tier) <= 0 || KingdomMaterials.TryOrdinaryMaterialOf(unit, out _)
+							|| KingdomMaterials.TryExoticOf(unit, out _))
+						{
+							Require(ChainHighCraftSkipped.Count < HighCraftSkipCap,
+								"taf-camp-rung5-bits-unsourced: too many candidate bodies were not bit stock");
+							ChainHighCraftSkipped.Add(blueprint);
+							Owned.Remove(unit);
+							unit.Obliterate(null, Silent: true);
+							Require(!GameObject.Validate(unit), "skipped high-craft candidate was not discarded");
+							continue;
+						}
 						StoreHighCraft(unit);
 						owed -= worth.Get(tier);
 					}
@@ -99,7 +113,10 @@ namespace ThousandAndFirst.Harness
 
 			/// <summary>The first blueprint the engine's own factory offers that production reads
 			/// as worth a bit of this tier. Bounded, read-only, and nothing is created until a
-			/// candidate is found.</summary>
+			/// candidate is found. UnitBits reads only a TinkerItem that can be disassembled, and
+			/// TinkerItem.GetBitCostFor logs an error and answers a made-up "1" for a part with no
+			/// Bits of its own (decompile XRL/World/Parts/TinkerItem.cs:133-158), so both are
+			/// skipped by their declared parameters before any cost is asked.</summary>
 			private string BlueprintWorthTier(int Tier)
 			{
 				int scanned = 0;
@@ -108,7 +125,11 @@ namespace ThousandAndFirst.Harness
 					if (++scanned > HighCraftScanCap) break;
 					var blueprint = pair.Value;
 					if (blueprint == null || blueprint.IsBaseBlueprint()
-						|| !blueprint.HasPart("TinkerItem")) continue;
+						|| !blueprint.HasPart("TinkerItem") || ChainHighCraftSkipped.Contains(pair.Key)
+						|| (blueprint.TryGetPartParameter<bool>("TinkerItem", "CanDisassemble",
+							out bool disassembles) && !disassembles)
+						|| string.IsNullOrEmpty(blueprint.GetPartParameter<string>("TinkerItem", "Bits")))
+						continue;
 					string cost = XRL.World.Parts.TinkerItem.GetBitCostFor(pair.Key);
 					if (string.IsNullOrEmpty(cost)) continue;
 					var worth = new KingdomBitTally();
@@ -140,6 +161,7 @@ namespace ThousandAndFirst.Harness
 					.Append("; held-bits=").Append(KingdomScenarioRules.Bounded(Stock.Bits.Describe()))
 					.Append("; held-exotics=").Append(KingdomScenarioRules.Bounded(Stock.Exotics.Describe()))
 					.Append("; minted=").Append(ChainHighCraft.Count)
+					.Append("; skipped=").Append(KingdomScenarioRules.Bounded(string.Join(",", ChainHighCraftSkipped)))
 					.Append("; stores=").Append(Stock.Stockpiles.Count)
 					.Append("; covers-bits=").Append(KingdomMaterialRules.CoversBits(Stock.Bits, Bits))
 					.Append("; covers-exotics=").Append(
