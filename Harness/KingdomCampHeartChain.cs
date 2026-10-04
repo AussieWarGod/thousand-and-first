@@ -30,6 +30,8 @@ namespace ThousandAndFirst.Harness
 			private List<GameObject> ChainBrush;
 			private string ChainBrushDigest;
 			private string ChainSupplyClaim;
+			private KingdomMaterialDebitCost ChainSupplyCost;
+			private KingdomBitTally ChainBitsBefore;
 
 			internal string ChainStep(string Verb)
 			{
@@ -42,6 +44,7 @@ namespace ThousandAndFirst.Harness
 					ChainFinalRung = KingdomCampHeartChainScript.SealedTargetRung(sealedScript);
 					Require(ChainFinalRung == 4 || ChainFinalRung == 5,
 						"the sealed paid heart chain names no exact final rung");
+					if (ChainFinalRung == 5) PreflightChainTerritory();
 					ChainHeart = StandingHeart();
 					Require(KingdomPlots.HeartRung(Zone) == 2, "chain did not start at paid rung two");
 					var blocked = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
@@ -56,8 +59,10 @@ namespace ThousandAndFirst.Harness
 					ClearChainFounder();
 					ChainPhase = 1;
 					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=18"
-						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true; synthetic-store-identities=true"
-						+ "; housing-calendar-frontier=true; no-improvement-driven=true; " + ChainState();
+						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true"
+						+ "; craft=" + KingdomZoning.Tech(System) + "; synthetic-store-identities=true"
+						+ "; housing-calendar-frontier=true; no-improvement-driven=true; "
+						+ (ChainTerritoryPreflight == null ? "" : ChainTerritoryPreflight + "; ") + ChainState();
 				}
 				if (Verb == KingdomCampHeartChainScript.Capital)
 				{

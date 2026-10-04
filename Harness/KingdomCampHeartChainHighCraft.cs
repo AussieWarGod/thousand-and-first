@@ -47,6 +47,9 @@ namespace ThousandAndFirst.Harness
 				MintExotic(GemBlueprint, KingdomExotic.Gem, exotics.Get(KingdomExotic.Gem));
 				MintBits(bits);
 				var stock = KingdomMaterials.Stock(Zone);
+				// Production's own bit tally once the mint is done: the payment check compares the
+				// bits the paid job reports lost against how far this reading falls.
+				ChainBitsBefore = stock.Bits.Copy();
 				ChainHighCraftReport = DescribeHighCraft(stock, bits, exotics);
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-exotics", true,
 					ChainHighCraftReport) == null, "high-craft supply journal unavailable");

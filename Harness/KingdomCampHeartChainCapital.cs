@@ -7,16 +7,18 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// The arcology's own prerequisites, which no rung below it asks for and which the paid chain
-	/// therefore never seeded: the arclight knowledge key, the arclight craft level (seeded in
-	/// <see cref="KingdomCampHeartChainSupport"/>), four claimed zones, and the crown.
+	/// therefore never seeded: the arclight craft level (the five disk lessons above the foundry
+	/// the chain's setup seeds for every sealed form), the arclight knowledge key, four claimed
+	/// zones, and the crown.
 	/// <para>
 	/// SYNTHETIC, DISCLOSED, AND ALL THROUGH PRODUCTION APIS. The node key is minted by
 	/// <c>KingdomZoning.Learn</c>, which is the same call production's own research completion
 	/// makes (Growth/KingdomResearch.Completion.cs:30-33); no research node is completed here. The
 	/// three extra zones are taken with <c>KingdomFounding.ClaimZone</c>, the founder's own claim.
 	/// The crown hall is staked and finished on the production plot path the eighteen fixture tent
-	/// rows already use; the crown itself is never written - it is read back through
-	/// <c>KingdomCrown.CrownedOn</c>, which resolves from a standing hall
+	/// rows already use, and its zone is read into the city book by production's own suspend-time
+	/// check-out (see KingdomCampHeartChainCrown.cs); the harness never writes the crown - it is
+	/// read back through <c>KingdomCrown.CrownedOn</c>, which resolves from the book
 	/// (Growth/KingdomCrownDiscovery.cs:84-119, Growth/KingdomCrownRules.cs:146-168).
 	/// </para>
 	/// <para>
@@ -45,9 +47,11 @@ namespace ThousandAndFirst.Harness
 					"taf-camp-rung5-capital-rung: the capital seed wants a standing rung-four court");
 				Require(System.Stage == GrowthStage.City,
 					"taf-camp-rung5-capital-stage: the capital seed wants the supported City stage");
+				TeachArclightCraft();
 				TeachArclightNode();
 				ClaimChainTerritory();
 				RaiseChainCrownHall();
+				PublishChainCrownZone();
 				ChainCapitalReport = DescribeChainCapital();
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-crown", true,
 					ChainCapitalReport) == null, "capital seed journal unavailable");
@@ -58,7 +62,7 @@ namespace ThousandAndFirst.Harness
 			}
 
 			/// <summary>The one roster key the arcology's <c>Knowledge</c> gate names. Craft POINTS
-			/// come from the disk lessons in the support seed: a node is worth zero points
+			/// come from disk lessons (TeachArclightCraft): a node is worth zero points
 			/// (Growth/KingdomZoningRules.cs:234), so the two are separate obligations.</summary>
 			private void TeachArclightNode()
 			{
@@ -107,9 +111,10 @@ namespace ThousandAndFirst.Harness
 			/// beside the twenty-by-eighteen heart, the paid tent, eighteen tent rows and eight
 			/// eight-by-six air-well footprints on this ground, so it stands on a claimed
 			/// neighbour. The city BOOK is what the crown is read from
-			/// (Growth/KingdomCrownDiscovery.cs:121-143), and the book spans every zone the city
-			/// holds. Candidates are the seed's own claims first, then any neighbour the claim loop
-			/// found already held; no zone is built for siting alone.</summary>
+			/// (Growth/KingdomCrownDiscovery.cs:121-143); it spans every zone the city holds but
+			/// learns a zone's works only at that zone's own reads, which PublishChainCrownZone
+			/// pulls forward. Candidates are the seed's own claims first, then any neighbour the
+			/// claim loop found already held; no zone is built for siting alone.</summary>
 			private void RaiseChainCrownHall()
 			{
 				Require(KingdomData.TryGetBuilding(KingdomCrownRules.CrownKey, out var entry),
@@ -179,6 +184,10 @@ namespace ThousandAndFirst.Harness
 						+ System.ClaimedZones.Count + " zone(s), not " + ArcologyZones);
 				Require(KingdomCrown.Enabled,
 					"taf-camp-rung5-capital-option-off: the capital option is disabled");
+				// The book first: a hall the book has not read cannot crown anything, so a crowned
+				// answer is never asserted ahead of the book holding the hall.
+				Require(ChainCrownBookAfter, "taf-camp-rung5-crown-unpublished: the city book holds no "
+					+ "single crown-hall row on " + ChainCrownZoneId + " after its zone's check-out");
 				Require(KingdomCrown.CrownedOn(System, Zone.ZoneID),
 					"taf-camp-rung5-uncrowned: the standing crown hall did not crown this ground; "
 						+ "capital=" + KingdomScenarioRules.Bounded(KingdomCrown.CapitalName(System)));
@@ -201,10 +210,14 @@ namespace ThousandAndFirst.Harness
 					.Append("; crown-zone=").Append(ChainCrownZoneId ?? "absent")
 					.Append("; capital=").Append(KingdomScenarioRules.Bounded(
 						KingdomCrown.CapitalName(System)))
+					.Append("; crowned-before=").Append(ChainCrownedBefore)
+					.Append("; book-before=").Append(ChainCrownBookBefore)
+					.Append("; book-after=").Append(ChainCrownBookAfter)
 					.Append("; crowned=").Append(KingdomCrown.CrownedOn(System, Zone.ZoneID))
 					.Append("; capital-option=").Append(KingdomCrown.Enabled)
 					.Append("; craft=").Append(KingdomZoning.Tech(System))
 					.Append("; node-arclight=true; synthetic-claims=true; synthetic-crown-hall=true")
+					.Append("; synthetic-book-read=true; crown-cache-cleared=true")
 					.Append("; synthetic-knowledge=true; no-turns=true");
 				return text.ToString();
 			}

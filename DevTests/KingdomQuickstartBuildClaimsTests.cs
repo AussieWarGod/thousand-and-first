@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 
@@ -111,6 +112,135 @@ namespace ThousandAndFirst.Tests
 			}
 			ClassicAssert.AreEqual(accepted,
 				KingdomQuickstartBuildClaims.CleanFirstPayment(claim, 18, price));
+		}
+
+		// The arcology's own price shape (RuntimeData/KingdomBuildings.xml:1409): materials beside
+		// its Bits="00346" and Exotics="ingot:3,gem:2" (#264 review).
+		private static KingdomMaterialDebitCost Composite()
+		{
+			var materials = new KingdomMaterialTally();
+			materials.Set(KingdomMaterial.Stone, 40);
+			materials.Set(KingdomMaterial.Timber, 1);
+			var bits = new KingdomBitTally();
+			bits.Set(0, 2); bits.Set(3, 1); bits.Set(4, 1); bits.Set(6, 1);
+			var exotics = new KingdomExoticTally();
+			exotics.Set(KingdomExotic.Ingot, 3); exotics.Set(KingdomExotic.Gem, 2);
+			return new KingdomMaterialDebitCost(materials, bits, exotics);
+		}
+
+		private static KingdomBitTally Bits(KingdomBitTally Start, params int[] TierThenCount)
+		{
+			var bits = Start.Copy();
+			for (int i = 0; i + 1 < TierThenCount.Length; i += 2) bits.Add(TierThenCount[i], TierThenCount[i + 1]);
+			return bits;
+		}
+
+		/// <summary>A first composite payment answered in full whose physical loss carries
+		/// <paramref name="LostBits"/> - more than the priced bits when the bodies broken up held a
+		/// surplus, as Growth/KingdomMaterialDebitRules.Planning.cs AddLost records.</summary>
+		private static KingdomConstructionClaims PaidComposite(KingdomMaterialDebitCost Price,
+			KingdomBitTally LostBits)
+		{
+			var claim = KingdomConstructionRules.NewClaims(94, Price);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryApplyWaterAttempt(
+				claim, 94, 94, 0, 94, true, out claim));
+			claim.MaterialSpent = Price.ToClaimString();
+			claim.MaterialLost = new KingdomMaterialDebitCost(Price.Materials, LostBits, Price.Exotics)
+				.ToClaimString();
+			claim.MaterialOutstanding = new KingdomMaterialDebitCost().ToClaimString();
+			ClassicAssert.IsTrue(KingdomConstructionRules.ValidateClaims(claim));
+			return claim;
+		}
+
+		[Test]
+		public void ACompositeClaimIsCleanOnlyAtItsCompositePriceNeverThePlainTally()
+		{
+			var price = Composite();
+			var claim = PaidComposite(price, price.Bits);
+			ClassicAssert.IsTrue(KingdomQuickstartBuildClaims.CleanFirstPayment(claim, 94, price));
+			var plain = new KingdomMaterialDebitCost(price.Materials);
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstPayment(claim, 94, plain));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94, plain,
+				price.Bits));
+		}
+
+		[Test]
+		public void CompositePaymentAdmitsExactlyTheWitnessedBitSurplus()
+		{
+			var price = Composite();
+			var surplus = Bits(price.Bits, 0, 3, 1, 2, 2, 1, 5, 1);
+			var claim = PaidComposite(price, surplus);
+			// Whole bodies carry surplus, so the plain clean predicate can never pass this payment.
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstPayment(claim, 94, price));
+			ClassicAssert.IsTrue(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94, price,
+				surplus));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94, price,
+				price.Bits));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94, price,
+				Bits(surplus, 6, 1)));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94,
+				new KingdomMaterialDebitCost(price.Materials), surplus));
+		}
+
+		[TestCase("material-lost-extra")]
+		[TestCase("exotic-lost-extra")]
+		[TestCase("bits-outstanding")]
+		[TestCase("water-extra")]
+		[TestCase("uncertain")]
+		[TestCase("plain-requested")]
+		public void CompositePaymentNeverAdmitsAnUnansweredOrForeignLoss(string fault)
+		{
+			var price = Composite();
+			var surplus = Bits(price.Bits, 0, 3);
+			var claim = PaidComposite(price, surplus);
+			switch (fault)
+			{
+				case "material-lost-extra":
+					var stone = price.Materials.Copy(); stone.Set(KingdomMaterial.Stone, 41);
+					claim.MaterialLost = new KingdomMaterialDebitCost(stone, surplus, price.Exotics).ToClaimString(); break;
+				case "exotic-lost-extra":
+					var gems = price.Exotics.Copy(); gems.Set(KingdomExotic.Gem, 3);
+					claim.MaterialLost = new KingdomMaterialDebitCost(price.Materials, surplus, gems).ToClaimString(); break;
+				case "bits-outstanding":
+					claim.MaterialSpent = claim.MaterialLost = new KingdomMaterialDebitCost(price.Materials, null,
+						price.Exotics).ToClaimString();
+					claim.MaterialOutstanding = new KingdomMaterialDebitCost(null, price.Bits).ToClaimString(); break;
+				case "water-extra": claim.WaterLost++; break;
+				case "uncertain": claim.Exact = false; break;
+				case "plain-requested":
+					claim.MaterialRequested = new KingdomMaterialDebitCost(price.Materials).ToClaimString(); break;
+			}
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, 94, price,
+				surplus), fault);
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(null, 94, price, surplus));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(PaidComposite(price,
+				surplus), 94, null, surplus));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(PaidComposite(price,
+				surplus), 94, price, null));
+			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstCompositePayment(PaidComposite(price,
+				surplus), -1, price, surplus));
+		}
+
+		[Test]
+		public void WithThePricedBitsWitnessedTheCompositePredicateIsCleanFirstPayment()
+		{
+			var price = Composite();
+			var claims = new List<KingdomConstructionClaims> { PaidComposite(price, price.Bits),
+				PaidComposite(price, Bits(price.Bits, 4, 2)), Paid() };
+			var extra = PaidComposite(price, price.Bits); extra.WaterLost++; claims.Add(extra);
+			var plain = Paid(); plain.Exact = false; claims.Add(plain);
+			int accepted = 0;
+			foreach (var claim in claims)
+				foreach (var cost in new[] { price, Price() })
+					foreach (int water in new[] { 2, 94 })
+					{
+						bool clean = KingdomQuickstartBuildClaims.CleanFirstPayment(claim, water, cost);
+						ClassicAssert.AreEqual(clean,
+							KingdomQuickstartBuildClaims.CleanFirstCompositePayment(claim, water, cost, cost.Bits));
+						if (clean) accepted++;
+					}
+			// Not vacuous: the exact composite and the exact plain payments are both accepted.
+			ClassicAssert.AreEqual(2, accepted);
 		}
 	}
 }

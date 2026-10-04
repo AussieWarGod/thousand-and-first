@@ -31,6 +31,65 @@ PROFILE_SPEC = importlib.util.spec_from_file_location(
 profile = importlib.util.module_from_spec(PROFILE_SPEC)
 PROFILE_SPEC.loader.exec_module(profile)
 
+HARNESS = ROOT / "Harness"
+# String and char literals and line comments, blanked to equal width before braces are matched,
+# so offsets into the blanked text are offsets into the source.
+CS_NOISE = re.compile(r'@?"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)\'|//[^\n]*')
+CS_JOURNAL_ROW = re.compile(r'KingdomScenarioJournal\.Append\("([a-z0-9-]+)"')
+
+
+def harness_method(name: str) -> str:
+    """The source body of the ONE Harness method declared `void <name>(`, braces balanced."""
+    hits = []
+    for path in sorted(HARNESS.glob("*.cs")):
+        text = path.read_text(encoding="utf-8")
+        for found in re.finditer(r"\bvoid\s+%s\s*\(" % re.escape(name), text):
+            hits.append((text, found.end()))
+    if len(hits) != 1:
+        raise AssertionError("%d Harness declarations of void %s(" % (len(hits), name))
+    text, start = hits[0]
+    blank = CS_NOISE.sub(lambda m: " " * len(m.group(0)), text)
+    opened = blank.index("{", start)
+    depth = 0
+    for index in range(opened, len(blank)):
+        depth += {"{": 1, "}": -1}.get(blank[index], 0)
+        if depth == 0:
+            return text[opened : index + 1]
+    raise AssertionError("void %s( never closes" % name)
+
+
+def supply_rows(target: int) -> list[str]:
+    """The observation rows SupplyChain(target) journals, in the order the harness writes them:
+    its per-rung probes in statement order, each resolved through its own journal Append. Derived
+    from Harness/KingdomCampHeartChainPayment.cs rather than restated, so a persona EXPECT that
+    lists them in any other order fails offline (#264 review: exotics is journalled first)."""
+    body = harness_method("SupplyChain")
+    calls = [
+        (found.start(), found.group(2))
+        for found in re.finditer(r"if \(Target == (\d)\) (\w+)\(\);", body)
+        if int(found.group(1)) == target
+    ]
+    chain = re.search(
+        r"if \(Target == 3\) \{([^{}]*)\}\s*else if \(Target == 4\) \{([^{}]*)\}"
+        r"\s*else \{([^{}]*)\}",
+        body,
+    )
+    if chain is None:
+        raise AssertionError("SupplyChain lost its per-rung probe chain")
+    group = {3: 1, 4: 2, 5: 3}[target]
+    calls.extend(
+        (chain.start(group) + found.start(), found.group(1))
+        for found in re.finditer(r"(\w+)\(\);", chain.group(group))
+    )
+    rows: list[str] = []
+    for _, method in sorted(calls):
+        journalled = CS_JOURNAL_ROW.findall(harness_method(method))
+        if not journalled:
+            raise AssertionError("%s journals no observation row" % method)
+        rows.extend(journalled)
+    return rows
+
+
 GREEN = (
     "REQUEST=arch-gallery-slice;facing=north\n"
     "SCRIPT=flatten;realize;status\n"
@@ -545,6 +604,55 @@ class ScriptVerbBoundTest(unittest.TestCase):
             with self.subTest(persona=path.name):
                 self.assertEqual(profile.parse_script(found["SCRIPT_WORDS"].split(), extra), lines)
                 self.assertLessEqual(len(lines), matrix.MAX_SCRIPT_VERBS)
+
+
+class HarnessJournalOrderTest(unittest.TestCase):
+    """Observation-row orders read from the harness that writes them (#264 review: the rung-5
+    persona listed the supply rows in an order SupplyChain never journals, and the old host
+    table restated the persona, so a correct native run would have failed at row 41)."""
+
+    RUNG5 = ROOT / "Tools" / "personas" / "camp-heart-rung5-native-check.persona"
+
+    def test_the_derivation_reads_the_natively_accepted_four_rung_orders(self):
+        # Native30's accepted journal: spatial (HoldChainTent, before SupplyChain), occupancy,
+        # road-wear before supply 3; renovation, survey-stakes before supply 4.
+        self.assertEqual(["camp-heart-chain-occupancy", "camp-heart-chain-road-wear"], supply_rows(3))
+        self.assertEqual(["camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"], supply_rows(4))
+
+    def test_the_rung_five_supply_rows_follow_the_harness_call_order(self):
+        rows = supply_rows(5)
+        self.assertEqual(3, len(rows))
+        self.assertEqual(3, len(set(rows)))
+        payment = harness_method("SupplyChain")
+        self.assertLess(payment.index("if (Target == 5) SupplyChainHighCraft();"),
+                        payment.index("ProveChainRetainedStakes();"))
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        expected = matrix.parse_expect(found["EXPECT"], self.RUNG5.name,
+                                       tuple(found["VERBS"].split(",")))
+        supply = [index for index, item in enumerate(expected)
+                  if item[0] == "camp-heart-chain-supply" and item[2] == "target=5"]
+        self.assertEqual(1, len(supply))
+        start = supply[0] - len(rows)
+        self.assertEqual(rows, [item[0] for item in expected[start:supply[0]]])
+
+    def test_a_journal_in_harness_order_passes_and_the_old_order_fails(self):
+        found = matrix.parse_manifest(self.RUNG5.read_text(encoding="utf-8"), self.RUNG5.name)
+        expected = matrix.parse_expect(found["EXPECT"], self.RUNG5.name,
+                                       tuple(found["VERBS"].split(",")))
+        journal = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, journal))
+        rows = supply_rows(5)
+        at = [item[0] for item in journal].index(rows[0])
+        swapped = list(journal)
+        swapped[at : at + 3] = [journal[at + 1], journal[at + 2], journal[at]]
+        self.assertTrue(matrix.match(expected, swapped))
+
+    def test_the_method_reader_balances_braces_past_literals_and_comments(self):
+        body = harness_method("SupplyChainHighCraft")
+        self.assertTrue(body.startswith("{") and body.endswith("}"))
+        self.assertEqual(["camp-heart-chain-exotics"], CS_JOURNAL_ROW.findall(body))
+        with self.assertRaises(AssertionError):
+            harness_method("Require")  # declared by several harness classes: never guessed
 
 
 class ExtraVerbTest(unittest.TestCase):
@@ -1190,11 +1298,11 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
-                # The arcology leg: the crown seed, then the fifth rung's own preflight beside the
-                # renovation probe, then the standing read before the final check.
+                # The arcology leg: the crown seed, then the fifth rung's supply rows in the order
+                # SupplyChain journals them (derived from the harness, never restated), then the
+                # standing read before the final check.
                 (("camp-heart-chain-crown",), "camp-heart-chain-capital"),
-                (("camp-heart-chain-renovation", "camp-heart-chain-arcology",
-                  "camp-heart-chain-exotics"), "camp-heart-chain-supply"),
+                (tuple(supply_rows(5)), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
                 (("camp-heart-chain-arcology",), "camp-heart-chain-check"),

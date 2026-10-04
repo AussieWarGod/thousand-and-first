@@ -15,7 +15,7 @@ namespace ThousandAndFirst.Harness
 			private void PrepareChainCommission()
 			{
 				Require(KingdomScenarioScript.TryRead(out var script, out string failure), failure);
-				ChainCommission = KingdomCampHeartChainScript.Matches(script);
+				ChainCommission = KingdomCampHeartChainScript.SealedTargetRung(script) > 0;
 				if (!ChainCommission) return;
 				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var outer), "final heart envelope absent");
 				int destination = outer.X1 - KingdomPlotRules.SmallWidth - KingdomPlotRules.RoadMargin - 2;
