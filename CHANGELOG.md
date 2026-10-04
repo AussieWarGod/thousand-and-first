@@ -1,8 +1,8 @@
 # Changelog
 
-Current 3123-file census is line-cap green: 441,942 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `2187df91b11b80eef61072d4154da5fa125afc6864d3b1e66a25cea5b91c32ff`.
-The cold-install inventory contains 3157 files. This is not evidence of a new public installation.
+Current 3124-file census is line-cap green: 441,979 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `eecea96dc92aff146676cbe503be33e3ff3f7c357ac6eaa132bcf4063c51d236`.
+The cold-install inventory contains 3158 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
@@ -17,18 +17,25 @@ records current acceptance.
   reading ticks, free storage, deeds, growth, seat exchange), so days 2-7 refused the daily, zone
   and active-load reconciliations and skipped due work and loaded-endpoint reconciliation. The
   fingerprint now authenticates only the window's still-open intents. Drift is accepted with no
-  new dispatch and no state write, and is logged once per window per process as `polity: dispatch
-  window N continues with endpoint facts changed since it opened; no new dispatch until window
-  N+1`. An open intent is re-proved at its frozen slot from its own settlement's live facts; one
-  that cannot be re-proved is withdrawn, its slot completed, and logged as `polity: window N
-  <Purpose> intent for <id> withdrawn: <reason>`, as are intents dropped at rollover or suppressed
-  while new causes are paused. Foreign-realm, clock-regression, forged-state and equal-digest
-  refusals are unchanged. No saved field, version or digest domain changed, so old saves need no
-  migration. A read-only `polity-window-check` harness verb journals `polity-dispatch window=...
-  revision=... count=... mask=... intents=...` rows for the new `polity-window-native-check`
-  persona (`CHECK=polity-window`); personas gain `LOG_REQUIRE` (literal substrings that must
-  appear in Player.log); the turn-clean personas now forbid the three polity refusal prefixes.
-  Native acceptance is pending.
+  new dispatch and no state write, and is logged at most once per window per loaded game (any
+  load, cold or in the same process, may log it again) as `polity: dispatch window N continues
+  with endpoint facts changed since it opened; no new dispatch until window N+1`. An open intent
+  is kept only while its live cause and facts re-prove it at its frozen slot. Guard and patrol
+  causes bind the zone read and work ran-through ticks; courier, trader and migrant causes bind
+  the owned topology and their source settlement's deed, market or population fact. A check-in
+  that re-reads the zone, a founding or loss anywhere, or a change at the source therefore
+  withdraws the intents bound to it: the slot is completed and the withdrawal logged as `polity:
+  window N <Purpose> intent for <id> withdrawn: <reason>`, as are intents dropped at rollover or
+  suppressed while new causes are paused. Foreign-realm, clock-regression, forged-state and
+  equal-digest refusals are unchanged. No saved field, version or digest domain changed, so old
+  saves need no migration. Endpoint facts are now built by the engine-free
+  `KingdomPolityEndpointFactRules` and the scheduler's lines by the engine-free
+  `KingdomPolityDispatchRules.DispatchNotes`, so both public suites execute them. A read-only
+  `polity-window-check` harness verb journals `polity-dispatch window=... revision=... count=...
+  mask=... intents=...` rows for the new `polity-window-native-check` persona
+  (`CHECK=polity-window`); personas gain `LOG_REQUIRE` (literal substrings that must appear in
+  Player.log); the turn-clean personas now forbid the three polity refusal prefixes. Native
+  acceptance is pending.
 
 - Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. That
   build reports core `2.0.211.56` (marketing 1.0.5, save format 409) and removed

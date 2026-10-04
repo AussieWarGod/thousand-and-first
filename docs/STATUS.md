@@ -14,21 +14,28 @@ pass once its rite ground existed (#257). The refusal changed no saved state.
 
 The frozen digest now authenticates only the window's still-open intents. A same-window
 reconciliation with drifted facts succeeds with no new work and no state write. Each open intent
-is re-proved at its frozen slot from its own settlement's live facts; one that cannot be
+is re-proved at its frozen slot from its own settlement's live facts and cause; one that cannot be
 re-proved is withdrawn, its slot completed and the withdrawal logged as `polity: window N
-<Purpose> intent for <id> withdrawn: <reason>`. Rollover drops and paused-cause suppressions are
-logged the same way. The scheduler logs drift once per window per process: `polity: dispatch
-window N continues with endpoint facts changed since it opened; no new dispatch until window N+1`.
+<Purpose> intent for <id> withdrawn: <reason>`. Guard and patrol causes bind the zone read and
+work ran-through ticks, and courier, trader and migrant causes bind the owned topology and their
+source settlement's facts, so a check-in that re-reads the zone, a founding or loss anywhere, or a
+change at the source withdraws the intents bound to it. Rollover drops and paused-cause
+suppressions are logged the same way. The scheduler logs drift at most once per window per loaded
+game (any load, cold or in the same process, may log it again): `polity: dispatch window N
+continues with endpoint facts changed since it opened; no new dispatch until window N+1`.
 Foreign-realm, clock-regression, forged-state, revision-exhaustion, compare-and-swap and
 equal-digest refusals are unchanged. No serialized field, version or digest domain changed; the
 only new member is a private non-serialized drift note, so old saves need no migration.
 Loaded-endpoint reconciliation now runs on every successful daily, zone and load reconciliation
 instead of about once a week.
 
-Source evidence: 21 engine-free window-drift cases run in both suites, and two source pins run in
-the main suite. Against the pre-fix rules, everything except the two control cases fails (21 of 23
-main, 19 of 21 portable); with the fix all pass. The scheduler, the drift note and the
-`KingdomSystem` field are engine-bound, so only source pins and the engine compile gate cover them.
+Source evidence: 25 engine-free window-drift cases run in both suites over production-shaped
+endpoint facts, built by the engine-free `KingdomPolityEndpointFactRules` that `TryOffer` now
+calls, and they execute the scheduler's lines from the engine-free
+`KingdomPolityDispatchRules.DispatchNotes`; four source pins run in the main suite. Against the
+pre-fix rules, everything except the two control cases fails (27 of 29 main, 23 of 25 portable);
+with the fix all pass. The scheduler's wiring, the drift-note dedupe and the `KingdomSystem` field
+are engine-bound, so only source pins and the engine compile gate cover them.
 
 A positive native witness is implemented but has not run. The read-only `polity-window-check`
 harness verb journals the realm's dispatch receipt after each daily pass as one `polity-dispatch
@@ -37,7 +44,8 @@ founds a camp and takes eleven daily witnesses, enough for every start phase of 
 window. `CHECK=polity-window` requires constant receipts inside a window, a committed advance at
 the boundary, and one window read three times in a row before a newer one opens. Its `LOG_FORBID`
 refuses the three refusal prefixes and any withdrawal, and the new `LOG_REQUIRE` key requires the
-drift line. The turn-clean personas now forbid the three refusal prefixes.
+heart's first rung (the rite-ground work row whose readings drift) and the drift line. The
+turn-clean personas now forbid the three refusal prefixes.
 
 Native acceptance is pending on the merged head: `polity-window-native-check`; the turn-clean set
 (`water-maintenance-native-check`, `paid-housing-native-check` warm and cold, `camp-heart-chain`,
@@ -45,8 +53,8 @@ Native acceptance is pending on the merged head: `polity-window-native-check`; t
 `quickstart-housing-recovery-save`, `teardown-native-check`, `beta-economic-present`,
 `beta-economic-away` and the four `home-map` personas), each with no reconciliation refusal, the
 drift line where facts drift and no withdrawal; and a cold load of a preserved copy of the
-archived #244 save, which must not refuse, must log one drift line and must open the next window
-normally. Untested natively: scheduled-cohort manifestation at a non-seat city after a later-day
+archived #244 save, which must not refuse, must log the drift line once for its window and must
+open the next window normally. Untested natively: scheduled-cohort manifestation at a non-seat city after a later-day
 reconcile, and the multi-city seat-exchange and mid-window founding leg, which follows PR #268.
 
 ## Qud build 25520692 re-pin: compile and licensed gates pass
@@ -130,10 +138,10 @@ subsidence, paid repair, frozen-application recovery and damaged-home cold load 
 The retained native failure below is superseded for this case only; #230 stays open and this
 does not establish Beta acceptance.
 
-Current census: 3123 staged C# files; 441,942 physical lines; zero at or above 300 lines.
-Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3157 files.
-Inventory SHA-256: `2187df91b11b80eef61072d4154da5fa125afc6864d3b1e66a25cea5b91c32ff`.
-Engine gate passes for 3123 sources, baseline and compatibility symbols, plus both harness modes.
+Current census: 3124 staged C# files; 441,979 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3158 files.
+Inventory SHA-256: `eecea96dc92aff146676cbe503be33e3ff3f7c357ac6eaa132bcf4063c51d236`.
+Engine gate passes for 3124 sources, baseline and compatibility symbols, plus both harness modes.
 
 ## Absent-owner home damage — native defect reproduced
 

@@ -27,7 +27,7 @@ use remain #230. No new Alpha release or all-building acceptance follows.
 
 ## Residence integration checkpoint
 
-Current development: 3123 staged sources / 3157 package files. City schema 5, archive 20 and
+Current development: 3124 staged sources / 3158 package files. City schema 5, archive 20 and
 residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
 cases and four engine modes pass. Native149daf47 retains the exact home/reservation through a
 controlled same-city visit and ordinary return pass. PR #255 stays draft; unique bed use,

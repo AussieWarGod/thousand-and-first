@@ -310,11 +310,18 @@ The scheduler opens one dispatch window per seven calendar days
 digest over every owned settlement's facts and mints at most one intent per endpoint. That digest
 authenticates only the window's still-open intents; it is not a whole-city equality guard. A later
 same-window reconciliation whose facts drifted (readings, stores, deeds, growth, seat exchange, a
-city founded or lost) mints nothing and writes nothing. It re-proves each open intent at its
-frozen slot from its own settlement's live facts, and withdraws, completes and reports one that
-cannot be re-proved (`polity: window N <Purpose> intent for <id> withdrawn: <reason>`). Rollover
-drops and paused-cause suppressions are reported the same way. Drift is logged once per window per
-process (`polity: dispatch window N continues with endpoint facts changed since it opened; no new
+city founded or lost) mints nothing and writes nothing unless an open intent must be withdrawn.
+It re-proves each open intent at its frozen slot from its own settlement's live facts and cause.
+Those causes bind more than the settlement's row (`KingdomPolityEndpointFactRules`): guard and
+patrol causes carry the zone read tick and the work's ran-through tick, and courier, trader and
+migrant causes carry the owned topology and their source settlement's deed, market or population
+fact. A check-in that re-reads a zone therefore withdraws that settlement's open guard or patrol
+intent, and a founding or loss anywhere, or a change at the source, withdraws the courier, trader
+and migrant intents bound to it. A withdrawn intent's slot is completed and the withdrawal
+reported (`polity: window N <Purpose> intent for <id> withdrawn: <reason>`). Rollover drops and
+paused-cause suppressions are reported the same way. Drift is logged at most once per window per
+loaded game (`KingdomSystem` instance); any load, cold or in the same process, may log it again
+(`polity: dispatch window N continues with endpoint facts changed since it opened; no new
 dispatch until window N+1`). A city founded mid-window waits for the next window, so no visit is
 replayed. Loaded-endpoint reconciliation runs on every successful daily, zone and load
 reconciliation (#244, #257).
