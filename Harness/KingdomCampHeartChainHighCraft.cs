@@ -36,8 +36,9 @@ namespace ThousandAndFirst.Harness
 			private KingdomCampHeartHighCraftRules.Ledger ChainHighCraftLedger;
 			private string ChainHighCraftReport;
 
-			/// <summary>Fills the supplemental store until production's own composite coverage
-			/// predicates stop refusing. Called only for the fifth rung.</summary>
+			/// <summary>Mints the arcology's exotics at their authored count, then bits only while
+			/// production's own stock reading is short of a tier, and requires production's own
+			/// composite coverage predicates afterwards. Called only for the fifth rung.</summary>
 			private void SupplyChainHighCraft()
 			{
 				ChainHighCraft.Clear();

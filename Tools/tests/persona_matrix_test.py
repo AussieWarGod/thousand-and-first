@@ -655,6 +655,159 @@ class HarnessJournalOrderTest(unittest.TestCase):
             harness_method("Require")  # declared by several harness classes: never guessed
 
 
+class HandoverWaitPlacementTest(unittest.TestCase):
+    """Which scripted wait each paid heart handover lands in, derived from the quoted ticks (#264
+    review: the rung-5 persona listed the arcology's renovation rows after a fourth 6600-turn
+    wait, while that handover falls inside the third, so a correct native run would have failed
+    its positional match about 32000 turns in).
+
+    The rule. A paid heart improvement is quoted its successor's authored Ticks at
+    KingdomUpgradeRules.BuildTicksPercent, after the district factor, which stays neutral because
+    only the charter assigns a district (Core/KingdomCharterPart.Civic.cs). The settlement pass
+    that begins it is the first daily boundary after the supply verb, so the paid check, which
+    closes the next `advance 1200`, comes 0..1200 turns after it. Receipt-bearing labour advances
+    only at daily passes (Growth/KingdomScaffold.cs TurnTick), so it completes at the first pass
+    at or after its due tick, and the handover, where the post-payment probe journals its witness
+    rows, runs at the pass after that. Native30 recorded exactly this for all three paid handovers.
+    """
+
+    PERSONAS = ("camp-heart-chain.persona", "camp-heart-rung5-native-check.persona")
+    # Native30 (beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/run-Player.log, relative
+    # to the evidence root): the semantic boundary each paid improvement began on ("improvement
+    # begun ... ticks=N" inside that boundary's pass), its quoted ticks, and the boundary whose
+    # pass logged "heart rung raised".
+    NATIVE30 = ((414000, 2250, 417600), (421200, 4500, 427200), (429600, 9000, 440400))
+    PAID = re.compile(r"paid-heart-chain paid; target=(\d)\Z")
+
+    @staticmethod
+    def constant(relative: str, pattern: str) -> int:
+        found = re.findall(pattern, (ROOT / relative).read_text(encoding="utf-8"))
+        if len(found) != 1:
+            raise AssertionError("%s: %d matches for %s" % (relative, len(found), pattern))
+        return int(found[0])
+
+    def day(self) -> int:
+        clock = (ROOT / "Simulation" / "City" / "KingdomSemanticClockRules.cs").read_text(encoding="utf-8")
+        self.assertIn("public const long CadenceTicks = KingdomRules.TicksPerDay;", clock)
+        return self.constant("Core/KingdomRules.Economy.cs", r"public const long TicksPerDay = (\d+)L;")
+
+    @staticmethod
+    def scale(ticks: int, percent: int) -> int:
+        # KingdomUpgradeRules.ScaleTicks, with production's integer floors.
+        return ticks // 100 * percent + ticks % 100 * percent // 100
+
+    def quoted(self, rung: int) -> int:
+        """BuildTicks of the paid improvement that raises the heart to `rung`."""
+        root = ET.parse(ROOT / "RuntimeData" / "KingdomBuildings.xml").getroot()
+        designs = {item.get("Key"): item for item in root.iter("building")}
+        chain, key = [], "heartbasin"
+        while key:
+            chain.append(key)
+            key = designs[key].get("UpgradesTo")
+        self.assertEqual(5, len(chain))
+        override = int(designs[chain[rung - 2]].get("UpgradeTicks") or 0)
+        if override > 0:
+            return override
+        neutral = self.constant("Core/KingdomRules.Districts.cs",
+                                r"public const int DistrictNeutralPercent = (\d+);")
+        percent = self.constant("Growth/KingdomUpgradeRules.cs",
+                                r"public const int BuildTicksPercent = (\d+);")
+        fresh = int(designs[chain[rung - 1]].get("Ticks"))
+        return max(1, self.scale(max(1, self.scale(fresh, neutral)), percent))
+
+    def handover_after_begin(self, ticks: int) -> int:
+        day = self.day()
+        return (-(-ticks // day) + 1) * day
+
+    def window(self, rung: int) -> tuple[int, int]:
+        """Earliest and latest handover, in turns after the paid check. The check closes an
+        `advance 1200` that may run 1201 turns, and a pass runs on the first turn at or after its
+        boundary, so one turn of slack is allowed at each end."""
+        latest = self.handover_after_begin(self.quoted(rung))
+        return latest - self.day() - 1, latest + 1
+
+    @staticmethod
+    def holding_wait(waits: list[int], earliest: int, latest: int) -> tuple[int, int, int]:
+        """(1-based wait, turns before, turns after) for the one wait holding the whole window."""
+        start = 0
+        for index, turns in enumerate(waits):
+            # Each earlier wait may run one turn long, so this one may start that much later.
+            late_start, end = start + index, start + turns
+            if late_start < earliest and latest < end:
+                return index + 1, earliest - late_start, end - latest
+            start = end
+        return 0, 0, 0
+
+    def placements(self, name: str) -> dict[int, tuple[list[int], int]]:
+        """Per paid rung: the script's waits between its paid and completion checks, and how many
+        of those waits the persona's EXPECT lists before the handover's witness rows."""
+        path = ROOT / "Tools" / "personas" / name
+        found = matrix.parse_manifest(path.read_text(encoding="utf-8"), name)
+        extra = tuple(found["VERBS"].split(","))
+        expected = matrix.parse_expect(found["EXPECT"], name, extra)
+        steps = matrix.script_lines(found["SCRIPT"], name, extra)
+        checks = [at for at, step in enumerate(steps) if step == "camp-heart-chain-check"]
+        rows = [at for at, item in enumerate(expected) if item[0] == "camp-heart-chain-check"]
+        self.assertEqual(len(checks), len(rows), name)
+        result = {}
+        for ordinal, at in enumerate(rows):
+            paid = self.PAID.search(expected[at][2])
+            if paid is None:
+                continue
+            rung = int(paid.group(1))
+            between = steps[checks[ordinal] + 1 : checks[ordinal + 1]]
+            self.assertTrue(between and all(step.startswith("advance ") for step in between), name)
+            listed = [item[0] for item in expected[at + 1 : rows[ordinal + 1]]]
+            witnesses = [index for index, verb in enumerate(listed) if verb != "advance"]
+            self.assertTrue(witnesses, "%s rung %d lists no handover witness" % (name, rung))
+            self.assertEqual(list(range(witnesses[0], witnesses[-1] + 1)), witnesses, name)
+            self.assertEqual(len(between), len(listed) - len(witnesses), name)
+            result[rung] = ([int(step.split()[1]) for step in between], witnesses[0])
+        return result
+
+    def test_the_rule_reproduces_native30s_three_paid_handovers(self):
+        for rung, (begin, ticks, raised) in zip((2, 3, 4), self.NATIVE30):
+            with self.subTest(rung=rung):
+                self.assertEqual(ticks, self.quoted(rung))
+                self.assertEqual(raised, begin + self.handover_after_begin(ticks))
+
+    def test_every_paid_handover_lands_inside_the_wait_its_witnesses_follow(self):
+        day = self.day()
+        seen = set()
+        for name in self.PERSONAS:
+            for rung, (waits, listed) in self.placements(name).items():
+                seen.add(rung)
+                earliest, latest = self.window(rung)
+                held, before, after = self.holding_wait(waits, earliest, latest)
+                with self.subTest(persona=name, rung=rung):
+                    self.assertNotEqual(0, held, "handover %d..%d straddles waits %r"
+                                        % (earliest, latest, waits))
+                    self.assertEqual(held, listed, "EXPECT lists the witnesses after wait %d; the "
+                                     "handover lands in wait %d of %r" % (listed, held, waits))
+                    # A daily pass of slack before the earliest handover, so no drift of the pass
+                    # phase can put the witnesses ahead of their wait's advance row; and when
+                    # another wait follows, a pass of slack after the latest one, so a labour
+                    # shortfall or a retry adding a pass cannot carry them past the next advance
+                    # row. After the last wait comes the completion check, which refuses an
+                    # unfinished handover by name.
+                    self.assertGreaterEqual(before, day)
+                    if held < len(waits):
+                        self.assertGreaterEqual(after, day)
+        self.assertEqual({3, 4, 5}, seen)
+
+    def test_the_fixture_assigns_no_district_so_the_quote_stays_neutral(self):
+        writes = re.compile(r"ZoneDistricts\s*(?:\[[^\]]*\]\s*=(?!=)|\.(?:Add|Remove|Clear)\(|=(?!=))")
+        for path in sorted(HARNESS.glob("*.cs")):
+            with self.subTest(shard=path.name):
+                self.assertIsNone(writes.search(path.read_text(encoding="utf-8")))
+        self.assertTrue(writes.search("System.ZoneDistricts[zone.ZoneID] = district;"))
+        self.assertIsNone(writes.search("System.ZoneDistricts != null && System.ZoneDistricts.Count == 0"))
+        self.assertIn("System.ZoneDistricts[zone.ZoneID] = district;",
+                      (ROOT / "Core" / "KingdomCharterPart.Civic.cs").read_text(encoding="utf-8"))
+        self.assertIn("// Receipt-bearing work advances only from KingdomConstruction.OnSettlementPass.",
+                      (ROOT / "Growth" / "KingdomScaffold.cs").read_text(encoding="utf-8"))
+
+
 class ExtraVerbTest(unittest.TestCase):
     def test_declared_third_party_verb_becomes_sealable(self):
         found = matrix.parse_manifest(
@@ -908,6 +1061,41 @@ class MatchingTest(unittest.TestCase):
         refusal = ("camp-heart-chain-removal", "REFUSED", "identity changed")
         self.assertIn(refusal, matrix.significant(rows + [refusal]))
         self.assertTrue(matrix.match(expected, matrix.significant(rows[:1] + [trace] + rows[2:])))
+
+    def test_arcology_witnesses_cannot_be_missing_repeated_or_refused(self):
+        """The rung-5 persona's own EXPECT binds its three new observation rows - the crown seed's
+        book read, the high-craft supply and the arcology's preflight and standing reads - by
+        position, outcome and reading (#264 review; docs/DEVELOPMENT.md: test missing, duplicate
+        and refused evidence for every new observation row)."""
+        name = "camp-heart-rung5-native-check.persona"
+        found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(encoding="utf-8"), name)
+        expected = matrix.parse_expect(found["EXPECT"], name, tuple(found["VERBS"].split(",")))
+        rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, rows))
+        # Never bookkeeping and never a non-positional diagnostic, so a match sees every one.
+        self.assertEqual(rows, matrix.significant(rows))
+        new = ("camp-heart-chain-crown", "camp-heart-chain-exotics", "camp-heart-chain-arcology")
+        for verb in new:
+            self.assertIn(verb, matrix.CAMP_HEART_EVIDENCE_ROWS)
+        indices = [index for index, row in enumerate(rows) if row[0] in new]
+        self.assertEqual(list(new) + ["camp-heart-chain-arcology"], [rows[index][0] for index in indices])
+        for index in indices:
+            verb, outcome, wanted = rows[index]
+            with self.subTest(witness=verb, row=index + 1):
+                self.assertTrue(wanted, "the witness binds a reading, not only its name")
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                changed = list(rows)
+                changed[index] = (verb, "REFUSED", wanted)
+                self.assertTrue(matrix.match(expected, changed))
+                changed[index] = (verb, outcome, "unwitnessed")
+                self.assertTrue(matrix.match(expected, changed))
+        # The two arcology reads are not interchangeable: preflight at rung four, standing at five.
+        first, second = indices[2], indices[3]
+        swapped = list(rows)
+        swapped[first] = rows[first][:2] + (rows[second][2],)
+        swapped[second] = rows[second][:2] + (rows[first][2],)
+        self.assertTrue(matrix.match(expected, swapped))
 
     def green_journal(self):
         return journal(

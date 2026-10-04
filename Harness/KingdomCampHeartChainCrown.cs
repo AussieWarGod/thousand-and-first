@@ -12,7 +12,8 @@ namespace ThousandAndFirst.Harness
 	/// SYNTHETIC, DISCLOSED. The craft lessons go through <c>KingdomZoning.Learn</c> exactly as
 	/// the setup's foundry lessons do. The crown hall's zone is read into the city book by
 	/// production's own suspend-time check-out (<c>KingdomCity.OnSuspending</c>), pulled forward
-	/// because the seed spends no turns. Nothing here writes the crown, a work row or a claim.
+	/// because the seed spends no turns. Nothing here writes the crown register, a work row or a
+	/// claim itself: the hall's work row reaches the book only through that production check-out.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks

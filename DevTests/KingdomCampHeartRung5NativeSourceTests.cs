@@ -497,10 +497,23 @@ namespace ThousandAndFirst.Tests
 				"no save/load", "# Physical input isolated for this exact dedicated game, through owned shutdown.",
 				"KingdomCity.OnSuspending", "five more disk lessons", "WITHOUT building any zone",
 				"The bit mint re-reads production's own stock before every body",
-				"does not count by exactly its worth is taken back out" })
+				"does not count by exactly its worth is taken back out",
+				"departures from camp-heart-chain on the way to rung four",
+				"The harness never writes the crown register",
+				"setup-only calendar completion (KingdomPlots.Advance)",
+				"THE ARCOLOGY'S WAITS ARE PLACED FROM ITS QUOTED TICKS" })
 				Assert.That(persona, Does.Contain(line), line);
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart recovery requires inspection\""));
 			Assert.That(persona, Does.Contain("TIMEOUT=7000"));
+			// Review of #264: coverage row 10 names the synthetic calendar completions and the
+			// prefix's only departures from the accepted four-rung persona.
+			string matrix = Read("Tools/coverage/matrix.json");
+			foreach (string claim in new[] {
+				"finished by setup-only calendar completion through KingdomPlots.Advance",
+				"departing from camp-heart-chain on the way to rung four only by two read-only setup preflights",
+				"one crown hall staked and finished by the same KingdomPlots.Advance calendar completion",
+				"its four waits placed from the arcology's quoted 17100 ticks" })
+				Assert.That(matrix, Does.Contain(claim), claim);
 		}
 	}
 }

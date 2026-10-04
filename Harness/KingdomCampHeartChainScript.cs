@@ -20,11 +20,17 @@ namespace ThousandAndFirst.Harness
 			Setup, "advance 1200", Supply, "advance 1200", Check, "advance 7200", Check,
 			Supply, "advance 1200", Check, "advance 6600", "advance 6600", Check, "advance 1200", Check };
 
-		// The arcology leg. The capital seed runs first and spends no turns; the four 6600-turn
-		// waits cover the fifth rung's own quoted labour, which is the largest on the ladder.
+		// The arcology leg. The capital seed runs first and spends no turns. The fifth rung is
+		// quoted 22800 x 75% = 17100 ticks (RuntimeData/KingdomBuildings.xml, BuildTicksPercent).
+		// Paid labour advances only at daily passes, so it completes at the first pass at or
+		// after its due tick, and the handover - where the renovation probe journals - runs at
+		// the next pass: 18000..19200 turns after the paid check. The first three waits end
+		// 16400 turns after that check and the last is the runner's longest, so the handover
+		// lands inside the last wait with a pass to spare before it and 7200 turns after it
+		// (Tools/tests/persona_matrix_test.py HandoverWaitPlacementTest derives this).
 		private static readonly string[] Rung5Extra = {
 			Capital, Supply, "advance 1200", Check, "advance 6600", "advance 6600",
-			"advance 6600", "advance 6600", Check, "advance 1200", Check };
+			"advance 3200", "advance 10000", Check, "advance 1200", Check };
 
 		internal static bool Matches(IList<string> Script)
 		{

@@ -17,9 +17,11 @@ namespace ThousandAndFirst.Harness
 	/// three extra zones are taken with <c>KingdomFounding.ClaimZone</c>, the founder's own claim.
 	/// The crown hall is staked and finished on the production plot path the eighteen fixture tent
 	/// rows already use, and its zone is read into the city book by production's own suspend-time
-	/// check-out (see KingdomCampHeartChainCrown.cs); the harness never writes the crown - it is
-	/// read back through <c>KingdomCrown.CrownedOn</c>, which resolves from the book
-	/// (Growth/KingdomCrownDiscovery.cs:84-119, Growth/KingdomCrownRules.cs:146-168).
+	/// check-out (see KingdomCampHeartChainCrown.cs); the harness never writes the crown register -
+	/// the crown is read back through <c>KingdomCrown.CrownedOn</c>, which resolves from the book
+	/// (Growth/KingdomCrownDiscovery.cs:84-119, Growth/KingdomCrownRules.cs:146-168), and
+	/// production's own resolver records the capital when it first reads the hall
+	/// (Growth/KingdomCrown.cs:117-123).
 	/// </para>
 	/// <para>
 	/// This seam spends no turns and drives no improvement.
