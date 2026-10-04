@@ -375,7 +375,7 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger source = KingdomPolityTestData.Full();
 			source.Cohorts[0] = null;
-			foreach (TestDelegate write in new TestDelegate[]
+			foreach (Action write in new Action[]
 			{
 				() => KingdomPolityCodec.EncodeEnvelopeV1Fixture(source),
 				() => KingdomPolityCodec.EncodeEnvelopeV2Fixture(source),

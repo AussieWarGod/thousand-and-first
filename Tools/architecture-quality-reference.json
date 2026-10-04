@@ -2,9 +2,9 @@
   "schema": 1,
   "benchmark": {
     "game": "Caves of Qud",
-    "version": "2.0.211.51",
-    "version_evidence": "Player.log:58",
-    "assembly_sha256": "8c3b0fc371eaffc85e3dc971e8ffcb21dfc6b05fb25b92398fbd474260598000"
+    "version": "2.0.211.56",
+    "version_evidence": "Assembly-CSharp.dll AssemblyVersion 2.0.211.56",
+    "assembly_sha256": "cfd20cf1d6126bb64c9362311b9611fe0450589e21d51db00536af32d63150a7"
   },
   "authoritative_sources": [
     {

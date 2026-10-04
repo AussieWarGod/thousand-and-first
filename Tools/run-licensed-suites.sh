@@ -24,8 +24,24 @@ QUD_BASE_WIN="${2:-F:\\SteamLibrary\\steamapps\\common\\Caves of Qud\\CoQ_Data\\
 SUFFIX="$(printf '%s' "$WT/DevTests/test.ps1" | sed 's#/#\\#g')"
 TEST_SCRIPT_WIN='\\wsl.localhost\Ubuntu'"$SUFFIX"
 
+# The decompile-backed InstalledQud cases read only the decompile of the pinned core. Its
+# version-keyed default archive (DevTests/KingdomQudDecompiledSource.cs) lives in this WSL home,
+# which the Windows leg cannot derive, so pass an explicit TAF_QUD_DECOMPILED, or that default
+# when it exists, as a translated path. With neither, nothing is passed: those cases then skip,
+# which test.ps1's zero-skip policy refuses.
+DECOMPILED_WSLENV=""
+if [ -z "${TAF_QUD_DECOMPILED+set}" ]; then
+    CORE_PATTERN='s/^GAME_CORE_BUILD[[:space:]]*=[[:space:]]*"\([0-9][0-9.]*\)"[[:space:]]*$/\1/p'
+    CORE="$(sed -n "$CORE_PATTERN" "$WT/Tools/workshop_metadata.py" 2>/dev/null)"
+    DEFAULT_DECOMPILED="${HOME:-}/coq/qud_helper/game_base/decompiled/${CORE}-ilspy9.1"
+    if [ -n "$CORE" ] && [ -n "${HOME:-}" ] && [ -d "$DEFAULT_DECOMPILED" ]; then
+        export TAF_QUD_DECOMPILED="$DEFAULT_DECOMPILED"
+    fi
+fi
+[ -z "${TAF_QUD_DECOMPILED+set}" ] || DECOMPILED_WSLENV=":TAF_QUD_DECOMPILED/p"
+
 TAF_QUD_BASE_WIN="$QUD_BASE_WIN" TAF_TEST_SCRIPT_WIN="$TEST_SCRIPT_WIN" \
-    WSLENV=TAF_QUD_BASE_WIN/w:TAF_TEST_SCRIPT_WIN/w \
+    WSLENV="TAF_QUD_BASE_WIN/w:TAF_TEST_SCRIPT_WIN/w$DECOMPILED_WSLENV" \
     powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
     '$env:TAF_QUD_BASE=$env:TAF_QUD_BASE_WIN; & $env:TAF_TEST_SCRIPT_WIN; exit $LASTEXITCODE'
 rc=$?

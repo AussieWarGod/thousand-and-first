@@ -162,8 +162,8 @@ def _saved(source: Path, state: dict, game_id: str, primary: str, info_hash: str
         require(row is not None and row["size"] > 0 and row["sha256"] == digest,
                 "native source save changed: " + leaf)
     info = json.loads(fs.read_bytes(source / "Synced/Saves" / game_id / "Primary.json", 4 * 1024**2))
-    require(info.get("ID") == game_id and info.get("SaveVersion") == 408
-            and info.get("GameVersion") == "2.0.211.51"
+    require(info.get("ID") == game_id and info.get("SaveVersion") == 409
+            and info.get("GameVersion") == "2.0.211.56"
             and isinstance(info.get("ModsEnabled"), list)
             and "r_ThousandAndFirst" in info["ModsEnabled"]
             and set(info["ModsEnabled"]) <= {"r_ThousandAndFirst", "FreeholdGames_DLC_PetsPack1"},

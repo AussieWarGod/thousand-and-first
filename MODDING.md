@@ -699,7 +699,7 @@ settler origins the base mod already counts; and `Builders`, `Creed` and `CreedS
 attribute like everything else, so another mod can re-declare `mymod_walkinghouse` with a
 different `CreedShare` and change only that.
 
-**Built-in breadth.** Against installed Qud 2.0.211.51, the ordinary `CanBeCreed` facts admit
+**Built-in breadth.** Against installed Qud 2.0.211.56, the ordinary `CanBeCreed` facts admit
 exactly 33 shipped factions:
 
 `Baetyls`, `Barathrumites`, `Chavvah`, `Consortium`, `Cragmensch`, `Daughters`, `Dromad`,

@@ -129,8 +129,11 @@ the startup/save/reload proof is an automated-driver `results.json` artifact (ev
 PASS, its process cleanly stopped) bound by hash in `docs/RELEASE_EVIDENCE.json`, never a
 human tester's unverifiable word. Credential entry and legal/marketing approval remain human.
 
-Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
-claiming compatibility with another build.
+Supported target: Caves of Qud v1.0.5, core build 2.0.211.56. The 2026-09-25 Steam update replaced
+core build 2.0.211.51, the target of public 0.3.7; the compile gate and both licensed suites were
+re-run on 2.0.211.56 and the published 0.3.7 candidate record keeps its original target. Native
+release checks on 2.0.211.56 remain owed. Re-run all licensed checks before claiming
+compatibility with another build.
 
 ## Two public package lanes
 
@@ -837,7 +840,8 @@ remains deferred until Beta. Verify the checkout before starting the release win
 Preconditions on the gaming PC, all already proved by the 0.3.1 releases: a Windows desktop session
 for the account that owns items `3794797472` and `3796495680`; the Steam client running and signed
 in under that **same** Windows account; licensed Caves of Qud at
-`F:\SteamLibrary\steamapps\common\Caves of Qud` at core build 2.0.211.51 with DLLs matching
+`F:\SteamLibrary\steamapps\common\Caves of Qud` at core build 2.0.211.56 (the 0.3.1 proofs ran on
+2.0.211.51, which the 2026-09-25 Steam update replaced) with DLLs matching
 `Tools/WorkshopSteam/sdk.lock.json`; .NET SDK 9.0.306 on the Windows PATH as `dotnet.exe`; a WSL2
 Ubuntu default distro under that same Windows account holding the gate toolchain; the registry root
 `C:\taf-workshop-state.dRBivM`; and both Workshop items subscribed on this client, because

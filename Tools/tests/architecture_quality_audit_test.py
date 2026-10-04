@@ -81,7 +81,7 @@ class ArchitectureQualityAuditTests(unittest.TestCase):
     def test_reference_manifest_is_complete(self) -> None:
         receipt = self.result["reference"]
         self.assertEqual(receipt["game"], "Caves of Qud")
-        self.assertEqual(receipt["version"], "2.0.211.51")
+        self.assertEqual(receipt["version"], "2.0.211.56")
         self.assertEqual(receipt["checks"], [])
         self.assertFalse(receipt["verified"])
 

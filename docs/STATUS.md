@@ -1,5 +1,56 @@
 # Current implementation and release evidence
 
+## Qud build 25520692 re-pin: compile and licensed gates pass
+
+Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. Steam's
+default public branch now serves only that build (appmanifest buildid 25520692): core
+`2.0.211.56`, marketing 1.0.5, save format 409. Opt-in branches remain available: the Steam
+client's cached app info (refreshed 2026-10-01) lists 18 that need no password, including `beta`
+("beta (211.x)", build 25247580) and `211.50` (build 24054858). Their core builds were not
+examined, so they are unverified targets. The update removed `Microsoft.Contracts.dll` and
+`UnityMultiSelectDropdown.dll` from the managed directory; no production, Harness or DevTests
+source names a type from either, and `DevTests/refs.rsp` drops both references. The release
+target, Workshop description, release-record examples, SDK lock label (both SDK DLL hashes
+unchanged), native save-format checks, upgrade-observer engine pin and architecture reference
+assembly hash now name `2.0.211.56`. The published 0.3.7 candidate record keeps its true
+`2.0.211.51` target through one exact published-record entry.
+
+Engine check: an ILSpy 9.1 decompile of the installed assembly differs from the earlier
+`2.0.211.51` decompile in 18 files and adds two autoexplore files. Format 409 only adds a
+coral-polyp render migration; the serializer files are unchanged. Engine types TAF patches or
+cites change only in save-version constants, except `ActionManager`, whose cited turn loop is
+identical nine lines later. The archive and wear serializer probes pass against the installed
+engine (103/103, 7/7 and 4/4 cases, save version 409), and the Hearthpyre 2.2.3 ABI proof is clean.
+
+The two decompile-backed installed-Qud source checks (history consumers in relic and dungeon
+generation, and the trade market sink) previously read the `2.0.211.51` and `2.0.210.24`
+decompiles. They now read only a decompile whose `Properties/AssemblyInfo.cs` declares the pinned
+core, by default the archived, version-keyed `2.0.211.56` decompile. A decompile of another
+engine fails them, as does an install of another core named by `TAF_QUD_BASE`, which the
+release check always sets. Without `TAF_QUD_BASE` they compare no installed engine, so passing
+them then does not show that the installed engine matches the pin. An absent archive is a skip,
+which every zero-skip licensed run refuses.
+
+All four engine compile modes pass (3117/3121 ordinary and 3444/3448 dev-harness sources), and
+both full licensed suites pass with `TAF_QUD_BASE` naming the installed base: 15,130 main and
+5,997 portable cases, zero skips. No native acceptance or release native stage has run on
+`2.0.211.56`. Native evidence below ran on `2.0.211.51`, and docs/DEVELOPMENT.md requires the
+same engine binding for reuse.
+
+Developer native smoke on `2.0.211.56` (2026-10-04): persona `quickstart-reload` passed for the
+`v0.3.7` tag (`de8317db`) and for dev `1f8f91ed`, the re-pin's base, whose runtime C# and XML
+this re-pin leaves unchanged. Each run booted a real Quickstart, made the first `Primary` save of
+the new game, stopped the game process it owned and cold-loaded that save in a fresh sealed
+profile with unchanged heart stock and IDs. Player.log reports `Version: 2.0.211.56`; there was no
+TAF MODERROR or MODWARN, exception or save error. Both runs used the development scenario harness
+with no Workshop mods (Hearthpyre absent) and one seed each. This is developer evidence only
+(`ordinaryAcceptance=false`, `releaseAcceptance=false`), not native acceptance; ordinary play,
+autosave, graceful quit and Steam delivery are untested. Native evidence archive:
+`smoke-qud-25520692/de8317db/quickstart-reload-1/SHA256SUMS`, SHA-256
+`68882d8dd57e4e980c3f6ef6e5192927c6c5a22a3b55358a46058f447c99cb86`, and
+`smoke-qud-25520692/1f8f91ed/quickstart-reload-1/SHA256SUMS`, SHA-256
+`63a765fea792dbcbd1f42f897f4f00b4b05749c89c0b11bbc618f8922422bd04`.
+
 ## Absent-owner loss fix — native damage replay passes
 
 New `sr3` claims freeze map-qualified home ownership alongside the existing work/plot and
