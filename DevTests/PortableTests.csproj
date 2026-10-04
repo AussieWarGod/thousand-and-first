@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
     <Compile Include="..\Simulation\City\KingdomResidence.cs" />
     <Compile Include="..\Simulation\City\KingdomResidenceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomResidentRow.Residence.cs" />
