@@ -18,9 +18,11 @@ records current acceptance.
   growth-free lifecycle record that every 0.3.x reader already loads back as the same
   founding-ready book. Founded saves are byte-for-byte unchanged; any other unwritable state is
   still refused, never truncated, and the refusal now names the failing check. No format bump:
-  an unfounded save from this build loads on older 0.3.x builds and can found there, but saving
-  that still-unfounded game on an older build fails as before. Source pins prove the frame, cold
-  load, byte-identical re-save and first founding; the native unfounded save and cold-load
+  the dormant record is the historical v5 lifecycle record that every 0.3.x lifecycle reader
+  accepts. Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
+  refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
+  hotfix built from main. Source pins prove the frame, cold load, byte-identical re-save and
+  first founding; the native unfounded save and cold-load
   personas are owed, and the Roleplay checkpoint and starting-pet Quickstart routes are not
   driven natively (#274, #276).
 

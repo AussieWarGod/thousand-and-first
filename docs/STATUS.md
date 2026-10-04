@@ -12,20 +12,36 @@ unbound quarantine) is written in the growth-free lifecycle v5 frame that every 
 v0.3.0 rebuilds into the same book. Every other book keeps the current frame and the unchanged
 strict gate. Refusals keep their message as the exact prefix and gain the failing check
 (`identity-unbound`, `identity-proof`, `root-shape`, ...). The production writer now depends
-permanently on the lifecycle v5 read branch. No format bump: an unfounded save from this build
-loads on older 0.3.x builds and can found there; saving it still unfounded there still fails.
+permanently on the lifecycle v5 read branch. No format bump: the dormant record is the historical
+v5 lifecycle record, which every 0.3.x lifecycle reader parses back into the same book
+(engine-free). Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
+refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
+hotfix built from main.
 
-Engine-free evidence only. `KingdomLifecycleDormantSaveTests` (20 cases, registered in both
+Engine-free evidence only. `KingdomLifecycleDormantSaveTests` (35 cases, registered in both
 suites) pins the exact 139-byte dormant image, equal to the historical v5 fixture writer; cold
 load, byte-identical re-save and first founding with the founded book back on frame 10;
 field-for-field round trips of the admitted quarantine states, including non-default counters,
-options and a 4096-character fault; refusal of every non-dormant unbound state; current-frame
-retention for an unbound quarantine carrying quarantined or staged growth; the frozen
-serialized-field census; and the refusal reasons. On a scratch copy with the writer and the two
-messages reverted, 16 of the 20 cases fail (the writer cases with the #272 message) and only
-the 4 refusal and census pins pass. Three of four predicate mutants are killed; the fourth
-(the explicit lane-operation checks) is equivalent, because an operation always carries a
-settlement identity an unbound book lacks.
+options and a 4096-character fault; current-frame retention for an unbound quarantine carrying
+quarantined or staged growth; the frozen serialized-field census; and every refusal reason
+except `aggregate-cap`. Refusal by both the predicate and the strict writer is pinned for the
+listed non-dormant unbound states: absent parts; growth, option and lane-operation state; a
+genuine future raid ledger on both arms; raid-ledger state, identity remnants, a broken lane
+counter, an unknown option, a negative tick and an overlong fault on the unbound quarantine,
+whose v5 image would drop the ledger or fail to load; and valid resource and proof rows there,
+which the v5 frame would carry but the dormant frame excludes. A reflective pin makes the
+predicate refuse a non-default value of every growth and raid-ledger field.
+
+On a scratch copy with the writer and the two messages reverted, 21 of the 35 cases fail (the
+writer cases with the #272 message, and the message pins); the 14 refusal, current-frame, census
+and absent-growth pins pass. On scratch copies, this fixture kills 39 of 50 mutants of the
+predicate, its raid-ledger check, seven `PristineGrowthBook` clauses, the writer and the refusal
+reasons. Ten survivors are equivalent: dropping the WireRejected, FormatVersion, IdentityBound or
+lane-operation checks (both arms, with the pristine-growth check, already refuse those states;
+an operation always carries a settlement identity an unbound book lacks), or dropping alone the
+ledger's Version, payload, ActiveIncidentId, either count or legacy-value check (`ValidLedger`,
+which both arms apply, ties each to a check that remains). The eleventh survivor drops the
+`aggregate-cap` reason, which no pin reaches.
 
 Native acceptance on this head is owed, not claimed: `unfounded-save-native-check` (a real engine
 save of an unfounded world with the SaveGameError witness armed; a run on a writer without the
