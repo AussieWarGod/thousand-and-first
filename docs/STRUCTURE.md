@@ -1,5 +1,14 @@
 # Structural release contract
 
+## Alpha 0.3.8 hotfix candidate census
+
+3108 staged production C# files / 440,963 physical lines; zero at or above 300 lines.
+1450 files with direct `XRL` imports; none exceed the cap. Cold-install inventory: 3141 files.
+Inventory SHA-256: `5a5462a6889b1843bc13a7930ae28cd5b0a8838fd1563e995222534575e38ed8`.
+The automated [delta review](STRUCTURE_REVIEW_0_3_8.md) and STRUCTURE_REVIEW.json bind this
+inventory: 3,103 production paths are byte-identical to the reviewed 0.3.7 inventory, two are
+added and three changed. Native acceptance and candidate delivery remain separate checks.
+
 ## Refreshed Alpha 0.3.7 candidate census
 
 3106 staged production C# files / 440,880 physical lines; zero at or above 300 lines.

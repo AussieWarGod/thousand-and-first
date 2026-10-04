@@ -1,5 +1,63 @@
 # Current implementation and release evidence
 
+## 0.3.8 hotfix candidate: unfounded games can be saved (#271, #272)
+
+Private hotfix candidate built from main (public 0.3.7 plus this fix and the build re-pin); not
+yet uploaded or accepted. Public Alpha remains 0.3.7.
+
+Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
+identity-unbound growth book, and the strict growth writer gate had no branch for it, so every
+save before founding threw "growth envelope is not bounded and writable". The same code shipped
+in every 0.3.x release. `WriteLifecycle` now chooses the frame before writing any byte: a book
+that `DormantLifecycleWireExact` admits (identity-unbound, pristine growth, no lane operations,
+resources or proofs, a constructor-default raid ledger, and the pristine shape or the canonical
+unbound quarantine) is written in the growth-free lifecycle v5 frame that every reader since
+v0.3.0 rebuilds into the same book. Every other book keeps the current frame and the unchanged
+strict gate. Refusals keep their message as the exact prefix and gain the failing check. The
+production writer now depends permanently on the lifecycle v5 read branch. No format bump: an
+unfounded save from this build loads on older 0.3.x builds and can found there; saving it still
+unfounded there still fails. The four production files are byte-identical to dev PR #277.
+
+The candidate also re-pins main to Caves of Qud build 25520692 (core 2.0.211.56, save format
+409). It takes only the pins main's compile gate and Alpha release lane need from dev's re-pin
+(#273): the two removed managed references, the release target (the published 0.3.7 record keeps
+its true 2.0.211.51 target), the Workshop description, the SDK lock label (both SDK DLL hashes
+unchanged), the smoke launcher's save format and the release-record examples. The
+decompile-pinning test helper, the upgrade-observer and upgrade-profile engine pins and the
+architecture-quality reference stay as they were on main; no gate or Alpha release step reads
+them.
+
+Engine-free evidence. `KingdomLifecycleDormantSaveTests` (20 cases, both suites) pins the exact
+139-byte dormant image, equal to the historical v5 fixture writer; cold load, byte-identical
+re-save and first founding with the founded book back on frame 10; field-for-field round trips
+of the admitted quarantine states, including non-default counters, options and a
+4096-character fault; refusal of every non-dormant unbound state; the frozen serialized-field
+census; and the refusal reasons. With only the writer change reverted on a scratch copy of this
+candidate, 9 of the 20 cases fail with the #272 message and 11 pass.
+
+Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
+engine save of an unfounded world with the SaveGameError witness armed; a run on the harness
+commit without the fix must refuse with the #272 text, and that failed run is retained as
+detection evidence), `unfounded-reload` (unfounded save, owned stop, fresh descendant cold load,
+production founding and a second real save, strictly checked by
+`Tools/check-unfounded-results.py`), and the founded regressions `quickstart-reload` and
+`camp-heart-save`. The reload host and checker are covered by fake-effect and synthetic-fixture
+tests only.
+
+Disclosed gaps: the exact #271 route (the Roleplay engine checkpoint save on entering Joppa) and
+a Kingdom Quickstart stopped by a starting pet are not driven natively, because the harness can
+drive neither (#276). A Quickstart whose founder placement refuses a starting pet from the Pets
+of Harvest Dawn DLC or a Workshop pet mod can stay unfounded (static trace only, not reproduced
+natively); this fix makes that world saveable, but the unfounded Quickstart itself remains a
+separate gameplay defect (#274). The fix is state-based, so the unfounded save
+covers both routes once it passes natively. A reporter re-test on #271 is welcome but is never a
+release gate. A player-facing save-refusal preflight is out of scope (#275).
+
+Candidate census: 3108 staged C# files; 440,963 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Cold-install inventory: 3141 files.
+Inventory SHA-256: `5a5462a6889b1843bc13a7930ae28cd5b0a8838fd1563e995222534575e38ed8`.
+Engine gate passes for 3108 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Public 0.3.7 — published and finalized
 
 Public Alpha 0.3.7 is published, verified and finalized, superseding 0.3.6. Earlier candidate
