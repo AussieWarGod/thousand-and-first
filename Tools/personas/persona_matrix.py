@@ -164,7 +164,7 @@ CAMP_HEART_EVIDENCE_ROWS = (
 )
 
 # Evidence rows the second-city family writes beside its automatic verb rows: the resolved
-# site (home, bordering parasang and its GroundIsTooClose verdict, chosen non-adjacent site)
+# site (home, bordering zone and its GroundIsTooClose verdict, chosen non-adjacent site)
 # and the published two-city topology. Not callable verbs.
 SECOND_CITY_EVIDENCE_ROWS = ("second-city-site", "second-city-topology")
 

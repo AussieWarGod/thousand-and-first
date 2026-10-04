@@ -12,12 +12,15 @@ namespace ThousandAndFirst.Harness
 	/// KingdomFounding.JudgeSite and the founding-heart preflight say, is the ground dry) is
 	/// proved by the caller against the live world, never guessed here.
 	/// <para>
-	/// The ring starts at MinRing, not 1, because ring 1 is exactly the
-	/// SecondFoundingVerdict.GroundIsTooClose band: a bordering parasang is claimed, not
-	/// founded. Candidates off the Joppa world's 80x25 parasang grid are skipped, never moved
-	/// onto it, for the reason Harness/KingdomScenarioGround.cs gives - the engine's biome
-	/// arrays are sized to exactly that grid, so an off-map candidate crashes zone build rather
-	/// than refusing.
+	/// Rings count world parasangs and start at the nearest. Production judges closeness per
+	/// zone, not per parasang: KingdomFounding.JudgeSite reads GroundIsTooClose only for a zone
+	/// bordering a realm claim (KingdomFounding.ZonesAdjacent, Chebyshev distance 1 in the
+	/// global zone grid wx * 3 + zx, wy * 3 + zy). Every candidate keeps the home sub-cell, so
+	/// even ring 1 lies three zones from city one. Whether a candidate is Allowed is JudgeSite's
+	/// own verdict, read live by the caller, never decided here. Candidates off the Joppa
+	/// world's 80x25 parasang grid are skipped, never moved onto it, for the reason
+	/// Harness/KingdomScenarioGround.cs gives - the engine's biome arrays are sized to exactly
+	/// that grid, so an off-map candidate crashes zone build rather than refusing.
 	/// </para>
 	/// <para>
 	/// It also writes the second-city-site evidence row, so the row's width is value-tested
@@ -27,8 +30,11 @@ namespace ThousandAndFirst.Harness
 	/// </summary>
 	internal static class KingdomSecondCitySiteRules
 	{
-		/// <summary>Ring 1 is the bordering band; a site must start outside it.</summary>
-		internal const int MinRing = 2;
+		/// <summary>
+		/// The nearest world parasang. On the home sub-cell it is three zones from city one, so
+		/// production's adjacency law never refuses it for bordering city one's ground.
+		/// </summary>
+		internal const int MinRing = 1;
 		internal const int MaxRing = 4;
 		internal const int WorldMaxX = 79;
 		internal const int WorldMaxY = 24;
@@ -38,15 +44,17 @@ namespace ThousandAndFirst.Harness
 		/// <summary>The heart rung a founding lays (Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs).</summary>
 		internal const int FoundingRung = 1;
 
-		/// <summary>How many candidate parasangs may be built before the site search refuses.</summary>
+		/// <summary>
+		/// How many candidate parasangs may be built before the site search refuses. Every
+		/// candidate tried is built and judged; none is skipped unbuilt.
+		/// </summary>
 		internal const int MaxProbes = 8;
 
 		/// <summary>
 		/// Each rejected candidate's reason is kept to this many characters in the site row, the
 		/// journal's own marker naming any cut, so at the widest every candidate still fits under
-		/// KingdomScenarioJournalRules.MaxMessageChars: MaxProbes built candidates each with a
-		/// reason at this cap, and every other candidate skipped as claimed or adjacent. The log
-		/// keeps each reason uncut.
+		/// KingdomScenarioJournalRules.MaxMessageChars: MaxProbes candidates, each rejected with
+		/// a reason at this cap. The log keeps each reason uncut.
 		/// </summary>
 		internal const int ReasonChars = 512;
 

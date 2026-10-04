@@ -692,6 +692,40 @@ class MatchingTest(unittest.TestCase):
                 changed[index] = (verb, outcome, "wrong second-city result")
                 self.assertTrue(matrix.match(expected, changed))
 
+    def test_second_city_forbids_the_activation_refusals_production_only_logs(self):
+        name = "second-city-native-check.persona"
+        manifest = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
+        forbidden = json.loads(manifest["LOG_FORBID"])
+        self.assertEqual(["founding heart: reserved identity audit refused",
+                          "polity: zone reconciliation refused"], forbidden)
+        # Production's own sentences, logged and never thrown by the zone-activation handler.
+        events = (ROOT / "Core/KingdomSystem.z20.Events.cs").read_text(encoding="utf-8")
+        start = events.index("public override bool HandleEvent(ZoneActivatedEvent E)")
+        handler = events[start:events.index("\n\t\t}\n", start)]
+        for statement in ('KingdomLog.Log("founding heart: reserved identity audit refused");',
+                          'KingdomLog.Log("polity: zone reconciliation refused (" + polityFailure'
+                          ' + ")");'):
+            self.assertEqual(1, handler.count(statement), statement)
+        refusals = ["[TAF] founding heart: reserved identity audit refused",
+                    "[TAF] polity: zone reconciliation refused (open polity topology differs"
+                    " from its frozen facts)"]
+        clean = "[TAF] survey: zone=JoppaWorld.8.22.1.1.10 classifications=1\r\n[TAF] seat\r\n"
+        self.assertEqual([], matrix.forbidden_log(manifest, clean.encode(), name))
+        for line, needle in zip(refusals, forbidden):
+            with self.subTest(forbidden=needle):
+                self.assertEqual(["line 3: " + needle], matrix.forbidden_log(
+                    manifest, (clean + line + "\r\n").encode(), name))
+        dirty = clean + "\r\n".join(refusals) + "\r\n"
+        self.assertEqual(2, len(matrix.forbidden_log(manifest, dirty.encode(), name)))
+        # The ordinary Player.log check passes both lines: only LOG_FORBID stops such a run.
+        with tempfile.TemporaryDirectory() as folder:
+            log = pathlib.Path(folder) / "Player.log"
+            log.write_text(dirty, encoding="utf-8")
+            result = subprocess.run(["bash", str(ROOT / "Tools/check-player-log.sh"), str(log)],
+                                    env={**os.environ, "TAF_LOG_ALLOW": ""},
+                                    capture_output=True, text=True, timeout=30)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
     def test_paid_handover_witnesses_cannot_be_missing_repeated_or_refused(self):
         witnesses = ("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
                      "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",

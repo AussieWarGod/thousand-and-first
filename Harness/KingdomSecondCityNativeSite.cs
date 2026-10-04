@@ -10,8 +10,10 @@ namespace ThousandAndFirst.Harness
 	/// Observation only - nothing here founds, claims, clears or moves anything; the travel case
 	/// moves the founder onto the cell chosen here.
 	/// <para>
-	/// A candidate parasang (KingdomSecondCitySiteRules.Candidates) must build, answer to no
-	/// foreign faction and read Allowed from KingdomFounding.JudgeSite. On it, a rite cell
+	/// A candidate parasang (KingdomSecondCitySiteRules.Candidates, nearest ring first) must
+	/// build, answer to no foreign faction and read Allowed from KingdomFounding.JudgeSite,
+	/// which alone decides held and too-close ground: nothing here skips a candidate unbuilt or
+	/// second-guesses production's per-zone adjacency law. On it, a rite cell
 	/// (KingdomSecondCitySiteRules.RiteOrder, seeded with city one's rite) must be empty, must hold
 	/// no liquid inside its rung-1 heart rect (the FoundingHeartGroundAllows predicate, read
 	/// through KingdomPlots.GroundGrid), and must pass production's own read-only founding-heart
@@ -40,8 +42,9 @@ namespace ThousandAndFirst.Harness
 			string home = KingdomSecondCityNativeChecks.HomeZoneId;
 			Cell homeCell = KingdomSecondCityNativeChecks.HomeCell;
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);
-			Require(candidates.Count > 0,
-				"no surface parasang outside the bordering band exists for " + home);
+			Require(candidates.Count > 0, "no on-map surface parasang in rings "
+				+ KingdomSecondCitySiteRules.MinRing + ".." + KingdomSecondCitySiteRules.MaxRing
+				+ " exists for " + home);
 			string key = KingdomPlotRules.HeartKeyForRung(KingdomSecondCitySiteRules.FoundingRung);
 			KingdomRules.BuildEntry entry;
 			Require(KingdomData.TryGetBuilding(key, out entry) && entry != null,
@@ -51,8 +54,6 @@ namespace ThousandAndFirst.Harness
 			for (int i = 0; i < candidates.Count && probes < KingdomSecondCitySiteRules.MaxProbes; i++)
 			{
 				string id = candidates[i];
-				if (System.ClaimedZones.Contains(id)) { Reject(tried, id, "claimed"); continue; }
-				if (KingdomFounding.ZonesAdjacent(home, id)) { Reject(tried, id, "adjacent"); continue; }
 				probes++;
 				Zone zone;
 				try { zone = The.ZoneManager.GetZone(id); }

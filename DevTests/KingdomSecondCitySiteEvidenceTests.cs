@@ -16,9 +16,9 @@ namespace ThousandAndFirst.Tests
 		private const string Home = "JoppaWorld.8.22.1.1.10";
 		private const string Border = "JoppaWorld.8.22.2.1.10";
 		private const string Site =
-			"site=JoppaWorld.8.20.1.1.10 rite=40,12 heart=38,11-43,14 centred=true probes=3 rejected=2";
-		private const string Foreign = "JoppaWorld.6.20.1.1.10";
-		private const string Unseatable = "JoppaWorld.7.20.1.1.10";
+			"site=JoppaWorld.9.21.1.1.10 rite=40,12 heart=38,11-43,14 centred=true probes=3 rejected=2";
+		private const string Foreign = "JoppaWorld.7.21.1.1.10";
+		private const string Unseatable = "JoppaWorld.8.21.1.1.10";
 		private const string UnseatableReason = "no seatable rite: 1596 cells, 12 occupied, 0 wet, "
 			+ "1584 refused by the heart preflight, last: no authored founding-heart pose binds its "
 			+ "basin to the poured rite";
@@ -58,7 +58,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ARefusedSiteRowNamesEveryCandidateAndClaimsNoChosenSite()
 		{
-			string refusal = KingdomSecondCitySiteRules.Refusal(8, 54);
+			string refusal = KingdomSecondCitySiteRules.Refusal(8, 62);
 			string row = KingdomSecondCitySiteRules.RefusedSiteRow(Home, 40, 12, Border, refusal,
 				KingdomSecondCitySiteRules.RejectedList(Rejections()));
 			Assert.That(row, Is.EqualTo("home=" + Home + " home-rite=40,12; border=" + Border
@@ -72,9 +72,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheRefusalNamesTheProbeLimitAndSurvivesTheVerbRowFailureBound()
 		{
-			string refusal = KingdomSecondCitySiteRules.Refusal(8, 72);
+			string refusal = KingdomSecondCitySiteRules.Refusal(8, 62);
 			Assert.That(refusal, Is.EqualTo("no eligible second-city site: probed 8 of at most 8 "
-				+ "parasangs (72 candidates in rings 2..4); every rejected candidate and its reason "
+				+ "parasangs (62 candidates in rings 1..4); every rejected candidate and its reason "
 				+ "is in the second-city-site row"));
 			// KingdomSecondCityNativeChecks.Fail bounds the exception's type name plus its message.
 			string failure = "InvalidOperationException: " + refusal;
@@ -96,35 +96,42 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheWidestRowKeepsEveryCandidateUnderTheJournalCap()
+		public void TheWidestRowKeepsEveryProbedCandidateUnderTheJournalCap()
 		{
-			// Two-digit parasang coordinates on every ring and no ring clipped by the map edge:
-			// all 72 candidates of rings 2..4, each at its widest id.
+			// Every candidate tried is built and judged and none is skipped unbuilt, so at most
+			// MaxProbes rejections ever reach the row.
+			Assert.That(Squash(TestMain.ReadRepositoryText(SiteSource)), Does.Contain(Squash(
+				"for (int i = 0; i < candidates.Count && probes < KingdomSecondCitySiteRules.MaxProbes;"
+				+ " i++) { string id = candidates[i]; probes++;")));
+			// Two-digit parasang coordinates, so every id is at its widest.
 			string home = "JoppaWorld.40.14.1.1.10";
+			string east = "JoppaWorld.40.14.2.1.10";
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(home);
-			Assert.That(candidates.Count, Is.EqualTo(72));
+			Assert.That(candidates.Count, Is.EqualTo(80));
+			int probes = KingdomSecondCitySiteRules.MaxProbes;
 			string huge = new string('s', 10 * KingdomScenarioJournalRules.MaxMessageChars);
 			List<string> tried = new List<string>();
-			for (int i = 0; i < candidates.Count; i++)
-				tried.Add(KingdomSecondCitySiteRules.Rejection(candidates[i],
-					i < KingdomSecondCitySiteRules.MaxProbes ? huge : "adjacent"));
-			string rejected = KingdomSecondCitySiteRules.RejectedList(tried);
-			string site = "site=" + candidates[candidates.Count - 1]
-				+ " rite=77,22 heart=72,19-77,22 centred=false probes=8 rejected=72";
-			string[] rows = {
-				KingdomSecondCitySiteRules.SiteRow(home, 79, 24, "JoppaWorld.40.14.2.1.10", site,
-					rejected),
-				KingdomSecondCitySiteRules.RefusedSiteRow(home, 79, 24, "JoppaWorld.40.14.2.1.10",
-					KingdomSecondCitySiteRules.Refusal(8, 72), rejected) };
-			foreach (string row in rows)
-			{
-				Assert.That(row.Length, Is.LessThanOrEqualTo(KingdomScenarioJournalRules.MaxMessageChars));
-				Assert.That(KingdomScenarioJournalRules.Bound(row,
-					KingdomScenarioJournalRules.MaxMessageChars), Is.EqualTo(row));
-				foreach (string id in candidates) Assert.That(row, Does.Contain(id + " ("));
-				Assert.That(Count(row, KingdomScenarioJournalRules.TruncatedOpen),
-					Is.EqualTo(KingdomSecondCitySiteRules.MaxProbes));
-			}
+			for (int i = 0; i < probes; i++)
+				tried.Add(KingdomSecondCitySiteRules.Rejection(candidates[i], huge));
+			// The last probe qualified: the rest were rejected.
+			string site = "site=" + candidates[probes - 1]
+				+ " rite=77,22 heart=72,19-77,22 centred=false probes=8 rejected=7";
+			AssertKept(KingdomSecondCitySiteRules.SiteRow(home, 79, 24, east, site,
+				KingdomSecondCitySiteRules.RejectedList(tried.GetRange(0, probes - 1))),
+				candidates, probes - 1);
+			// Every probe rejected: the search refused.
+			AssertKept(KingdomSecondCitySiteRules.RefusedSiteRow(home, 79, 24, east,
+				KingdomSecondCitySiteRules.Refusal(probes, candidates.Count),
+				KingdomSecondCitySiteRules.RejectedList(tried)), candidates, probes);
+		}
+
+		private static void AssertKept(string Row, IList<string> Candidates, int Rejected)
+		{
+			Assert.That(Row.Length, Is.LessThanOrEqualTo(KingdomScenarioJournalRules.MaxMessageChars));
+			Assert.That(KingdomScenarioJournalRules.Bound(Row,
+				KingdomScenarioJournalRules.MaxMessageChars), Is.EqualTo(Row));
+			for (int i = 0; i < Rejected; i++) Assert.That(Row, Does.Contain(Candidates[i] + " ("));
+			Assert.That(Count(Row, KingdomScenarioJournalRules.TruncatedOpen), Is.EqualTo(Rejected));
 		}
 
 		[Test]
@@ -136,7 +143,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomSecondCitySiteRules.SiteRow(Home, 40, 12, Border, Site, rejected),
 				Does.Contain(wanted));
 			Assert.That(KingdomSecondCitySiteRules.RefusedSiteRow(Home, 40, 12, Border,
-				KingdomSecondCitySiteRules.Refusal(8, 54), rejected), Does.Not.Contain(wanted));
+				KingdomSecondCitySiteRules.Refusal(8, 62), rejected), Does.Not.Contain(wanted));
 		}
 
 		[Test]

@@ -9,10 +9,10 @@ namespace ThousandAndFirst.Tests
 	/// Real execution against the engine-free second-city site arithmetic, not a source pin:
 	/// every assertion below drives KingdomSecondCitySiteRules (and, through it, production's
 	/// own KingdomPlotRules heart geometry) and reads the values it actually produces. These are
-	/// the facts the native run cannot re-derive once it is under way -- a candidate inside the
-	/// bordering band would be refused as GroundIsTooClose, an off-map candidate crashes zone
-	/// build instead of refusing, and a rite poured where the heart rect slides can never bind
-	/// the founding basin.
+	/// the facts the native run cannot re-derive once it is under way -- an off-map candidate
+	/// crashes zone build instead of refusing, and a rite poured where the heart rect slides can
+	/// never bind the founding basin. Closeness is production's per-zone adjacency law, run in
+	/// KingdomSecondCitySiteAdjacencyTests rather than assumed here as a parasang band.
 	/// </summary>
 	public class KingdomSecondCitySiteRulesTests
 	{
@@ -65,29 +65,36 @@ namespace ThousandAndFirst.Tests
 				Is.EqualTo("JoppaWorld.6.20.1.1.10"));
 		}
 
-		[Test]
-		public void NoCandidateLiesInsideTheBorderingBand()
+		/// <summary>A candidate's world-parasang ring around Home, its sub-cell and its depth.</summary>
+		private static int Ring(string Id, out string Sub, out int Depth)
 		{
+			string world;
+			string subX;
+			string subY;
+			int wx;
+			int wy;
+			Assert.That(KingdomSecondCitySiteRules.TrySplit(Id, out world, out wx, out wy,
+				out subX, out subY, out Depth), Is.True, Id);
+			Sub = subX + "," + subY;
+			int dx = wx > 8 ? wx - 8 : 8 - wx;
+			int dy = wy > 22 ? wy - 22 : 22 - wy;
+			return dx > dy ? dx : dy;
+		}
+
+		[Test]
+		public void EveryCandidateSitsOnTheHomeSubCellInRingsOneToFour()
+		{
+			Assert.That(KingdomSecondCitySiteRules.MinRing, Is.EqualTo(1));
 			IList<string> candidates = KingdomSecondCitySiteRules.Candidates(Home);
-			Assert.That(candidates.Count, Is.GreaterThan(0));
+			Assert.That(candidates.Count, Is.EqualTo(8 + 16 + 17 + 21));
 			foreach (string id in candidates)
 			{
-				string world;
-				string subX;
-				string subY;
-				int wx;
-				int wy;
+				string sub;
 				int depth;
-				Assert.That(KingdomSecondCitySiteRules.TrySplit(id, out world, out wx, out wy,
-					out subX, out subY, out depth), Is.True);
-				int dx = wx > 8 ? wx - 8 : 8 - wx;
-				int dy = wy > 22 ? wy - 22 : 22 - wy;
-				int ring = dx > dy ? dx : dy;
-				Assert.That(ring, Is.GreaterThanOrEqualTo(KingdomSecondCitySiteRules.MinRing));
-				Assert.That(ring, Is.LessThanOrEqualTo(KingdomSecondCitySiteRules.MaxRing));
+				Assert.That(Ring(id, out sub, out depth), Is.InRange(
+					KingdomSecondCitySiteRules.MinRing, KingdomSecondCitySiteRules.MaxRing));
 				Assert.That(depth, Is.EqualTo(KingdomSecondCitySiteRules.SurfaceDepth));
-				Assert.That(subX, Is.EqualTo("1"));
-				Assert.That(subY, Is.EqualTo("1"));
+				Assert.That(sub, Is.EqualTo("1,1"));
 			}
 		}
 
@@ -100,17 +107,9 @@ namespace ThousandAndFirst.Tests
 			foreach (string id in candidates)
 			{
 				Assert.That(seen.Add(id), Is.True, id + " was offered twice");
-				string world;
-				string subX;
-				string subY;
-				int wx;
-				int wy;
+				string sub;
 				int depth;
-				KingdomSecondCitySiteRules.TrySplit(id, out world, out wx, out wy, out subX,
-					out subY, out depth);
-				int dx = wx > 8 ? wx - 8 : 8 - wx;
-				int dy = wy > 22 ? wy - 22 : 22 - wy;
-				int ring = dx > dy ? dx : dy;
+				int ring = Ring(id, out sub, out depth);
 				Assert.That(ring, Is.GreaterThanOrEqualTo(previous));
 				previous = ring;
 			}

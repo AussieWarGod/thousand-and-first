@@ -19,7 +19,7 @@ namespace ThousandAndFirst.Harness
 	/// the world map; the waterless route, so the basin's dram cost and its three Popup prompts
 	/// (name, vocation, refusal) are NOT exercised - a sealed script cannot answer a popup and
 	/// KingdomScenarioVerbProvider forbids one outright. Force is never passed, so
-	/// GroundIsTooClose is observed on the bordering parasang rather than bypassed. No case spends
+	/// GroundIsTooClose is observed on the bordering zone rather than bypassed. No case spends
 	/// a turn; city two has no population, buildings, stockpile or economy. Save and cold load
 	/// are out of scope for this persona.
 	/// </para>

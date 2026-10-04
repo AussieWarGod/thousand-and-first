@@ -776,6 +776,7 @@
     <Compile Include="KingdomSecondCityNativeSourceTests.cs" />
     <Compile Include="KingdomSecondCitySiteRulesTests.cs" />
     <Compile Include="KingdomSecondCitySiteEvidenceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteAdjacencyTests.cs" />
     <Compile Include="..\Harness\KingdomSecondCityScript.cs" />
     <Compile Include="..\Harness\KingdomSecondCitySiteRules.cs" />
     <Compile Include="KingdomArchitectureRulesTests.cs" />

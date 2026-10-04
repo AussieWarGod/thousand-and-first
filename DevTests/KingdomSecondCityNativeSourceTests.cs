@@ -216,15 +216,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheSiteSearchIsBoundedAndNamesItsProbeLimitWhenItRefuses()
 		{
-			Assert.That(KingdomSecondCitySiteRules.MinRing, Is.EqualTo(2));
+			// Rings start at the nearest world parasang; JudgeSite alone decides closeness
+			// (KingdomSecondCitySiteAdjacencyTests).
+			Assert.That(KingdomSecondCitySiteRules.MinRing, Is.EqualTo(1));
 			Assert.That(KingdomSecondCitySiteRules.MaxProbes, Is.EqualTo(8));
 			string source = Read(Site);
 			Assert.That(source, Does.Contain("probes < KingdomSecondCitySiteRules.MaxProbes"));
 			Assert.That(source, Does.Contain("GroundIsForeignFaction"));
 			Assert.That(source, Does.Contain(
 				"Refusal = KingdomSecondCitySiteRules.Refusal(probes, candidates.Count);"));
-			Assert.That(KingdomSecondCitySiteRules.Refusal(8, 54), Does.StartWith(
-				"no eligible second-city site: probed 8 of at most 8 parasangs (54 candidates"));
+			Assert.That(KingdomSecondCitySiteRules.Refusal(8, 62), Does.StartWith(
+				"no eligible second-city site: probed 8 of at most 8 parasangs (62 candidates"));
 		}
 
 		[Test]

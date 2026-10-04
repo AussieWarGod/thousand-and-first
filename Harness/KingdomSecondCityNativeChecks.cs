@@ -8,7 +8,7 @@ namespace ThousandAndFirst.Harness
 	/// <summary>
 	/// Behavioural coverage row 12 "Multiple cities": the frame. City one is founded by the
 	/// built-in realize verb (the production first-city transaction) and lives one ordinary
-	/// turn; this shard then reads the bordering parasang's verdict and has
+	/// turn; this shard then reads the bordering zone's verdict and has
 	/// KingdomSecondCityNativeSite resolve a second site on a NON-adjacent surface parasang, and
 	/// the four cases in KingdomSecondCityNativeCases drive travel, the production second
 	/// founding, its already-ours refusal, and the production seat exchange on return.
@@ -154,18 +154,18 @@ namespace ThousandAndFirst.Harness
 			Bound = true;
 		}
 
-		/// <summary>The tabled negative: a bordering parasang is claimed, not founded.</summary>
+		/// <summary>The tabled negative: a bordering zone is claimed, not founded.</summary>
 		private static string ObserveBorder(KingdomSystem System, Zone Zone)
 		{
 			string border = Zone.GetZoneIDFromDirection("E");
 			Require(!string.IsNullOrEmpty(border) && border != HomeZoneId
 				&& KingdomFounding.ZonesAdjacent(HomeZoneId, border),
-				"the eastern neighbour did not read as a bordering parasang");
+				"the eastern neighbour did not read as a bordering zone");
 			Zone bordering = The.ZoneManager.GetZone(border);
-			Require(bordering != null, "the bordering parasang could not be built");
+			Require(bordering != null, "the bordering zone could not be built");
 			Require(KingdomFounding.JudgeSite(System, bordering)
 				== KingdomSettlement.SecondFoundingVerdict.GroundIsTooClose,
-				"the bordering parasang did not refuse as GroundIsTooClose");
+				"the bordering zone did not refuse as GroundIsTooClose");
 			return border;
 		}
 	}
