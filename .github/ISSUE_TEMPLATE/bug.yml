@@ -19,7 +19,7 @@ body:
     attributes:
       label: Caves of Qud core build
       description: Full internal build when known (shown in logs/version details).
-      placeholder: "2.0.211.51"
+      placeholder: "2.0.211.56"
     validations:
       required: true
   - type: input

@@ -12,8 +12,10 @@ launches a game during preparation, repairs a source, or deletes/reseals a parti
 
 Pinned source production: tag `v0.3.1`, commit
 `a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`. Native observer ordering is restricted to engine
-`2.0.211.51` / save format 408. Candidate must be a full immutable commit containing these tools
-and observers. A dirty worktree or a manifest version string is not runtime provenance.
+`2.0.211.56` / save format 409; the 2026-09-25 Steam update replaced `2.0.211.51` / format 408,
+and retained evidence from that engine does not meet this pin. Candidate must be a full
+immutable commit containing these tools and observers. A dirty worktree or a manifest version
+string is not runtime provenance.
 
 ## Root checks before native runs
 

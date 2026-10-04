@@ -19,7 +19,7 @@ body:
     attributes:
       label: Caves of Qud version
       description: Give marketing version and core build when known.
-      placeholder: "1.0.5 / core 2.0.211.51"
+      placeholder: "1.0.5 / core 2.0.211.56"
     validations:
       required: true
   - type: input

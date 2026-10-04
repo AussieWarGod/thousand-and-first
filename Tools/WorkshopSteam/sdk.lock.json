@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "qudCoreBuild": "2.0.211.51",
+  "qudCoreBuild": "2.0.211.56",
   "steamworksNetVersion": "2024.8.0",
   "steamworksSdkVersion": "1.60",
   "managedFile": "com.rlabrecque.steamworks.net.dll",

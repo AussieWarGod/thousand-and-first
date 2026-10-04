@@ -125,7 +125,7 @@ class UnattendedRecipeTest(unittest.TestCase):
 
 
 class NativeSourceReceiptTest(unittest.TestCase):
-    def fixture(self, root, mode="source-donor"):
+    def fixture(self, root, mode="source-donor", identity=(409, "2.0.211.56")):
         donor = mode == "source-donor"
         config = configuration(mode)
         save = root / "Synced/Saves" / GAME
@@ -134,7 +134,7 @@ class NativeSourceReceiptTest(unittest.TestCase):
         (records / "Stages").mkdir(parents=True)
         (records / "Legacies").mkdir()
         data = {"Primary.sav.gz": b"synthetic save, never native evidence", "Cache.db": b"stopped cache",
-                "Primary.json": json.dumps(dict(ID=GAME, SaveVersion=408, GameVersion="2.0.211.51",
+                "Primary.json": json.dumps(dict(ID=GAME, SaveVersion=identity[0], GameVersion=identity[1],
                                                  ModsEnabled=["r_ThousandAndFirst"])).encode()}
         for name, raw in data.items():
             (save / name).write_bytes(raw)
@@ -165,6 +165,18 @@ class NativeSourceReceiptTest(unittest.TestCase):
                 frozen["files"] = [row for row in frozen["files"] if not row["path"].endswith(".a.seal")]
                 with self.assertRaisesRegex(ValueError, "stage"):
                     capture(root, config, frozen)
+
+    def test_replaced_engine_or_save_format_refuses(self):
+        # The 2026-09-25 Steam update replaced core 2.0.211.51 and its save format 408.
+        for mode in ("source-donor", "stage-source"):
+            for identity in ((408, "2.0.211.56"), (409, "2.0.211.51")):
+                with self.subTest(mode=mode, identity=identity), \
+                        tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    config, frozen = self.fixture(root, mode, identity)
+                    capture = witnesses.capture_donor if mode == "source-donor" else witnesses.capture_stage
+                    with self.assertRaisesRegex(ValueError, "foreign engine"):
+                        capture(root, config, frozen)
 
     def test_missing_completion_refusal_and_foreign_rows_fail(self):
         for raw in (journal("source-donor").replace(b"\tOK\t", b"\tREFUSED\t", 1),

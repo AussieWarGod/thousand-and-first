@@ -872,6 +872,8 @@
 	<Compile Include="KingdomCharterMenuRulesTests.cs" />
 	<Compile Include="KingdomDesignationReleaseSourceTests.cs" />
 	<Compile Include="KingdomPropertyRulesTests.cs" />
+	<Compile Include="KingdomQudDecompiledSource.cs" />
+	<Compile Include="KingdomQudDecompiledSourceTests.cs" />
 	<Compile Include="KingdomFounderHistoryRulesTests.cs" />
 	<Compile Include="KingdomNamedCookRulesTests.cs" />
 	<Compile Include="KingdomStasisVaultRulesTests.cs" />
