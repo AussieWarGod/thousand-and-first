@@ -22,7 +22,8 @@ records current acceptance.
   accepts. Saves from this development build also carry City schema 5, which 0.3.1-0.3.7
   refuse, so they do not load on those releases; the unfounded-save downgrade applies only to a
   hotfix built from main. Source pins prove the frame, cold load, byte-identical re-save and
-  first founding; the native unfounded save and cold-load
+  first founding, and that every durable record a fresh, unfounded game holds is written and
+  read back; the native unfounded save and cold-load
   personas are owed, and the Roleplay checkpoint and starting-pet Quickstart routes are not
   driven natively (#274, #276).
 

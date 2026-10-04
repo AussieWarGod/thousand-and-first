@@ -43,6 +43,27 @@ ledger's Version, payload, ActiveIncidentId, either count or legacy-value check 
 which both arms apply, ties each to a check that remains). The eleventh survivor drops the
 `aggregate-cap` reason, which no pin reaches.
 
+`KingdomFreshUnfoundedSaveTests` (2 cases, both suites), ported from hotfix PR #278, checks every
+durable book a fresh, unfounded `KingdomSystem` holds, built exactly as its field initializer
+builds it: the envelope codecs (lifecycle, polity, trade, experience, carry) round-trip
+byte-identically and reload valid; the named-field books hold only values the engine's
+named-field writer serializes itself, and their load normalization settles; and the empty
+settlement topologies pass their write gate (16 books in the main suite, 11 in the portable
+kernel). Dev's city book is the one book whose shape differs from the hotfix base (schema 5 adds
+the residence column), so here its fields are also walked behind its load guard, and its written
+fields reload through the production load path (residence and subsidence migration, then
+validated normalization) to the identical field image. A source census pins the 24
+`KingdomSystem` fields that reach mod serialization code, with their initializers, and each
+book's writer body; the 204 serialized fields it parses match the compiled assembly. No book
+fails on this head. With only the writer change reverted on a scratch copy, the pin fails on the
+lifecycle book alone, with the #272 message, and the other 15 books pass (10 in the portable
+kernel). With only the polity ledger's `FutureCauseFloorTick` initializer reverted, it fails on
+the polity ledger alone with "unobserved presentation option is noncanonical", the second defect
+the hotfix's first native unfounded save hit; dev has carried that initializer since PR #250.
+Mutations that break the city book's residence column, schema version, writer body, field types
+or load path, or the census, each turn it red; four of them (a non-native and a nested-codec city
+field, two residence-load mutants) stayed green before the city adaptation.
+
 Native acceptance on this head is owed, not claimed: `unfounded-save-native-check` (a real engine
 save of an unfounded world with the SaveGameError witness armed; a run on a writer without the
 fix must refuse and is retained as detection evidence), `unfounded-reload` (unfounded save,
