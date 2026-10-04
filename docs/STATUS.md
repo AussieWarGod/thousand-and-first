@@ -1,5 +1,54 @@
 # Current implementation and release evidence
 
+## Polity dispatch window drift fix (#244, #257): source change; native acceptance pending
+
+`KingdomPolityDispatchRules.TryOpen` froze one endpoint digest over every owned settlement's
+facts at the first reconciliation of each 7-day dispatch window, then refused every later
+same-window reconciliation whose facts differed. Ordinary play rewrites those facts daily: the
+read and work ticks inside the guard and patrol observations, free storage, deeds, growth, and the
+seat during travel between owned cities. Days 2-7 of every window therefore logged `polity: daily
+reconciliation refused (open polity topology differs from its frozen facts)` and skipped due work
+and loaded-endpoint reconciliation. A save cut on those days carried the mismatch into the
+active-load and zone reconciliations (#244). A population-0 camp refused from its second daily
+pass once its rite ground existed (#257). The refusal changed no saved state.
+
+The frozen digest now authenticates only the window's still-open intents. A same-window
+reconciliation with drifted facts succeeds with no new work and no state write. Each open intent
+is re-proved at its frozen slot from its own settlement's live facts; one that cannot be
+re-proved is withdrawn, its slot completed and the withdrawal logged as `polity: window N
+<Purpose> intent for <id> withdrawn: <reason>`. Rollover drops and paused-cause suppressions are
+logged the same way. The scheduler logs drift once per window per process: `polity: dispatch
+window N continues with endpoint facts changed since it opened; no new dispatch until window N+1`.
+Foreign-realm, clock-regression, forged-state, revision-exhaustion, compare-and-swap and
+equal-digest refusals are unchanged. No serialized field, version or digest domain changed; the
+only new member is a private non-serialized drift note, so old saves need no migration.
+Loaded-endpoint reconciliation now runs on every successful daily, zone and load reconciliation
+instead of about once a week.
+
+Source evidence: 21 engine-free window-drift cases run in both suites, and two source pins run in
+the main suite. Against the pre-fix rules, everything except the two control cases fails (21 of 23
+main, 19 of 21 portable); with the fix all pass. The scheduler, the drift note and the
+`KingdomSystem` field are engine-bound, so only source pins and the engine compile gate cover them.
+
+A positive native witness is implemented but has not run. The read-only `polity-window-check`
+harness verb journals the realm's dispatch receipt after each daily pass as one `polity-dispatch
+window=N revision=R count=C mask=M intents=I` row. The `polity-window-native-check` persona
+founds a camp and takes eleven daily witnesses, enough for every start phase of the 8400-tick
+window. `CHECK=polity-window` requires constant receipts inside a window, a committed advance at
+the boundary, and one window read three times in a row before a newer one opens. Its `LOG_FORBID`
+refuses the three refusal prefixes and any withdrawal, and the new `LOG_REQUIRE` key requires the
+drift line. The turn-clean personas now forbid the three refusal prefixes.
+
+Native acceptance is pending on the merged head: `polity-window-native-check`; the turn-clean set
+(`water-maintenance-native-check`, `paid-housing-native-check` warm and cold, `camp-heart-chain`,
+`first-guest-native-check`, `guest-save-lifecycle-native-check`,
+`quickstart-housing-recovery-save`, `teardown-native-check`, `beta-economic-present`,
+`beta-economic-away` and the four `home-map` personas), each with no reconciliation refusal, the
+drift line where facts drift and no withdrawal; and a cold load of a preserved copy of the
+archived #244 save, which must not refuse, must log one drift line and must open the next window
+normally. Untested natively: scheduled-cohort manifestation at a non-seat city after a later-day
+reconcile, and the multi-city seat-exchange and mid-window founding leg, which follows PR #268.
+
 ## Qud build 25520692 re-pin: compile and licensed gates pass
 
 Compile gate re-pinned to Caves of Qud build 25520692 after the 2026-09-25 Steam update. Steam's
