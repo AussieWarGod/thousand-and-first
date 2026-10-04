@@ -9,8 +9,10 @@
 # synthetic: it is commissioned and built by production.
 # LOG_FORBID lists lines production writes to Player.log through KingdomLog.Log on this
 # path: a funded begin refused or left waiting for its scaffold, an unstaged seal, and a
-# founding-heart recovery halt. The outstanding-funding and zoning waits reach only the
-# in-memory ledger, so the checks journal its tail when a ready-looking begin never starts.
+# founding-heart recovery halt. Begin's outstanding-funding and scaffold waits reach only the
+# in-memory ledger, so the second check scans it and refuses on either (journaling whether the
+# twelve-note ledger kept every note); its zoning gate is asked before the begin leg, and the
+# ledger tail is journaled when a ready-looking begin never starts.
 # The canvas is minted one unit short of the tent's bill plus the upgrade's, so the real passes
 # can begin nothing on the standing tent; the shortfall verb mints only the missing unit.
 # Legs count daily settlement passes (1200 ticks each). A freshly staked raising's first
