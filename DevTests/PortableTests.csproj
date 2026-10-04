@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="[4.6.1]" />
+    <PackageReference Include="NUnit" Version="[5.0.0]" />
   </ItemGroup>
 
   <ItemGroup>
@@ -781,6 +781,7 @@
 	<Compile Include="KingdomExternalOwnershipDigestTests.cs" />
 	<Compile Include="KingdomPropertyRulesTests.cs" />
 	<Compile Include="KingdomStandingRulesTests.cs" />
+	<Compile Include="KingdomQudDecompiledSource.cs" />
 	<Compile Include="KingdomFounderHistoryRulesTests.cs" />
 	<Compile Include="KingdomNamedCookRulesTests.cs" />
 	<Compile Include="KingdomStasisVaultRulesTests.cs" />

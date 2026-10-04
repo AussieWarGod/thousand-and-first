@@ -5,7 +5,7 @@
   "seed": 0,
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
   "runtimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_REQUESTED_TREE_NEVER_STRUCTURE_REVIEW_JSON",
-  "gameBuildId": "2.0.211.51",
+  "gameBuildId": "2.0.211.56",
   "logRef": "docs/release-evidence/longform-scenario.log",
   "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
   "continuity": {
