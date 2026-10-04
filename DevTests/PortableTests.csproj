@@ -485,6 +485,7 @@
     <Compile Include="..\Core\KingdomRules.Districts.cs" />
     <Compile Include="..\Core\KingdomRules.Scarcity.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
+    <Compile Include="..\Experience\KingdomGrowthEnvelopeRefusalRules.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />

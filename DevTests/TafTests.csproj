@@ -1481,6 +1481,7 @@
 	<Compile Include="..\Experience\KingdomLifecycleDigestRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleSlotRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
+	<Compile Include="..\Experience\KingdomGrowthEnvelopeRefusalRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceOpportunityRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceValidationRules.cs" />
