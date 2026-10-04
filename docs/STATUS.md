@@ -29,11 +29,11 @@ only new member is a private non-serialized drift note, so old saves need no mig
 Loaded-endpoint reconciliation now runs on every successful daily, zone and load reconciliation
 instead of about once a week.
 
-Source evidence: 25 engine-free window-drift cases run in both suites over production-shaped
+Source evidence: 26 engine-free window-drift cases run in both suites over production-shaped
 endpoint facts, built by the engine-free `KingdomPolityEndpointFactRules` that `TryOffer` now
 calls, and they execute the scheduler's lines from the engine-free
 `KingdomPolityDispatchRules.DispatchNotes`; five source pins run in the main suite. Against the
-pre-fix rules, everything except the two control cases fails (28 of 30 main, 23 of 25 portable);
+pre-fix rules, everything except the two control cases fails (29 of 31 main, 24 of 26 portable);
 with the fix all pass. The scheduler's wiring, the drift-note dedupe and the `KingdomSystem` field
 are engine-bound, so only source pins and the engine compile gate cover them.
 
