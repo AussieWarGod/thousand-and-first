@@ -96,6 +96,13 @@ namespace ThousandAndFirst.Harness
 					&& ready.BuildTicks == QuoteTicks
 					&& ready.StageNeeded == GrowthStage.Camp,
 					"the ready quote is not the frozen 2 drams / 1 hand / 900 ticks / Camp");
+				// Begin's next read-only gate, asked now rather than after the 2400-turn leg: the
+				// assessment's craft gate admits ground-only zoning verdicts that Begin refuses
+				// (Growth/KingdomUpgrade.14.Begin.cs), and that refusal reaches only the ledger.
+				string zoning;
+				Require(KingdomZoning.Permits(System, Zone.ZoneID, ready.Successor, out zoning),
+					"Begin's zoning gate refuses the ready successor: "
+						+ KingdomScenarioRules.Bounded(zoning));
 				Evidence.Append("\nshort verdict=NotEnoughMaterial")
 					.Append("; supplied-brush=").Append(supplied)
 					.Append("; reason=").Append(KingdomScenarioRules.Bounded(expected))

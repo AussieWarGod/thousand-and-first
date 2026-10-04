@@ -63,8 +63,9 @@ namespace ThousandAndFirst.Tests
 		/// The readiness observation asks production's assessment with the inputs the settlement
 		/// pass itself computes - free hands from the population less the assigned crew, and
 		/// competing work from every working improvement plus every built work whose receipt
-		/// still blocks - never an assumed empty queue, and keeps the verdict's reason and those
-		/// inputs. When the ready-looking begin never happens, the second check journals a fresh
+		/// still blocks - never an assumed empty queue, keeps the verdict's reason and those
+		/// inputs, and asks Begin's read-only zoning gate before the long leg rather than after
+		/// it. When the ready-looking begin never happens, the second check journals a fresh
 		/// verdict and reason, the inputs, the tent's announced verdict and the ledger tail
 		/// before it refuses: Begin's zoning and outstanding-funding outcomes reach only the
 		/// in-memory ledger, never Player.log.
@@ -90,6 +91,13 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Follows(shortfall, "Assess(tent, out readyContext);",
 				".Append(readyContext).Append(LedgerTail());", 120), Is.True,
 				"the ready inputs are journaled before the verdict is required");
+			// Begin's read-only zoning gate is asked before the long leg, not discovered after it.
+			Assert.That(shortfall, Does.Contain(
+				"KingdomZoning.Permits(System, Zone.ZoneID, ready.Successor, out zoning)"));
+			Assert.That(Read("Growth/KingdomUpgrade.14.Begin.cs"), Does.Contain(
+				"if (!KingdomZoning.Permits(System, Z.ZoneID, A.Successor,"));
+			Assert.That(Read("Growth/KingdomUpgradeRules.Assessment.cs"), Does.Contain(
+				"public static bool CraftGateAdmits(ZoningVerdict Verdict)"));
 			string phases = Read(Phases);
 			Assert.That(Follows(phases, "if (!bound) RecordUnbegun(tent);",
 				"\"the settlement pass bound no improvement receipt to the tent\"", 160), Is.True);
