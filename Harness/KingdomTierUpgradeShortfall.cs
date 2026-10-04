@@ -42,6 +42,19 @@ namespace ThousandAndFirst.Harness
 		/// a full ledger silently drops every later note.</summary>
 		internal const int LedgerTailNotes = 4;
 
+		/// <summary>Begin's ledger-only sentences for a funded begin that did not raise its
+		/// scaffold in its own pass (<c>Growth/KingdomUpgrade.14.Begin.cs</c>): an outstanding
+		/// claim it retries, and a scaffold it could not yet raise. Either can still end Working
+		/// with clean claims one pass later, so only the ledger tells it from a first-pass begin.
+		/// </summary>
+		internal static readonly string[] BeginWaitNotes = {
+			"The improvement receipt remains outstanding.",
+			"The paid improvement could not yet raise its scaffold." };
+
+		/// <summary>Notes the ledger keeps before it silently drops the rest
+		/// (<c>Core/KingdomLedger.cs</c>, <c>Note</c>).</summary>
+		internal const int LedgerNoteCap = 12;
+
 		private sealed partial class Frame
 		{
 			private void NamedMaterialRefusal()
@@ -166,6 +179,22 @@ namespace ThousandAndFirst.Harness
 				for (int i = Math.Max(0, notes.Count - LedgerTailNotes); i < notes.Count; i++)
 					text.Append("; ledger=").Append(KingdomScenarioRules.Bounded(notes[i]));
 				return text.ToString();
+			}
+
+			/// <summary>The first ledger note carrying one of <see cref="BeginWaitNotes"/>, or
+			/// null. Notes are only appended until a homecoming report is read, which the sealed
+			/// run never opens, so below <see cref="LedgerNoteCap"/> the scan saw every note; at
+			/// the cap a later note may have been dropped, and <paramref name="Complete"/> says so.
+			/// </summary>
+			private string BeginWaitNote(out bool Complete)
+			{
+				List<string> notes = System.Ledger?.Notes;
+				Complete = notes != null && notes.Count < LedgerNoteCap;
+				if (notes == null) return null;
+				foreach (string note in notes)
+					foreach (string wait in BeginWaitNotes)
+						if (note != null && note.Contains(wait)) return note;
+				return null;
 			}
 
 			/// <summary>Runs one read against the production local-operation survey, bound for

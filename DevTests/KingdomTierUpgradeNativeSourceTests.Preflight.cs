@@ -115,6 +115,42 @@ namespace ThousandAndFirst.Tests
 				"System.Ledger.Note(\"{{r|The improvement waits. \" + zoningFailure + \"}}\");"));
 		}
 
+		/// <summary>
+		/// A funded begin that waited - on an outstanding claim it retried, or on a scaffold it
+		/// could not yet raise - still binds its receipt and can end Working with clean claims one
+		/// pass later, and Begin writes both waits only to the in-memory ledger. So the second
+		/// check journals the bound receipt, refuses on either production sentence in the ledger,
+		/// and says whether its scan saw every note: the ledger keeps only its first twelve until
+		/// a homecoming report is read, which the sealed run never opens.
+		/// </summary>
+		[Test]
+		public void AFundedBeginThatWaitedIsRefusedFromTheLedger()
+		{
+			string begin = Read("Growth/KingdomUpgrade.14.Begin.cs");
+			string shortfall = Read(Shortfall);
+			foreach (string wait in new[] { "The improvement receipt remains outstanding.",
+				"The paid improvement could not yet raise its scaffold." })
+			{
+				Assert.That(begin, Does.Contain("System.Ledger.Note(\"{{r|" + wait), wait);
+				Assert.That(shortfall, Does.Contain("\"" + wait + "\""), wait);
+			}
+			Assert.That(shortfall, Does.Contain("internal const int LedgerNoteCap = 12;"));
+			Assert.That(Read("Core/KingdomLedger.cs"), Does.Contain(
+				"if (!string.IsNullOrEmpty(Line) && Notes.Count < 12)"));
+			Assert.That(shortfall, Does.Contain(
+				"Complete = notes != null && notes.Count < LedgerNoteCap;"));
+			string phases = Read(Phases);
+			Assert.That(Follows(phases, "string waited = BeginWaitNote(out scanned);",
+				"RecordBound(job, scanned);", 80), Is.True, "the bound receipt is journaled");
+			Assert.That(Follows(phases, "RecordBound(job, scanned);", "Require(waited == null,", 80),
+				Is.True, "the wait refuses after the receipt is journaled");
+			Assert.That(Follows(phases, "Require(waited == null,", "CleanFirstPayment(", 400),
+				Is.True, "the wait refuses before the clean payment is read");
+			foreach (string field in new[] { "\"; created=\"", "\"; updated=\"",
+				"\"; revision=\"", "\"; wait-scan=\"" })
+				Assert.That(phases, Does.Contain(field), field);
+		}
+
 		/// <summary>When no completed tent stands after leg one, the first check journals the
 		/// commission receipt's phase, due tick and recorded failure, the works' stage and the
 		/// crew inputs before it refuses (docs/DEVELOPMENT.md: inspect the recorded construction

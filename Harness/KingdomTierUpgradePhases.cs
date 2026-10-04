@@ -93,6 +93,11 @@ namespace ThousandAndFirst.Harness
 					&& job.TargetKey == ToKey && job.SubjectId == PredecessorId
 					&& KingdomConstruction.Owns(System, Zone, job),
 					"the improvement job identity differs from the paid tier climb");
+				bool scanned;
+				string waited = BeginWaitNote(out scanned);
+				RecordBound(job, scanned);
+				Require(waited == null, "the funded begin waited before its scaffold stood: "
+					+ KingdomScenarioRules.Bounded(waited));
 				KingdomMaterialTally bill = new KingdomMaterialTally();
 				bill.Add(KingdomMaterial.Brush, QuoteBrush);
 				Require(KingdomQuickstartBuildClaims.CleanFirstPayment(job.Claims, QuoteDrams,
@@ -159,6 +164,31 @@ namespace ThousandAndFirst.Harness
 				Evidence.Append("\nunbegun verdict=").Append(fresh.Verdict)
 					.Append("; reason=").Append(KingdomScenarioRules.Bounded(fresh.Reason))
 					.Append("; ").Append(context).Append(LedgerTail());
+			}
+
+			/// <summary>The bound receipt as production left it, journaled before its payment and
+			/// phase are required: phase, recorded failure, measured claims, publication ticks and
+			/// revision, whether the scan for Begin's wait sentences saw every ledger note, and the
+			/// ledger tail. A first-pass begin makes every funding and projection publication in
+			/// the tick the job was created (<c>Growth/KingdomUpgrade.14.Begin.cs</c>).
+			/// </summary>
+			private void RecordBound(KingdomConstructionJob Job, bool Scanned)
+			{
+				KingdomConstructionClaims claims = Job.Claims;
+				Evidence.Append("\nbound job=").Append(Job.Id)
+					.Append("; phase=").Append(Job.Phase)
+					.Append("; physical=").Append(Job.PhysicalPhase)
+					.Append("; failure=").Append(KingdomScenarioRules.Bounded(Job.Failure))
+					.Append("; created=").Append(Job.CreatedTick)
+					.Append("; updated=").Append(Job.UpdatedTick)
+					.Append("; revision=").Append(Job.Revision)
+					.Append("; water=").Append(claims == null ? "absent"
+						: claims.WaterSpent + "/" + claims.WaterRequested + " outstanding "
+							+ claims.WaterOutstanding)
+					.Append("; material-outstanding=").Append(claims == null ? "absent"
+						: KingdomScenarioRules.Bounded(claims.MaterialOutstanding))
+					.Append("; wait-scan=").Append(Scanned ? "every-note" : "ledger-at-cap")
+					.Append(LedgerTail());
 			}
 
 			/// <summary>Final check, after leg three: the successor stands, its predecessor is
