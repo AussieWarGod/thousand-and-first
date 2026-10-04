@@ -26,7 +26,10 @@ namespace ThousandAndFirst.Tests
 		private const string ChecksSource = "Harness/KingdomSecondCityNativeChecks.cs";
 		private const string ProviderSource = "Harness/KingdomSecondCityNativeProvider.cs";
 		private const string CasesSource = "Harness/KingdomSecondCityNativeCases.cs";
+		private const string RulesSource = "Harness/KingdomSecondCitySiteRules.cs";
+		private const string ScriptSource = "Harness/KingdomSecondCityScript.cs";
 		private const string PersonaSource = "Tools/personas/second-city-native-check.persona";
+		private const string MatrixSource = "Tools/coverage/matrix.json";
 
 		/// <summary>The site's place relative to city one, as every summary must state it.</summary>
 		private const string SitePlace =
@@ -111,8 +114,9 @@ namespace ThousandAndFirst.Tests
 			Regex apart = new Regex(@"\b(non-?adjacent|distant)\s+((surface|world)\s+)?parasangs?\b",
 				RegexOptions.IgnoreCase);
 			foreach (string path in new[] { PersonaSource, ProviderSource, ChecksSource, CasesSource,
-				SiteSource })
+				SiteSource, RulesSource, ScriptSource })
 				Assert.That(apart.Match(Prose(path)).Value, Is.Empty, path);
+			Assert.That(apart.Match(RowTwelve()).Value, Is.Empty, MatrixSource);
 			// The run's headline, the persona header and both harness summaries say where it is.
 			Assert.That(Prose(PersonaSource), Does.Contain("DESCRIPTION=a realm founds a second city "
 				+ "on a non-adjacent surface zone three zones from the first city, refuses"));
@@ -257,6 +261,17 @@ namespace ThousandAndFirst.Tests
 		{
 			string text = Regex.Replace(TestMain.ReadRepositoryText(Path), @"(?m)^[ \t]*(///|//|#)", "");
 			return Regex.Replace(text, @"\s+", " ");
+		}
+
+		/// <summary>Row 12 of the coverage matrix, from its id to its evidence field.</summary>
+		private static string RowTwelve()
+		{
+			string matrix = TestMain.ReadRepositoryText(MatrixSource);
+			int start = matrix.IndexOf("\"id\": 12,");
+			Assert.That(start, Is.GreaterThan(0), "row 12 is missing from the coverage matrix");
+			int end = matrix.IndexOf("\"evidence\":", start);
+			Assert.That(end, Is.GreaterThan(start), "row 12 has no evidence field");
+			return matrix.Substring(start, end - start);
 		}
 	}
 }
