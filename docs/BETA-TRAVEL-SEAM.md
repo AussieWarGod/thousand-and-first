@@ -18,6 +18,10 @@ zone eviction, forced loading, or direct turn-clock write substitutes for those 
 the pair does not claim equal total elapsed time. Use
 `python3 Tools/compare-travel-personas.py PRESENT-JOURNAL AWAY-JOURNAL` to compare matching
 seed/home witnesses. This checks journal structure, not provenance of arbitrary supplied files.
+The engine completes an advance on the next player action opportunity, so each leg's 1200-turn
+wait may be observed at 1200 or 1201 turns. `beta-return` and the witness accept exactly that
+band and refuse with both the accepted and observed counts; the pair reports each leg's wait
+instead of requiring the two legs to match.
 The normal runner still owns strict log/MODERROR checks; no log exemptions are added.
 
 The runtime observes shared reification spend (24 thirds/four heavy per turn), physical remaining
