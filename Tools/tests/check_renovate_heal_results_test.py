@@ -190,7 +190,8 @@ class RenovateHealResultsTest(unittest.TestCase):
                  ([line.replace(JOB, "f" * 32) for line in self.LOAD_LOG], "exactly one readmission"),
                  ([line.replace("defect=A", "defect=B") for line in self.LOAD_LOG], "another defect"),
                  (self.LOAD_LOG[:4], "did not complete"),
-                 (self.LOAD_LOG + [report("daily stage")], "strict Player.log"),
+                 (self.LOAD_LOG + [report("daily stage")], "still refused"),
+                 (self.LOAD_LOG + ["[TAF] seal: settlement pass was not staged (" + STALL + ")"], "still refused"),
                  ([self.LOAD_LOG[0], "MODERROR [The Thousand and First] - ThousandAndFirst: boom"]
                   + self.LOAD_LOG[1:], "before the heal"),
                  ([self.LOAD_LOG[0], report("loaded stage reconciliation", "a different reason")]

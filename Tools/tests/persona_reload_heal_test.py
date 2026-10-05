@@ -39,10 +39,12 @@ class Fake:
                       command="renovate-heal 8.22@40,12", defect="A")
         if phase == "save":
             result["saveHashes"] = {"Primary.sav.gz": "stuck", "Primary.json": "info", "Cache.db": "cache"}
+            result["stallSealReason"] = "stall reading"
         else:
             result.update(importedSaveHashes={"Primary.sav.gz": "stuck", "Primary.json": "info"},
                           secondSaveHashes={"Primary.sav.gz": "healed", "Primary.json": "healed-info"},
-                          backupSaveHash="stuck", readmittedDefect="A", healedAfterLoad=True, crossBuild=True)
+                          backupSaveHash="stuck", readmittedDefect="A", healedAfterLoad=True, crossBuild=True,
+                          preHealSealReasons=["stall reading"])
             if self.change:
                 self.change(result)
         return result
@@ -77,7 +79,8 @@ class HealOrchestrationTests(unittest.TestCase):
                     lambda r: r["importedSaveHashes"].update({"Primary.sav.gz": "other"}),
                     lambda r: r.update(backupSaveHash="other"),
                     lambda r: r["secondSaveHashes"].update({"Primary.sav.gz": "stuck"}),
-                    lambda r: r.update(healedAfterLoad=False), lambda r: r.pop("crossBuild")]
+                    lambda r: r.update(healedAfterLoad=False), lambda r: r.pop("crossBuild"),
+                    lambda r: r.update(preHealSealReasons=["stall reading", "another reading"])]
         for change in changes:
             fake = Fake(change=change)
             with self.assertRaises((ValueError, KeyError)): heal.execute_renovate_heal(fake, "8.22@40,12")

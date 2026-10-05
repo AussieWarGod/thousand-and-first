@@ -111,6 +111,9 @@ def execute_renovate_heal(backend, start: str) -> dict:
         require(second and second != primary, "the healed world wrote no second real save")
         require(loaded.get("healedAfterLoad") is True and loaded.get("crossBuild") is True,
                 "session two did not heal the stuck save on the fixed build")
+        reason = saved.get("stallSealReason")
+        require(reason and set(loaded.get("preHealSealReasons", [])) <= {reason},
+                "session two's pre-heal seal reports name another reading than session one's stall")
 
     return cycle(backend, (start,), verify, "developer-renovate-heal-cold-reload",
                  dict(healedAfterLoad=True, secondRealSave=True, crossBuild=True))

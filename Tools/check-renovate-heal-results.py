@@ -133,6 +133,8 @@ def load_log(raw: bytes, job: str, defect: str) -> tuple[str, list[str]]:
     tail = lines[found[0]:]
     require(any("[TAF] improvement handover: " in line for line in tail[1:]),
             "the readmitted handover did not complete")
+    require(not any("seal: settlement pass was not staged" in line or "failed closed" in line
+                    for line in tail), "the seal still refused after the heal")
     reports, rest = stall_reports(lines[:found[0]], ("loaded stage reconciliation", "daily stage"))
     require(not any(flagged(line) for line in rest),
             "session two logged a diagnostic before the heal other than the loaded stall's own report")
