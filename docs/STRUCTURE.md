@@ -2,8 +2,8 @@
 
 ## Absent-owner roof-loss checkpoint
 
-3126 staged production C# files; 442,062 physical lines; 1459 files with direct `XRL` imports;
-zero at or above 300 lines. Inventory SHA-256: `7a51c007ec0c53bea707c329540fcc89fd417834e34841d6a28a753e84472675`.
+3132 staged production C# files; 442,576 physical lines; 1461 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `f85d926223710f576b0eba3aa5eef5d98322a1f058da786a4ec566a8f024754d`.
 [Automated delta review](STRUCTURE_REVIEW_HOME_LOSS.md) covers canonical home ownership,
 legacy claim preservation, guarded roof publication and observed home loss. Native replay
 remains pending; architectural and functional Beta requirements remain open in #229/#251.

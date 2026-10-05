@@ -1,6 +1,6 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-Current development census: 3126 production C# files / 3,160 cold-install files.
+Current development census: 3132 production C# files / 3,166 cold-install files.
 Coherent recruitment is under native validation; earlier source/evidence below remains historical.
 
 ## Current development census notice
