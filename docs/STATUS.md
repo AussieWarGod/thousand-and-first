@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Polity dispatch window drift fix (#244, #257): source change; native acceptance pending
+## Polity dispatch window drift fix (#244, #257): targeted native runs pass
 
 `KingdomPolityDispatchRules.TryOpen` froze one endpoint digest over every owned settlement's
 facts at the first reconciliation of each 7-day dispatch window, then refused every later
@@ -37,25 +37,66 @@ pre-fix rules, everything except the two control cases fails (29 of 31 main, 24 
 with the fix all pass. The scheduler's wiring, the drift-note dedupe and the `KingdomSystem` field
 are engine-bound, so only source pins and the engine compile gate cover them.
 
-A positive native witness is implemented but has not run. The read-only `polity-window-check`
-harness verb journals the realm's dispatch receipt after each daily pass as one `polity-dispatch
-window=N revision=R count=C mask=M intents=I` row. The `polity-window-native-check` persona
-founds a camp and takes eleven daily witnesses, enough for every start phase of the 8400-tick
-window. `CHECK=polity-window` requires constant receipts inside a window, a committed advance at
-the boundary, and one window read three times in a row before a newer one opens. Its `LOG_FORBID`
-refuses the three refusal prefixes and any withdrawal, and the new `LOG_REQUIRE` key requires the
-heart's first rung (the rite-ground work row whose readings drift) and the drift line. The
-turn-clean personas now forbid the three refusal prefixes.
+Native witness: the read-only `polity-window-check` harness verb journals the realm's dispatch
+receipt after each daily pass as one `polity-dispatch window=N revision=R count=C mask=M
+intents=I` row. The `polity-window-native-check` persona founds a camp and takes eleven daily
+witnesses, enough for every start phase of the 8400-tick window. `CHECK=polity-window` requires
+constant receipts inside a window, a committed advance at the boundary, and one window read three
+times in a row before a newer one opens. Its `LOG_FORBID` refuses the three refusal prefixes and
+any withdrawal, and the new `LOG_REQUIRE` key requires the heart's first rung (the rite-ground
+work row whose readings drift) and the drift line. The turn-clean personas now forbid the three
+refusal prefixes. The #268 second-city pin that asserted the old same-window refusal now asserts
+the drift contract: a second city joining inside an open window leaves its one-city facts frozen
+until the next window.
 
-Native acceptance is pending on the merged head: `polity-window-native-check`; the turn-clean set
-(`water-maintenance-native-check`, `paid-housing-native-check` warm and cold, `camp-heart-chain`,
-`first-guest-native-check`, `guest-save-lifecycle-native-check`,
-`quickstart-housing-recovery-save`, `teardown-native-check`, `beta-economic-present`,
-`beta-economic-away` and the four `home-map` personas), each with no reconciliation refusal, the
-drift line where facts drift and no withdrawal; and a cold load of a preserved copy of the
-archived #244 save, which must not refuse, must log the drift line once for its window and must
-open the next window normally. Untested natively: scheduled-cohort manifestation at a non-seat city after a later-day
-reconcile, and the multi-city seat-exchange and mid-window founding leg, which follows PR #268.
+Native runs at the reviewed head `ab5e75c89d21b7f6a7e741cb7a012f387be74e5f` (core `2.0.211.56`;
+19 launches, each with a closed seal match, MODERROR 0 and owned shutdown) logged no
+`reconciliation refused` line on any surface and no `withdrawn:` line. They logged 31 drift
+lines, at most one per window per loaded game, and accepted all 118 later-in-window daily passes.
+Archives are relative to the evidence root, with SHA-256 prefixes:
+
+- `polity-window-native-check` passed: one receipt inside each window and committed advances from
+  window 30 to 31 to 32 (`polity-244/ab5e75c8/polity-window-native-check-1/result.json`,
+  `b737ee32`).
+- `water-maintenance-native-check` passed (#257): the population-0 camp's day-2 pass, the archived
+  refusal shape, was accepted with the drift line, and the next window opened normally
+  (`polity-244/ab5e75c8/water-maintenance-native-check-1/result.json`, `02c8d865`).
+- `paid-housing-native-check` passed warm with no refusal where the archived run logged 16
+  (`polity-244/ab5e75c8/paid-housing-native-check-2/result.json`, `5d698951`), and its cold load
+  reconciled without the archived active-load and zone refusals
+  (`polity-244/ab5e75c8/paid-housing-native-check-cold-1/result.json`, `0ca4898d`) (#244).
+- `first-guest-native-check`, `quickstart-housing-recovery-save`, `beta-economic-present` and
+  `home-map-absent-save-native-check`, which visits and returns to a claimed zone inside a drifted
+  window, also passed.
+
+The forward merge of dev `1de15ce5` changed compile inputs outside the polity code, so both
+targeted personas ran again on the merged head `ac7801a0b84395069d040f342f043d79fabba2ca` (core
+`2.0.211.56`; closed seals, MODERROR 0, strict logs clean, no refusal or withdrawal).
+`polity-window-native-check` read window 21 once, window 22 seven times and window 23 three times,
+each at one receipt, with drift lines for windows 22 and 23
+(`polity-244/ac7801a0/polity-window-native-check-1/result.json`, `79b2ff72`).
+`water-maintenance-native-check` raised the rite ground at its founding pass, accepted the day-2
+pass at population 0 with the drift line and opened the next window normally
+(`polity-244/ac7801a0/water-maintenance-native-check-1/result.json`, `ccba15d9`). Later commits
+change only DevTests and docs, not the runtime or harness these runs sealed.
+
+The other turn-clean personas logged no refusal or withdrawal but did not complete, for causes
+outside this fix: `camp-heart-chain` stops at its stale tent fixture (#282); wildlife killed
+founders in `guest-save-lifecycle-native-check`, `home-map-native-check` and, twice,
+`home-map-save-native-check` (#237); the guest-save retry stalled its first guest's arrival
+(#285); the home-map retry read one shelter as packed housing and `home-map-damage-native-check`
+stalled its starter fire (#237 family); `teardown-native-check` lost a crew body before its final
+check; and `beta-economic-away` was blocked by terrain on its away walk, so it crossed no
+later-in-window pass.
+
+The legacy cold load is partial. A preserved copy of the archived #244 save (`eda49f65`) loaded
+under the fix with no refusal and one drift line, for window 21
+(`polity-244/ab5e75c8/legacy-cold-load-eda49f65-1/result.json`, `664f8916`). Window 22's opening
+at tick 184800 was not observed, because that load route passes no turns; window openings after
+drift are shown by the warm runs above.
+
+Untested natively: scheduled-cohort manifestation at a non-seat city after a later-day reconcile,
+and the multi-city seat-exchange and mid-window founding leg, which is left to a later PR.
 
 Current census: 3126 staged C# files; 442,062 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3160 files.

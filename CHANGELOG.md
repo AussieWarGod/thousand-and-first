@@ -34,8 +34,9 @@ records current acceptance.
   `polity-window-check` harness verb journals `polity-dispatch window=... revision=... count=...
   mask=... intents=...` rows for the new `polity-window-native-check` persona
   (`CHECK=polity-window`); personas gain `LOG_REQUIRE` (literal substrings that must appear in
-  Player.log); the turn-clean personas now forbid the three polity refusal prefixes. Native
-  acceptance is pending.
+  Player.log); the turn-clean personas now forbid the three polity refusal prefixes. Native runs
+  log no refusal or withdrawal: the witness, the #257 camp and paid housing warm and cold pass,
+  and the legacy save's cold load is partial (docs/STATUS.md).
 
 - A game whose kingdom has not been founded can now be saved (#271, #272). Every save before
   the first city was founded failed with "growth envelope is not bounded and writable": the
