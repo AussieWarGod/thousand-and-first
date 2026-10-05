@@ -8,10 +8,10 @@ All notable changes to The Thousand and First. Historical entries retain their o
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
-## [0.3.8] — 2026-10-04 (Alpha)
+## [0.3.8] — 2026-10-05 (Alpha)
 
-Alpha hotfix candidate: a game whose kingdom has not been founded can now be saved. Private
-candidate; not yet uploaded or accepted. Public Alpha remains 0.3.7.
+Alpha hotfix: a game whose kingdom has not been founded can now be saved. The private candidate
+is subscribed and native-verified; public delivery is pending.
 
 - Save a game before its kingdom is founded (#271, #272). Since 0.3.0, every save made before
   the first city was founded failed with "growth envelope is not bounded and writable": the
