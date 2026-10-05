@@ -126,15 +126,19 @@ namespace ThousandAndFirst.Tests
 		public void AnyOtherQuarantineStaysUnderInspection(string Failure)
 		{
 			KingdomConstructionJob current = Stuck(Failure);
-			KingdomConstructionJob next = KingdomConstructionRules.Transition(current,
-				KingdomConstructionPhase.Outstanding, 412800L,
-				"readmitted after retired handover defect #283 (A): " + Failure);
-			ClassicAssert.IsFalse(KingdomConstructionRules.IsRetiredDefectReadmission(current, next));
-			ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(current, next));
-			string failure;
-			ClassicAssert.IsFalse(KingdomConstructionRules.TryReadmissionFailure(current,
-				KingdomRetiredHandoverDefect.FounderMarks, out failure));
-			ClassicAssert.IsNull(failure);
+			foreach (KingdomRetiredHandoverDefect defect in new[] {
+				KingdomRetiredHandoverDefect.FounderMarks, KingdomRetiredHandoverDefect.LandedScaffold })
+			{
+				KingdomConstructionJob next = KingdomConstructionRules.Transition(current,
+					KingdomConstructionPhase.Outstanding, 412800L, "readmitted after retired handover defect #283 ("
+					+ (defect == KingdomRetiredHandoverDefect.FounderMarks ? "A" : "B") + "): " + Failure);
+				ClassicAssert.IsFalse(KingdomConstructionRules.IsRetiredDefectReadmission(current, next));
+				ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(current, next));
+				string failure;
+				ClassicAssert.IsFalse(KingdomConstructionRules.TryReadmissionFailure(current, defect,
+					out failure), defect.ToString());
+				ClassicAssert.IsNull(failure);
+			}
 		}
 
 		[TestCase(KingdomConstructionPhase.Complete)]
