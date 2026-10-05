@@ -1,5 +1,53 @@
 # Current implementation and release evidence
 
+## Public 0.3.8 — published and finalized
+
+Public Alpha 0.3.8 is published, verified and finalized, superseding 0.3.7. Earlier candidate
+and pending-publication statements below retain their historical checkpoints; this section
+controls current delivery status. The broader Beta goal remains incomplete.
+
+[Run 37258356731](https://github.com/AussieWarGod/thousand-and-first/actions/runs/37258356731)
+passed all applicable hosted, licensed, submission, subscribed-verification and finalization
+jobs at immutable `v0.3.8`, source `414472d3dbea013337f21baf588d845049ccb784`, and concluded
+on run attempt 2. The hotfix (PR #278) and the private receipt binding with the public metadata
+(PR #288) reached main through normal protected PR merges with merge commits, and the Alpha
+candidate commit `725762afb7517b981ed1fa2109d3df5a41834a7a` is an ancestor of the tagged
+commit. The configured admin tag-creation path was used; no required check or branch
+protection was bypassed.
+
+Run attempt 1 passed its hosted jobs, but the Steam host job failed at its first WSL step, the
+fresh clone, because `wsl.exe` could not connect to the WSL service (connection timeout). The
+probe, gate, package, check and submit steps were skipped, so no Steam attempt existed and
+nothing reached Steam. Only that failed job was re-run, as attempt 2, after confirming no
+attempt existed. No submission was retried and no tag moved.
+
+All eleven licensed gates passed: 14,994 main and 5,886 portable cases, zero managed skips,
+the shipped IPart ABI (36 shipped classes, 4 custom compatibility contracts), the exact
+Hearthpyre 2.2.3 source and ABI check, four engine compile modes (3,104, 3,108, 3,410 and
+3,414 sources), 46 launcher cases and package/deployment/structural boundaries. Three
+foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. The Steam host
+reproduced the hosted package receipt exactly before the publisher check and submit. Public
+item `3794797472` (public attempt 0007) reports `SubscribedInstallationVerified` and
+`attemptFinalized=true`; all 3,141 package files match one subscribed installation.
+`freshTransferVerified=false` and `releaseReady=false` remain the delivery tool's one-client
+limits.
+
+- Public receipt SHA-256: `8d1ee210dd96214aa8be45b570d97884b9ccce494ec084b5e782a25da763f091`.
+- Plan SHA-256: `217f3afc96538d65f8aa2666bfa1c8bf6239e3cf03702f8bd16f7f92a1f3bb1a`.
+- Installed inventory SHA-256: `0b74445cfa1a9fbdca77ffa46cca18b4710e0c6b0ebc7c00f28a6e3189d9339a`.
+- Finalization SHA-256: `5625cf41480bec8cac5e8dfa26ff129da86cfab42c493391a4155adb2a0e2e2f`.
+- Delivery archive: `releases/0.3.8/public/result.json`, SHA-256 `16c91e14fb119a72d9f7c177851b7d52e796382a1566b17f1d3b9686848a52e9`.
+
+Production C#, XML, harness and TESTING.md remain byte-identical to the subscribed private
+candidate; only the permitted publication metadata differs in the package (README.md,
+CHANGELOG.md and workshop.json, three of its 3,141 files). The native evidence below remains
+the original private-candidate runs, not new public gameplay runs. It covers the unfounded
+save, cold reload and founding after reload, and founded Quickstart, housing and guest saves
+(save legs only for housing and guest). Still open: the Roleplay checkpoint route and a
+starting-pet Quickstart (#274, #276), save-time writer robustness (#275), an in-game census of
+serialized fields (#281), a founded save of a paid camp (#282) and the paid tent-to-tentrow
+renovation stall (#283), as well as the broader Beta goal.
+
 ## Private 0.3.8 candidate verified; public promotion pending
 
 [Release run 37250905506](https://github.com/AussieWarGod/thousand-and-first/actions/runs/37250905506)

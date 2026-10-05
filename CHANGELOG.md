@@ -10,8 +10,8 @@ records current acceptance.
 
 ## [0.3.8] — 2026-10-05 (Alpha)
 
-Alpha hotfix: a game whose kingdom has not been founded can now be saved. The private candidate
-is subscribed and native-verified; public delivery is pending.
+Alpha hotfix: a game whose kingdom has not been founded can now be saved.
+Public 0.3.8 is published, verified and finalized on one subscribed client.
 
 - Save a game before its kingdom is founded (#271, #272). Since 0.3.0, every save made before
   the first city was founded failed with "growth envelope is not bounded and writable": the
