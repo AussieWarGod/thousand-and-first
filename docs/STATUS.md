@@ -1,9 +1,70 @@
 # Current implementation and release evidence
 
+## Private 0.3.8 candidate verified; public promotion pending
+
+[Release run 37250905506](https://github.com/AussieWarGod/thousand-and-first/actions/runs/37250905506)
+passed hosted checks, all eleven licensed gates, submission, subscribed verification and
+finalization at immutable `staging-v0.3.8`, source `14256e3522ddb88ecda67ad5f79648c1b6191d67`. That
+source is the merge commit of PR #278 into main; its tree equals the tested hotfix head `3ba1d377`.
+Full licensed suites passed 14,994 main/5,886 portable cases with zero managed skips; all four
+engine compile modes, the shipped IPart ABI, the exact Hearthpyre 2.2.3 source and ABI check and
+46 launcher cases passed. Three explicit foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture
+skips remain. PR #278 merged with its required checks green, the tag went through the admin-only
+tag ruleset, and no job in the run was retried or re-run.
+
+All 3,141 package files match one subscribed client of private item `3796495680`. The hosted
+runner reproduced the receipt before any Steam call, and it reproduces byte for byte again from
+that commit with `Tools/workshop-package.sh --test`. `freshTransferVerified=false` and
+`releaseReady=false` remain tool-level limits.
+
+- Private receipt SHA-256: `d92b30537a1723f796deec6b0a33ebd1b871444ae057a014b45c58e455d15273`.
+- Plan SHA-256: `11495bbad7aa5ad206bfde272baccceac625d3a87cd3e827c228239a40b254d8`.
+- Installed inventory SHA-256: `d3ff2e6d423d5b70c2cb12be80b0fe349bc3a366a52fdc923ad1ee2e0b2042fe`.
+- Finalization SHA-256: `c60cca6fab4c9a924e4e6aa293b569169a958e3f402b7b30fd26dff00d666826`.
+
+Native runs, all on Caves of Qud core 2.0.211.56 through `Tools/run-personas.sh`. Runs 7-10 used
+dev's #277 head and are not evidence for this candidate. S1 and S2 ran after subscription from a
+detached checkout of the candidate: its 3,141 runtime files and the 3,141 files of the subscribed
+install both match the private receipt, checked before and after the runs. As for 0.3.7, the
+launcher starts the game with Steam disabled on a sealed profile that adds the developer harness,
+which the Workshop package excludes. The game therefore loads that byte-bound copy, not the
+Steam-installed folder; each launch matched the receipt on 3,140 of 3,141 runtime files, the
+exception being the developer manifest that enables the harness.
+
+| Run | Head | Persona | Verdict |
+| --- | --- | --- | --- |
+| 1 | `24dd8dcf`, harness without the fix | `unfounded-save-native-check` | FAIL, as required: refused with the #272 text |
+| 2 | `08d52956`, earlier hotfix head | `unfounded-save-native-check` | FAIL: polity ledger `Invalid polity authority: unobserved presentation option is noncanonical`, fixed by `a229c28c` |
+| 3 | `3ba1d377` | `unfounded-save-native-check` | PASS: real save, dormant lifecycle frame 5, no save error |
+| 4 | `3ba1d377` | `unfounded-reload` | PASS: unfounded save, cold load, production founding, second real save |
+| 5 | `3ba1d377` | `quickstart-reload` | PASS: founded Quickstart save bytes unchanged across a cold load |
+| 6 | `3ba1d377` | `camp-heart-save` | FAIL: stale paid-tent fixture refuses before any save is attempted (#282); not a save defect |
+| 11 | `3ba1d377` | `quickstart-housing-recovery-save` | PASS: founded real save after 17,202 turns |
+| 12 | `3ba1d377` | `guest-save-lifecycle-native-check` | PASS: founded real save after 16,802 turns with an enrolled guest |
+| S1 | `14256e35`, subscribed candidate | `unfounded-save-native-check` | PASS: real save, dormant lifecycle frame 5, no save error |
+| S2 | `14256e35`, subscribed candidate | `unfounded-reload` | PASS: unfounded save, cold load, production founding, second real save |
+
+No passing run logged MODERROR, a `SaveGame:` exception, `exception serializing object`, or a
+growth-envelope or polity-authority line; MODWARN carried only the Pets of Harvest Dawn DLC lines,
+and every launch matched its profile seal exactly. docs/RELEASING.md section 4's required pair
+therefore passes on the candidate's production and harness bytes. Not covered: the housing and
+guest cold-load sessions for runs 11 and 12 (save legs only), a founded save of a paid camp
+(#282), the Roleplay checkpoint route and a starting-pet Quickstart (#274, #276), and an in-game
+census of serialized fields (#281). Native archive: `release-0.3.8/14256e35/` (S1 `SHA256SUMS`
+SHA-256 `f1ed4b64f9c764e2a07ecb4de6b15ce91f1b276b299451becbaed5ab8db5c1a1`, S2
+`3f3f318ee5249528d57292ac2976753df7a6d76f9e64c410209005d1cd85f625`, subscribed binding
+`4e1557cdd56cab1659babe875f72a91ba0a2905187c88b469ec1a11ab4bfa296`) and `hotfix-272/<head>/` for
+runs 1-6, 11 and 12; every directory verifies against its own `SHA256SUMS`.
+
+The private receipt is copied exactly into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. This docs-only
+binding commit becomes the Alpha candidate; TESTING.md remains frozen through public promotion.
+Public listing still serves 0.3.7; public 0.3.8 delivery is pending.
+
 ## 0.3.8 hotfix candidate: unfounded games can be saved (#271, #272)
 
-Private hotfix candidate built from main (public 0.3.7 plus this fix and the build re-pin); not
-yet uploaded or accepted. Public Alpha remains 0.3.7.
+Private hotfix candidate built from main (public 0.3.7 plus this fix and the build re-pin). It is
+uploaded to the private staging item, verified and finalized, as recorded above; public Alpha
+remains 0.3.7.
 
 Until the first city is founded, `KingdomSystem.LifecycleBook` holds the constructor-default,
 identity-unbound growth book, and the strict growth writer gate had no branch for it, so every
@@ -105,16 +166,17 @@ load. docs/RELEASING.md requires both verdicts for every release. Each persona e
 state its own world holds when it saves. An in-game reflection census of the serialized fields
 is follow-up #281.
 
-Native acceptance on this candidate is owed, not claimed: `unfounded-save-native-check` (a real
-engine save of an unfounded world with the SaveGameError witness armed; a run on the harness
-commit without the fix must refuse with the #272 text, and that failed run is retained as
-detection evidence), `unfounded-reload` (unfounded save, owned stop, fresh descendant cold load,
-production founding and a second real save, strictly checked by
-`Tools/check-unfounded-results.py`), and the founded regressions `quickstart-reload` and
-`camp-heart-save`. The reload host and checker are covered by fake-effect and synthetic-fixture
-tests only. Native runs so far: the detector on the harness commit refused with the #272 text, as
-required, and the first run on the earlier head 08d52956 refused on the polity ledger, which the
-change above fixes; both failed runs are retained. All four personas are owed on the final head.
+Native checks on this candidate: `unfounded-save-native-check` (a real engine save of an
+unfounded world with the SaveGameError witness armed) and `unfounded-reload` (unfounded save,
+owned stop, fresh descendant cold load, production founding and a second real save, strictly
+checked by `Tools/check-unfounded-results.py`) pass on the final head and again on the subscribed
+candidate, and the founded regression `quickstart-reload` passes on the final head. The detector
+run on the harness commit without the fix refused with the #272 text, as required, and the first
+run on the earlier head 08d52956 refused on the polity ledger, which the change above fixes; both
+failed runs are retained. `camp-heart-save` cannot reach its save on this head or on dev: its
+paid-tent fixture predates 0.3.7's tent bill and refuses before saving (#282), so two longer
+founded real-save personas stand in for it. The section above lists every run. The reload host
+and checker are covered by fake-effect and synthetic-fixture tests only.
 
 Disclosed gaps: the exact #271 route (the Roleplay engine checkpoint save on entering Joppa) and
 a Kingdom Quickstart stopped by a starting pet are not driven natively, because the harness can
