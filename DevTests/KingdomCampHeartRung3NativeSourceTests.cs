@@ -353,7 +353,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("TWICE IN A ROW"));
 			Assert.That(persona, Does.Contain("That is a reading of the source, not a result."));
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
-				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
+				+ "recovery requires inspection\",\"seal: settlement pass was not staged\",\"improvement readmitted:\"]"));
 			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
 			Assert.That(persona, Does.Contain("SET=camp,native-regression,test-only"));
 		}

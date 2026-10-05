@@ -265,7 +265,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"improvement refused cleanly:\","
 				+ "\"construction: improvement projection waits:\","
 				+ "\"seal: settlement pass was not staged\","
-				+ "\"construction: founding heart recovery requires inspection\"]"));
+				+ "\"construction: founding heart recovery requires inspection\","
+				+ "\"improvement readmitted:\"]"));
 			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain("synthetic-camp=true; synthetic-residents=true; "

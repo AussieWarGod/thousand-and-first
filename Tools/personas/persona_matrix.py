@@ -449,9 +449,11 @@ def parse_log_forbid(value: str, name: str) -> list[str]:
     LOG_EXPECT allows a known-benign line through the checker; this is its opposite and is not a
     weaker form of it. Each entry is a literal SUBSTRING, because the lines that matter carry a
     tick or an id the persona cannot know in advance, and one occurrence anywhere fails the run.
-    Bounded exactly like LOG_EXPECT so a persona cannot smuggle a regex or an essay in here.
+    Bounded like LOG_EXPECT in shape and size so a persona cannot smuggle a regex or an essay in
+    here, but with up to eight entries (eight of the longest fill the 8192-character total): a
+    forbidden substring can only fail a run, never excuse a line, so a longer list weakens nothing.
     """
-    return parse_log_substrings(value, name, "LOG_FORBID")
+    return parse_log_substrings(value, name, "LOG_FORBID", 8)
 
 
 def parse_log_require(value: str, name: str) -> list[str]:
@@ -466,7 +468,7 @@ def parse_log_require(value: str, name: str) -> list[str]:
     return parse_log_substrings(value, name, "LOG_REQUIRE")
 
 
-def parse_log_substrings(value: str, name: str, key: str) -> list[str]:
+def parse_log_substrings(value: str, name: str, key: str, most: int = 4) -> list[str]:
     """The shared bounded literal-substring list behind LOG_FORBID and LOG_REQUIRE."""
     if len(value) > 8192:
         fail("%s %s exceeds 8192 characters" % (name, key))
@@ -474,8 +476,8 @@ def parse_log_substrings(value: str, name: str, key: str) -> list[str]:
         lines = json.loads(value)
     except (ValueError, RecursionError):
         fail("%s %s must be a JSON array of literal substrings" % (name, key))
-    if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
-        fail("%s %s must contain 1..4 literal substrings" % (name, key))
+    if not isinstance(lines, list) or not 1 <= len(lines) <= most:
+        fail("%s %s must contain 1..%d literal substrings" % (name, key, most))
     if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
            or not line.isprintable() for line in lines):
         fail("%s %s lines must be 1..1024 printable characters" % (name, key))

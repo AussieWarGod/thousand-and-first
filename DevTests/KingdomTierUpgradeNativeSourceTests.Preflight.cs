@@ -182,6 +182,8 @@ namespace ThousandAndFirst.Tests
 				{ "seal: settlement pass was not staged", "Core/KingdomSystem.z21.SemanticPass.cs" },
 				{ "construction: founding heart recovery requires inspection",
 					"Growth/KingdomConstruction.Settlement.cs" },
+				// #283 design 8.1: the acceptance run settles without a readmission.
+				{ "improvement readmitted:", "Growth/KingdomUpgrade.27.RetiredDefectReadmission.cs" },
 			};
 			string line = Read(Persona).Split('\n').Single(
 				row => row.StartsWith("LOG_FORBID=", StringComparison.Ordinal)).Substring(11).Trim();

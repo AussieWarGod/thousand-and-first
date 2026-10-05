@@ -402,7 +402,7 @@ namespace ThousandAndFirst.Tests
 				+ "stagedigest:OK~founded=true,COMPLETE"));
 			// The day after the raise, and the two halts it exists to catch.
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
-				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
+				+ "recovery requires inspection\",\"seal: settlement pass was not staged\",\"improvement readmitted:\"]"));
 			Assert.That(persona, Does.Contain("ACCEPTANCE GATE FOR #162"));
 			Assert.That(persona, Does.Contain("cases 1, 3, 4, 5 and 6 remain owed"));
 			string checks = Read(Checks);

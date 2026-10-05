@@ -237,6 +237,15 @@ class QuickstartResultsTest(unittest.TestCase):
                 self.write(self.root / "Player.log", raw); self.refused()
         self.assertEqual(raw, (self.root / "Player.log").read_bytes())
 
+    def test_a_283_readmission_line_refuses_a_fresh_quickstart(self):
+        self.fixture("load")
+        self.assertEqual("PASS", check.verify(self.root, "load")["verdict"])
+        self.write(self.root / "Player.log", b"[TAF] loaded synthetic checker fixture only\n"
+                   b"[TAF] improvement readmitted: job=00000000000000000000000000000283 defect=B"
+                   b" design=tent->tentrow at 29,9\n")
+        with self.assertRaisesRegex(ValueError, "#283 readmission"):
+            check.verify(self.root, "load")
+
     def test_links_and_empty_evidence_refuse(self):
         self.fixture(); path = self.root / "Player.log"; raw = path.read_bytes(); path.unlink()
         target = Path(self.temp.name) / "foreign.log"; target.write_bytes(raw); path.symlink_to(target); self.refused()

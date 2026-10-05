@@ -349,8 +349,15 @@ def snapshot_identity(raw: bytes) -> tuple:
     return game_id, seed, selected, "yes" if advisor else "no"
 
 
+# #283 design 8.1: a fresh Quickstart on a build with the fix never readmits a quarantine, so
+# the line is forbidden here although the strict checker passes it (the stuck-save heal route,
+# Tools/check-renovate-heal-results.py, needs that line to pass).
+READMITTED = b"improvement readmitted:"
+
+
 def verify_log(raw: bytes) -> None:
     require(raw, "Player.log is empty")
+    require(READMITTED not in raw, "Player.log carries a #283 readmission on a fresh game")
     environment = os.environ.copy()
     environment["TAF_LOG_ALLOW"] = ""
     with tempfile.TemporaryDirectory(prefix="taf-quickstart-log.") as scratch:

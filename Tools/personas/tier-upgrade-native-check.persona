@@ -12,7 +12,9 @@
 # founding-heart recovery halt. Begin's outstanding-funding and scaffold waits reach only the
 # in-memory ledger, so the second check scans it and refuses on either (journaling whether the
 # twelve-note ledger kept every note); its zoning gate is asked before the begin leg, and the
-# ledger tail is journaled when a ready-looking begin never starts.
+# ledger tail is journaled when a ready-looking begin never starts. #283: it also forbids the
+# readmission line. On a fresh game on the fixed build any readmission readmits a quarantine
+# that build created, so the handover must settle without one (design 8.1).
 # The canvas is minted one unit short of the tent's bill plus the upgrade's, so the real passes
 # can begin nothing on the standing tent; the shortfall verb mints only the missing unit.
 # Legs count daily settlement passes (1200 ticks each). A freshly staked raising's first
@@ -32,6 +34,6 @@ START=8.22@40,12
 SCRIPT=stagedigest;tier-upgrade-setup;advance 3600;tier-upgrade-check;tier-upgrade-short;advance 2400;tier-upgrade-check;advance 3600;tier-upgrade-check;stagedigest
 VERBS=tier-upgrade-setup,tier-upgrade-check,tier-upgrade-short
 EXPECT=stagedigest:OK~founded=false,tier-upgrade-setup:OK~native-tier-upgrade phase=1,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=2,tier-upgrade-short:OK~native-tier-upgrade phase=3,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,tier-upgrade-after-wait:OK~native-tier-upgrade after-wait,tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
-LOG_FORBID=["improvement refused cleanly:","construction: improvement projection waits:","seal: settlement pass was not staged","construction: founding heart recovery requires inspection"]
+LOG_FORBID=["improvement refused cleanly:","construction: improvement projection waits:","seal: settlement pass was not staged","construction: founding heart recovery requires inspection","improvement readmitted:"]
 SET=tier-upgrade,native-regression,test-only
 TIMEOUT=3600
