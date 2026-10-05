@@ -51,19 +51,11 @@ namespace ThousandAndFirst
 			if (!GameObject.Validate(Predecessor) || !GameObject.Validate(Successor)
 				|| Successor.GetIntProperty(BuiltProperty) != 1
 				|| Successor.GetStringProperty(BuildKeyProperty) != SuccessorKey) return false;
-			if (Predecessor.GetIntProperty(KingdomAdopt.LarderProperty) == 1
-				&& (Successor.Inventory == null
-					|| Successor.GetIntProperty(KingdomAdopt.LarderProperty) != 1)) return false;
-			if (Predecessor.GetIntProperty(KingdomAdopt.StoresProperty) == 1
-				&& (Successor.GetPart<LiquidVolume>() == null
-					|| Successor.GetIntProperty(KingdomAdopt.StoresProperty) != 1)) return false;
-			if (Predecessor.GetIntProperty(KingdomSalvage.CertifiedProperty) == 1
-				&& Successor.GetIntProperty(KingdomSalvage.CertifiedProperty) != 1) return false;
-			string given = Predecessor.GetStringProperty(KingdomDesign.GivenNameProperty);
-			if (!string.IsNullOrEmpty(given)
-				&& Successor.GetStringProperty(KingdomDesign.GivenNameProperty) != given) return false;
-			if (Predecessor.GetIntProperty(AdoptedProperty) == 1
-				&& Successor.GetIntProperty(AdoptedProperty) != 1) return false;
+			// The scalar marks (larder, stores, certification, given name, adoption, yielding) are
+			// checked by the same table CarryMarks writes from; yielding stays one-directional.
+			if (!KingdomUpgradeRules.FounderMarksSettled(ReadFounderMarks(Predecessor),
+				ReadFounderMarks(Successor), Successor.Inventory != null,
+				Successor.GetPart<LiquidVolume>() != null)) return false;
 			if (KingdomPlots.TryReadRect(Predecessor, out _))
 			{
 				if (!KingdomPlots.TryReadRect(Successor, out _)) return false;
@@ -71,9 +63,7 @@ namespace ThousandAndFirst
 				if (!string.IsNullOrEmpty(plot)
 					&& Successor.GetStringProperty(KingdomPlots.PlotIdProperty) != plot) return false;
 			}
-			if (!KingdomWear.SameStableState(Predecessor, Successor)) return false;
-			return Predecessor.GetIntProperty(KingdomPlots.YieldingProperty) != 1
-				|| Successor.GetIntProperty(KingdomPlots.YieldingProperty) == 1;
+			return KingdomWear.SameStableState(Predecessor, Successor);
 		}
 
 		/// <summary>

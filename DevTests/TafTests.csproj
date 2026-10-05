@@ -1203,6 +1203,7 @@
 	<Compile Include="..\Growth\KingdomUpgradeRules.Assessment.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.Reasoning.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.Parsing.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.FounderMarks.cs" />
     <Compile Include="..\Growth\KingdomDesignRules.cs" />
     <Compile Include="..\Growth\KingdomPlotRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotDeclarations.cs" />
