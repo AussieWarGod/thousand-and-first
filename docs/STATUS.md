@@ -31,15 +31,21 @@ The fix is the design's hotfix half (A1-A3), plus A4 evidence:
   quarantine or layout fault, content custody), no prior readmission, and exactly one signature. A:
   the founder-marks text, the predecessor yields and the successor does not, every other mark and
   the wear settled, upgrade phase 5 and a complete successor layout. B: the endpoints text and a
-  non-live scaffold reference. Only then does it mark `r_TAF_ImprovementReadmitted` on the
-  predecessor, clear the improvement's own quarantine flags, move the job to Outstanding through
-  `KingdomConstruction.Readmit` and log `improvement readmitted: job=... defect=A|B ...`; HandOver
-  re-proves everything in the same call. `KingdomConstructionRules.IsRetiredDefectReadmission` is
-  the only exit `ValidPhaseUpdate` admits out of InspectionRequired besides cancellation.
+  non-live scaffold reference. Only builds before the fix wrote B's text (the fixed HandOver
+  publishes `KingdomConstructionRules.HandoverEndpointsUnproven` instead), and A's structure cannot
+  arise on this build (CarryMarks writes the yielding mark before the marks check and no code
+  removes it), so only their quarantines qualify. After that judgement, and only then, it marks
+  `r_TAF_ImprovementReadmitted` on the predecessor, clears the improvement's own quarantine flags,
+  moves the job to Outstanding through `KingdomConstruction.Readmit` and logs
+  `improvement readmitted: job=... defect=A|B ...`; HandOver re-proves everything in the same call.
+  `KingdomConstructionRules.IsRetiredDefectReadmission` is the only exit `ValidPhaseUpdate` admits
+  out of InspectionRequired besides cancellation.
 - A4 (ruled Q5): the tier-upgrade check journals `tier-upgrade-after-wait`, read fresh after the
   handover wait (job phase and first failure, intent flags, both yielding marks, readmission
   marker, successor layout state, one capture-only seal reading), and then requires the carried
-  yielding mark and a seal reading without a fault.
+  yielding mark and a seal reading without a fault. Its LOG_FORBID refuses
+  `improvement readmitted:` (design 8.1): the after-wait row cannot show a readmission once the
+  predecessor is gone and Complete clears the job failure.
 
 Not included, by ruling: the seal-side Pending witness and deferral (B1, B2; never before A1 and
 A2), the typed failure cause and handover-refusal log line (B3, Q7), an abandon-with-refund action
@@ -55,6 +61,22 @@ suite) fail 7 of 7 before and pass after, including the writer/reader parity pin
 survived until a same-projection route-change case was added. The
 engine-bound adapters, Poll wiring and harness meet a compiler only in the canonical gate.
 
+Review round 2 (of 35909706). The fixed HandOver had kept publishing signature B's text for every
+endpoint refusal, the new landed-scaffold proof included, so a transient refusal on this build (the
+scaffold id still live elsewhere, or past the global lookup bound) could be readmitted as #283 (B);
+it now publishes its own text. The tier-upgrade persona and the fixed-build regressions
+(`camp-heart-native-checks`, `camp-heart-rung3-native-check`, `camp-heart-chain`,
+`paid-housing-native-check`, `unfounded-save-native-check`) forbid the readmission line, and the
+Quickstart reload checker refuses it, because reload personas carry no LOG_FORBID; LOG_FORBID now
+takes up to eight entries, as a forbid can only fail a run. A reload persona refused before any
+effect exits 3 and fails alone instead of stopping the persona matrix, and the heal persona left
+the tier-upgrade set. On 35909706 with only the new tests applied, 2 of 10 retired-defect source
+pins and the three moved persona pins fail, and the 31 selected host tests report 13 failures
+(counting subtests) and 2 errors; on this head all pass. Eleven mutations (B's text written again, the new text given B's literal, a yielding
+removal or zero write, the forbid dropped, the cap back to four, exit 3 treated as an ownership
+failure or as a pass, exit 1 for a preflight refusal, evidence created before the preflight, the
+Quickstart forbid dropped) are each killed by a named case.
+
 Native stuck-save heal route: `renovate-heal-reload` (reload grammar `reload-descendant
 renovate-heal <start>`). Session one runs on this head with exactly the fifteen #283 production
 files restored from dev `ec762424` (`Tools/persona_reload_heal.py` lists them and proves that delta,
@@ -68,20 +90,24 @@ the verdict: session one's only diagnostics may be the seal's reports of the jou
 as the defect evidence; session two passes the unchanged strict Player.log checker from its
 readmission line on. Before that line it may carry only the seal's load-time report of the same
 stall, because the seal reconciles a loaded world before the first settlement pass can heal it; a
-player loading a stuck save sees that one report too. Host tests cover the grammar, orchestration,
-cross-build transport, source-tree proof and checker with synthetic fixtures; nothing has run
-natively.
+player loading a stuck save sees that one report too. Without `TAF_RELOAD_SOURCE_TREE`, or when
+its proof fails, the helper refuses before preparing or launching anything (exit 3); the persona
+matrix records that persona as failed and runs the rest. Host tests cover the grammar,
+orchestration, cross-build transport, source-tree proof and checker with synthetic fixtures;
+nothing has run natively.
 
 Native acceptance owed on the final head: `tier-upgrade-native-check` with
 `TAF_PERSONA_SEED=#922453088` (the 4ea54bb9 siting inside the heart's survey; expected: handover
 completes, the tent-row stands, the after-wait row shows yielding carried and a seal reading
 without a fault, MODERROR 0); `renovate-heal-reload` (session one expected to stall and retained as
 defect evidence, session two expected to pass); `quickstart-reload` and
-`unfounded-save-native-check` as regressions.
+`unfounded-save-native-check` as regressions, and `paid-housing-native-check`,
+`camp-heart-native-checks`, `camp-heart-rung3-native-check` and `camp-heart-chain` for the
+changed HandOver gate (design 8.4). Every one of them now refuses a readmission line.
 
-Current census: 3132 staged C# files; 442,576 physical lines; zero at or above 300 lines.
+Current census: 3132 staged C# files; 442,595 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1461 files, 0 over the line limit. Cold-install inventory: 3166 files.
-Inventory SHA-256: `f85d926223710f576b0eba3aa5eef5d98322a1f058da786a4ec566a8f024754d`.
+Inventory SHA-256: `407fe63b3c26099b225eaf6dc16c265f747dda3596be694068c88ab8442a3541`.
 Engine gate passes for 3132 sources, baseline and compatibility symbols, plus both harness modes.
 
 ## Polity dispatch window drift fix (#244, #257): targeted native runs pass

@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3132-file census is line-cap green: 442,576 physical lines; direct `XRL`
-imports occur in 1461 files, 0 of them over the line limit. Inventory SHA-256: `f85d926223710f576b0eba3aa5eef5d98322a1f058da786a4ec566a8f024754d`.
+Current 3132-file census is line-cap green: 442,595 physical lines; direct `XRL`
+imports occur in 1461 files, 0 of them over the line limit. Inventory SHA-256: `407fe63b3c26099b225eaf6dc16c265f747dda3596be694068c88ab8442a3541`.
 The cold-install inventory contains 3166 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -25,13 +25,17 @@ records current acceptance.
   settlement pass: only an improvement under inspection with one of the two retired causes and an
   otherwise intact handover qualifies, the old building records the readmission so it can never
   repeat, Player.log says `improvement readmitted: job=... defect=A|B ...`, and the handover then
-  re-proves everything; any other cause stays under inspection. Loading such a save still reports
-  the stuck seal once before that pass heals it. No saved field or format changed; one new object
-  property marks a readmission. The tier-upgrade persona now journals a fresh
-  `tier-upgrade-after-wait` row that names a stall's first cause, and the new
+  re-proves everything; any other cause stays under inspection. The fixed handover's endpoint
+  refusal has its own text, so no quarantine this build writes can match either retired cause.
+  Loading such a save still reports the stuck seal once before that pass heals it. No saved field
+  or format changed; one new object property marks a readmission. The tier-upgrade persona now
+  journals a fresh `tier-upgrade-after-wait` row that names a stall's first cause, and it and the
+  fixed-build regressions (heart rungs, paid housing, the unfounded save and the Quickstart reload
+  checker) forbid the readmission line; `LOG_FORBID` now takes up to eight entries. The new
   `renovate-heal-reload` persona saves a stuck renovation on a build without the fix and cold-loads
-  it on this one (`prepare-scenario-load.py --runtime`). Native acceptance is owed
-  (docs/STATUS.md).
+  it on this one (`prepare-scenario-load.py --runtime`); refused before any effect, as without
+  `TAF_RELOAD_SOURCE_TREE`, it fails alone instead of stopping the persona matrix. Native acceptance
+  is owed (docs/STATUS.md).
 
 - Polity dispatch no longer refuses ordinary days inside a dispatch window (#244, #257). The first
   reconciliation of each 7-day window freezes one fingerprint of every owned settlement's facts,
