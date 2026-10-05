@@ -1008,7 +1008,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(113, len(self.personas()))
+        self.assertEqual(114, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1189,10 +1189,15 @@ class ShippedPersonaTest(unittest.TestCase):
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             if found.get("RELOAD"):
-                self.assertIn(found["RELOAD"], ("quickstart", "unfounded"))
+                self.assertIn(found["RELOAD"], ("quickstart", "unfounded", "renovate-heal"))
                 self.assertEqual(found["EXPECT"], "RELOAD-COMPLETE")
                 if found["RELOAD"] == "quickstart":
                     self.assertTrue(found["SCRIPT_WORDS"].startswith("quickstart-save "))
+                elif found["RELOAD"] == "renovate-heal":
+                    # #283: session one seals exactly the heal script and verbs on the unfixed tree.
+                    self.assertEqual(found["SCRIPT_WORDS"], " ".join(matrix.RENOVATE_HEAL_RELOAD_SCRIPT))
+                    self.assertEqual(found["VERBS"], ",".join(matrix.RENOVATE_HEAL_RELOAD_VERBS))
+                    self.assertTrue(matrix.reload_start(found["START"]), path.name)
                 else:
                     # The unfounded save leg seals exactly this script, verb and start.
                     self.assertEqual(found["SCRIPT_WORDS"], " ".join(matrix.UNFOUNDED_RELOAD_SCRIPT))

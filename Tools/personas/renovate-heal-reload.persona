@@ -1,0 +1,20 @@
+# #283 stuck-save heal route. Two owned processes, two builds, one save.
+# Session one runs on a tree WITHOUT the fix: this tree with exactly the #283 production files
+# restored from the pre-fix base and nothing else changed (Tools/persona_reload_heal.py FIX_NEW
+# and FIX_CHANGED; the host proves that delta, the identical harness and the identical tools
+# before anything launches). Name it with TAF_RELOAD_SOURCE_TREE. It runs the tier-upgrade
+# legs and the third ordinary wait into the retired handover stall, journals the fresh after-wait
+# evidence and saves the stall for real; its seal reports of that stall are the defect evidence.
+# Session two cold-loads that exact save in a fresh descendant profile whose staged runtime comes
+# from THIS tree (prepare-scenario-load.py --runtime), resumes 2400 ordinary turns, and must show
+# the one readmission line, the completed handover, the finished tent-row with the carried
+# yielding mark, a seal reading without a fault and a second real save. Before its readmission
+# line the only diagnostic it may carry is the seal's report of the loaded stall itself.
+# Seed: TAF_PERSONA_SEED, else #922453088 (the 4ea54bb9 siting inside the heart's survey).
+# Synthetic setup is the tier-upgrade persona's, disclosed there. Not ordinary-play acceptance.
+DESCRIPTION=save a paid tent renovate stuck by #283 on an unfixed build, cold-load it on the fix, heal and save again
+REQUEST=founding-first-city
+SCRIPT=reload-descendant renovate-heal 8.22@40,12
+EXPECT=RELOAD-COMPLETE
+SET=reload,save-load,tier-upgrade
+TIMEOUT=3600

@@ -62,7 +62,8 @@ namespace ThousandAndFirst.Harness
 					|| Verb == ShortVerb), "tier-upgrade verbs take no arguments");
 				IList<string> script;
 				Require(KingdomScenarioScript.TryRead(out script, out _)
-					&& KingdomTierUpgradeScript.Matches(script),
+					&& (KingdomTierUpgradeScript.Matches(script)
+						|| KingdomRenovateHealScript.Matches(script)),
 					"the exact sealed tier-upgrade script is absent or differs");
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;

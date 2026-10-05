@@ -185,6 +185,19 @@ TIER_UPGRADE_EVIDENCE_ROWS = ("tier-upgrade-after-wait",)
 # <wx>.<wy>@<x>,<y> spelling of Tools/scenario_profile.py parse_start, bounded the same way.
 UNFOUNDED_RELOAD_SCRIPT = ("stagedigest", "unfounded-save", "stagedigest")
 UNFOUNDED_RELOAD_VERB = "unfounded-save"
+
+# The #283 stuck-save heal route: session one seals exactly this script and these verbs on a build
+# WITHOUT the fix (Harness/KingdomRenovateHealScript.cs Steps), drives the paid tent -> tentrow
+# renovate into the retired handover stall and saves it; the host cold-loads that save on the fixed
+# build in a fresh descendant profile (Tools/persona_reload_heal.py). Same canonical start grammar.
+RENOVATE_HEAL_RELOAD_SCRIPT = (
+    "stagedigest", "tier-upgrade-setup", "advance 3600", "tier-upgrade-check",
+    "tier-upgrade-short", "advance 2400", "tier-upgrade-check", "advance 3600",
+    "renovate-heal-save",
+)
+RENOVATE_HEAL_RELOAD_VERBS = (
+    "tier-upgrade-setup", "tier-upgrade-check", "tier-upgrade-short", "renovate-heal-save",
+)
 RELOAD_START = re.compile(r"(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)@(0|[1-9][0-9]?),(0|[1-9][0-9]?)\Z")
 RELOAD_START_BOUNDS = (80, 25, 80, 25)
 
@@ -306,11 +319,13 @@ def parse_manifest(text: str, name: str) -> dict:
     if found["SCRIPT"].startswith("reload-descendant "):
         parts = found["SCRIPT"].split()
         unfounded = parts[1:2] == ["unfounded"]
-        if unfounded:
+        heal = parts[1:2] == ["renovate-heal"]
+        if unfounded or heal:
             if len(parts) != 3 or not reload_start(parts[2]):
                 fail(
                     name
-                    + " reload requires exactly: reload-descendant unfounded <wx>.<wy>@<x>,<y>"
+                    + " reload requires exactly: reload-descendant " + parts[1]
+                    + " <wx>.<wy>@<x>,<y>"
                 )
         elif (
             len(parts) != 4
@@ -340,6 +355,12 @@ def parse_manifest(text: str, name: str) -> dict:
             found["START"] = parts[2]
             found["VERBS"] = UNFOUNDED_RELOAD_VERB
             found["RELOAD"] = "unfounded"
+        elif heal:
+            # Session one's exact sealed recipe, prepared from the unfixed tree by the host.
+            found["SCRIPT_WORDS"] = " ".join(RENOVATE_HEAL_RELOAD_SCRIPT)
+            found["START"] = parts[2]
+            found["VERBS"] = ",".join(RENOVATE_HEAL_RELOAD_VERBS)
+            found["RELOAD"] = "renovate-heal"
         else:
             found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
             found["RELOAD"] = "quickstart"

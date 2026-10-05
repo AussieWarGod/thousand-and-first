@@ -330,7 +330,7 @@ class UnfoundedReloadTests(unittest.TestCase):
 
     def test_cli_dispatches_the_unfounded_route_to_its_own_backend(self):
         source = (TOOLS / "run-persona-reload.py").read_text(encoding="utf-8")
-        self.assertIn('require(route in ("quickstart", "unfounded"), "not a cold-reload persona")', source)
+        self.assertIn('require(route in ("quickstart", "unfounded", "renovate-heal"), "not a cold-reload persona")', source)
         self.assertIn("UnfoundedNativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)", source)
         self.assertIn('execute_unfounded(backend, manifest["START"])', source)
 

@@ -228,6 +228,10 @@
 	<Compile Include="KingdomUpgradeUnattendedSourceTests.cs" />
 	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
 	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
+	<Compile Include="KingdomRenovateHealTests.cs" />
+	<Compile Include="KingdomRenovateHealSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealScript.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealSnapshot.cs" />
 	<Compile Include="KingdomDowngradeRequestTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
