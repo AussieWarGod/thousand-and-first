@@ -59,15 +59,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void AWindowFrozenWithOneCityRefusesTheTwoCityFactsInTheSamePeriod()
+		public void AWindowFrozenWithOneCityKeepsItsFactsWhenTheSecondCityJoinsInTheSamePeriod()
 		{
-			// Why setup requires no open window: the return would then meet this refusal.
+			// Why setup requires no open window: the return would only drift inside it (#244). The
+			// window keeps its one-city facts until the next period, so ReturnSeat could never read
+			// two endpoints.
 			KingdomPolityDispatchState state = new KingdomPolityDispatchState();
 			Assert.That(KingdomPolityDispatchRules.TryOpen(state, Offer(Founded, CityOne),
 				out List<KingdomPolityDueWork> _, out string failure), Is.True, failure);
-			Assert.That(KingdomPolityDispatchRules.TryOpen(state, Offer(Founded + 1L, CityOne, CityTwo),
-				out List<KingdomPolityDueWork> _, out failure), Is.False);
-			Assert.That(failure, Is.EqualTo("open polity topology differs from its frozen facts"));
+			KingdomPolityDispatchState before = KingdomPolityDispatchRules.CloneState(state);
+			Assert.That(KingdomPolityDispatchRules.TryOpen(state, state.Revision,
+				Offer(Founded + 1L, CityOne, CityTwo), true, out List<KingdomPolityDueWork> work,
+				out bool drifted, out List<string> withdrawn, out failure), Is.True, failure);
+			Assert.That(drifted && work.Count == 0 && withdrawn.Count == 0, Is.True);
+			Assert.That(KingdomPolityDispatchRules.SameState(before, state) && state.EndpointCount == 1,
+				Is.True, "the window keeps its one-city count, digest and revision");
 		}
 
 		[Test]
