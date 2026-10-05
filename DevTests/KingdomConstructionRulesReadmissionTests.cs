@@ -107,6 +107,9 @@ namespace ThousandAndFirst.Tests
 			KingdomConstructionJob plotNext = Readmitted(plot, KingdomRetiredHandoverDefect.FounderMarks);
 			ClassicAssert.IsFalse(KingdomConstructionRules.IsRetiredDefectReadmission(plot, plotNext));
 			ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(plot, plotNext));
+			// The pure rule refuses a route change on its own, not only through the registry gate.
+			plotNext.Route = KingdomConstructionRoute.Improvement;
+			ClassicAssert.IsFalse(KingdomConstructionRules.IsRetiredDefectReadmission(plot, plotNext));
 
 			KingdomConstructionJob removing = Stuck(KingdomConstructionRules.HandoverEndpointsFailure);
 			removing.PhysicalPhase = KingdomPhysicalPhase.FinalRemovalPending;
