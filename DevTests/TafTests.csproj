@@ -776,7 +776,10 @@
 	<Compile Include="KingdomCovenantRulesTests.cs" />
 	<Compile Include="KingdomUpgradeLogicalSource.cs" />
     <Compile Include="KingdomUpgradeRulesTests.cs" />
+	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
+	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
+	<Compile Include="KingdomUpgradeSourceRetiredDefectTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />

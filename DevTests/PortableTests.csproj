@@ -226,6 +226,8 @@
 	<Compile Include="KingdomUpgradeSnapshotTests.cs" />
 	<Compile Include="KingdomUpgradeNativeSourceTests.cs" />
 	<Compile Include="KingdomUpgradeUnattendedSourceTests.cs" />
+	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
+	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
 	<Compile Include="KingdomDowngradeRequestTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
