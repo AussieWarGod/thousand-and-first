@@ -969,6 +969,7 @@
 	<Compile Include="..\Growth\KingdomMaterialDebitResult.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Transitions.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Readmission.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Canonical.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Funding.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Costs.cs" />
@@ -978,6 +979,7 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.ScaffoldWork.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.FounderMarks.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.LandedScaffold.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.RetiredDefect.cs" />
 	<Compile Include="..\Growth\KingdomConstructionClaims.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.Claims.cs" />

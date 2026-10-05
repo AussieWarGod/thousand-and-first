@@ -171,7 +171,7 @@ namespace ThousandAndFirst
 						cell, job, intent.SuccessorBlueprint))
 				{
 					FailExactHandover(Predecessor, Successor, SuccessorKey,
-						"The paid improvement job no longer matches its exact physical endpoints.");
+						KingdomConstructionRules.HandoverEndpointsFailure);
 					return;
 				}
 				// No reference is passed as the expected predecessor: TryLandedScaffoldId has
