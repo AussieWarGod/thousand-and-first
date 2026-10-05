@@ -25,6 +25,19 @@ namespace ThousandAndFirst
 					&& Failure == "the public entrance has no witnessed street connection to the zone edge yet";
 		}
 
+		/// <summary>#283: one capture-only reading of the live world, journaled as evidence:
+		/// whether it captured, its spatial result and reason, and whether the settlement pass
+		/// would call it a fault. False only when the observation itself changed the staged
+		/// record.</summary>
+		internal bool NativeSpatialCaptureReading(out bool Captured,
+			out KingdomInheritanceSpatialCaptureResult Spatial, out string Reason)
+		{
+			string before = NativePendingStageEvidence();
+			Captured = TryCapture(The.Game.GetSystem<KingdomSystem>(), LegacyId, Generation,
+				Revision, The.Game.TimeTicks, out var record, out Reason, out Spatial);
+			return NativePendingStageEvidence() == before;
+		}
+
 		internal bool NativeSpatialCaptureWaits(out string Failure)
 		{
 			string before = NativePendingStageEvidence();

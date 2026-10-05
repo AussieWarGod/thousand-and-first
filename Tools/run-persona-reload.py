@@ -10,6 +10,7 @@ import signal
 import tempfile
 
 from persona_reload import NativeBackend, UnfoundedNativeBackend, execute, execute_unfounded, require
+from persona_reload_heal import RenovateHealNativeBackend, execute_renovate_heal, validate_source_tree
 from personas.persona_matrix import load
 
 _PR_SET_PDEATHSIG = 1
@@ -81,7 +82,7 @@ def main():
         arm_parent_death_signal()
         manifest, _ = load(str(args.persona))
         route = manifest.get("RELOAD")
-        require(route in ("quickstart", "unfounded"), "not a cold-reload persona")
+        require(route in ("quickstart", "unfounded", "renovate-heal"), "not a cold-reload persona")
         require(not os.environ.get("TAF_PERSONA_CAPTURE_DIR"),
                 "reload persona has no screenshot contract; omit TAF_PERSONA_CAPTURE_DIR")
         require(args.game.is_file(), "configured game executable is missing")
@@ -95,6 +96,17 @@ def main():
         if route == "unfounded":
             backend = UnfoundedNativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)
             result = execute_unfounded(backend, manifest["START"])
+        elif route == "renovate-heal":
+            # #283: session one's tree is named by the operator and proved to be this branch's
+            # detector commit (the unfixed runtime) BEFORE anything is prepared or launched.
+            source_tree = os.environ.get("TAF_RELOAD_SOURCE_TREE", "")
+            require(source_tree, "the heal route needs TAF_RELOAD_SOURCE_TREE: a clean checkout of "
+                    "this branch's detector commit, the unfixed build")
+            proof = validate_source_tree(Path(source_tree), tools.parent)
+            backend = RenovateHealNativeBackend(tools, args.game.resolve(), evidence, int(timeout),
+                                                seed, Path(source_tree))
+            result = execute_renovate_heal(backend, manifest["START"])
+            result["sourceTreeProof"] = proof
         else:
             _, location, advisor = manifest["SCRIPT_WORDS"].split()
             backend = NativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)

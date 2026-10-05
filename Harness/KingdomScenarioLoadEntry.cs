@@ -26,6 +26,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomUpgradeSnapshot UpgradeSnapshot;
 		internal static KingdomCampHeartSaveSnapshot CampSnapshot;
 		internal static KingdomUnfoundedSaveSnapshot UnfoundedSnapshot;
+		internal static KingdomRenovateHealSnapshot HealSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
 
@@ -108,6 +109,10 @@ namespace ThousandAndFirst.Harness
 					Check(KingdomUnfoundedSaveSnapshot.TryDecode(SnapshotWire, out UnfoundedSnapshot)
 						&& UnfoundedSnapshot.GameId == Request.GameId,
 						"sealed unfounded snapshot does not bind the selected save");
+				else if (SnapshotWire.StartsWith(KingdomRenovateHealSnapshot.Prefix, StringComparison.Ordinal))
+					Check(KingdomRenovateHealSnapshot.TryDecode(SnapshotWire, out HealSnapshot)
+						&& HealSnapshot.GameId == Request.GameId,
+						"sealed heal snapshot does not bind the selected save");
 				else if (KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(SnapshotWire))
 					Check(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(SnapshotWire)
 						&& KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(SnapshotWire, out RungSnapshot)
@@ -138,6 +143,12 @@ namespace ThousandAndFirst.Harness
 				if (CampSnapshot != null)
 				{
 					KingdomCampHeartLoad.Prepare(loaded, priorPopup);
+					resume = loaded;
+					return;
+				}
+				if (HealSnapshot != null)
+				{
+					KingdomRenovateHealLoad.Prepare(loaded, priorPopup);
 					resume = loaded;
 					return;
 				}
@@ -191,7 +202,8 @@ namespace ThousandAndFirst.Harness
 			finally
 			{
 				if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm();
-				if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups) Popup.Suppress = false;
+				if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups
+					&& !KingdomRenovateHealLoad.OwnsPopups) Popup.Suppress = false;
 				try { if (QuickstartSnapshot != null) KingdomQuickstartLoadTest.Finish(quickstartVerified); }
 				finally { Armed = false; }
 				// Only this exact scenario continues through vanilla RunGame after all cleanup succeeds.

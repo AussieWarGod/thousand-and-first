@@ -39,6 +39,9 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomTierUpgradeScript.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.Preflight.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
@@ -758,6 +761,8 @@
 	<Compile Include="KingdomCovenantRulesTests.cs" />
 	<Compile Include="KingdomUpgradeLogicalSource.cs" />
     <Compile Include="KingdomUpgradeRulesTests.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealScript.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealSnapshot.cs" />
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
