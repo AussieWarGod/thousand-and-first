@@ -761,9 +761,14 @@
 	<Compile Include="KingdomCovenantRulesTests.cs" />
 	<Compile Include="KingdomUpgradeLogicalSource.cs" />
     <Compile Include="KingdomUpgradeRulesTests.cs" />
+	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
+	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
+	<Compile Include="KingdomRenovateHealTests.cs" />
+	<Compile Include="KingdomRenovateHealSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomRenovateHealScript.cs" />
 	<Compile Include="..\Harness\KingdomRenovateHealSnapshot.cs" />
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
+	<Compile Include="KingdomUpgradeSourceRetiredDefectTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
