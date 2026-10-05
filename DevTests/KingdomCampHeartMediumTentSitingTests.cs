@@ -41,11 +41,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCampHeartMediumTentTests.Hearts(out _, out _, out var rung4);
 			KingdomCampHeartMediumTentTests.CommissionCell(out int x, out int y);
-			// A housing plot scores by its distance from the marks' settled heart. Every settled
-			// heart between the survey's west edge and just east of the rite ground gives the same
-			// founder-ground answer; the quote lock refuses any other answer before payment.
-			for (int heartX = 32; heartX <= 41; heartX++)
-				for (int heartY = 10; heartY <= 13; heartY++)
+			// A housing plot scores by its distance from the marks' settled heart: the rite-ground
+			// works pull it toward (40,12) and the camp's first dedicated reservoir, at the first
+			// clear cell near (7,1), pulls it north-west. Every settled heart in this band gives the
+			// same founder-ground answer; the quote lock refuses any other answer before payment.
+			for (int heartX = 30; heartX <= 41; heartX++)
+				for (int heartY = 8; heartY <= 13; heartY++)
 				{
 					Rect chosen = Choose(x, y, heartX, heartY, out var outcome);
 					Assert.That(outcome, Is.EqualTo(KingdomLayoutRules.LayoutOutcome.Founder));

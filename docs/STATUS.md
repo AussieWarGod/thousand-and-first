@@ -31,8 +31,8 @@ inside the north court's persisted footprint, never on its producer root.
 Source evidence: engine-free cases in both suites derive the bill and sentinel from the catalogue,
 pin which scripts pay the tent, replay the fixture's home loop (18 rows beside the Medium tent, 16
 from the grid alone), check every court reservation and derive the commission cell. Main-suite
-cases replay production siting (`KingdomPlotRules.ChooseRect`) for every settled heart from x 32
-to 41 and y 10 to 13, check every authored lane of the rows, the tent and the final heart against
+cases replay production siting (`KingdomPlotRules.ChooseRect`) for every settled heart from x 30
+to 41 and y 8 to 13, check every authored lane of the rows, the tent and the final heart against
 the architecture corpus, and show that eight courts and seventeen rows are the City minimum. The
 host oracle derives the saved brush from the catalogue. Native acceptance is owed:
 `camp-heart-native-checks`, `camp-heart-save` with its cold load, and `camp-heart-chain`. The
