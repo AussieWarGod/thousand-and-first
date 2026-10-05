@@ -48,7 +48,10 @@ namespace ThousandAndFirst.Tests
 			// Between(...) window and every AssertOrdered over the shards above stays valid;
 			// neither new shard carries any of their anchors.
 			"Growth/KingdomUpgrade.25b.HandoverProof.cs",
-			"Growth/KingdomUpgrade.26.HeartRung.cs"
+			"Growth/KingdomUpgrade.26.HeartRung.cs",
+			// #283: appended for the same reason; it carries no anchor of the windows above. The
+			// landed-scaffold adapter reads the durable identity HandOver proves against.
+			"Growth/KingdomUpgrade.20b.LandedScaffold.cs"
 		};
 
 		internal static string Read()

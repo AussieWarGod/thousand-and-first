@@ -114,7 +114,7 @@ namespace ThousandAndFirst.Tests
 
 			string handover = Read("Growth/KingdomUpgrade.20.HandOver.cs");
 			AssertOrdered(handover, "TryCommitScaffoldRemovalProof(ownerSystem",
-				"ExactPendingRemovalProof(Successor, intent.Scaffold.IDIfAssigned");
+				"ExactPendingRemovalProof(Successor, scaffoldId");
 			StringAssert.Contains("TryCommitScaffoldRemovalProof(System, Z,",
 				Read("Growth/KingdomCommission.Recovery.cs"));
 			StringAssert.Contains("TryCommitScaffoldRemovalProof(System, Z,",
