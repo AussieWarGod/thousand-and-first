@@ -139,12 +139,18 @@ namespace ThousandAndFirst
 			}
 			KingdomConstructionJob job = null;
 			KingdomSystem ownerSystem = null;
+			string scaffoldId = null;
 			KingdomArchitectureIntent authoredSuccessor = null;
 			bool authoredUpgrade = false;
 			if (!string.IsNullOrEmpty(receipt))
 			{
 				ownerSystem = The.Game == null
 					? null : The.Game.RequireSystem<KingdomSystem>();
+				// #283: the landed scaffold's identity comes from the successor's durable removal
+				// intent. PollHandover nulls the scaffold reference before every call, so refusing
+				// on a null reference quarantined any handover still unsettled after its landing
+				// pass. Computed before the predicate chain because of its out parameter.
+				bool landed = TryLandedScaffoldId(intent, Successor, out scaffoldId);
 				if (!KingdomConstruction.TryFind(receipt, out job)
 					|| !KingdomConstruction.Owns(ownerSystem, Predecessor.CurrentZone, job)
 					|| job.Route != KingdomConstructionRoute.Improvement
@@ -157,7 +163,7 @@ namespace ThousandAndFirst
 							|| !ExactRemovalReceipt(job)))
 					|| job.SubjectId != Predecessor.ID
 					|| SuccessorKey != job.TargetKey || intent == null || !intent.Working
-					|| intent.Scaffold == null
+					|| !landed
 					|| !r_KingdomScaffold.IsExactPendingImprovementSuccessor(Successor)
 					|| !EnsureExactImprovementPredecessor(ownerSystem, Predecessor.CurrentZone,
 						Predecessor, job)
@@ -168,17 +174,19 @@ namespace ThousandAndFirst
 						"The paid improvement job no longer matches its exact physical endpoints.");
 					return;
 				}
+				// No reference is passed as the expected predecessor: TryLandedScaffoldId has
+				// already refused a live one, and the callee re-proves global absence by id.
 				if (job.PhysicalPhase == KingdomPhysicalPhase.None
 					&& !r_KingdomScaffold.TryCommitScaffoldRemovalProof(ownerSystem,
-						Predecessor.CurrentZone, Successor, intent.Scaffold,
-						intent.SuccessorBlueprint, intent.Scaffold.IDIfAssigned, ref job,
+						Predecessor.CurrentZone, Successor, null,
+						intent.SuccessorBlueprint, scaffoldId, ref job,
 						out string scaffoldFailure))
 				{
 					r_KingdomImprovement.FailHandover(intent, scaffoldFailure);
 					KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return;
 				}
-				if (!ExactPendingRemovalProof(Successor, intent.Scaffold.IDIfAssigned,
+				if (!ExactPendingRemovalProof(Successor, scaffoldId,
 					Predecessor.IDIfAssigned, job))
 				{
 					r_KingdomImprovement.FailHandover(intent,
@@ -213,7 +221,7 @@ namespace ThousandAndFirst
 				out carriedLiquid, out carriedItems)) return;
 			string predecessorName;
 			if (!TryRemoveHandoverPredecessor(Predecessor, Successor, cell, predecessorId,
-				SuccessorKey, intent, ownerSystem, ref job, carriedLiquid, carriedItems,
+				SuccessorKey, intent, scaffoldId, ownerSystem, ref job, carriedLiquid, carriedItems,
 				out predecessorName)) return;
 			if (SuccessorKey == KingdomHostedArcology.ArcologyKey && job != null)
 			{
