@@ -14,5 +14,6 @@ START=8.22@40,12
 SCRIPT=stagedigest;first-guest-setup;advance 6000;first-guest-check;advance 6000;first-guest-check;advance 6000;first-guest-check;stagedigest
 VERBS=first-guest-setup,first-guest-check
 EXPECT=stagedigest:OK~founded=false,first-guest-setup:OK~native-first-guest phase=0,advance:OK,first-guest-check:OK~native-first-guest phase=1,advance:OK,first-guest-check:OK~native-first-guest phase=2,advance:OK,first-guest-check:OK~native-first-guest cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_FORBID=["polity: daily reconciliation refused","polity: zone reconciliation refused","polity: active load reconciliation refused"]
 SET=growth,native-regression
 TIMEOUT=1200

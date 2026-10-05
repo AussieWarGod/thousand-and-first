@@ -24,7 +24,9 @@ namespace ThousandAndFirst
 			if (!KingdomPolityDispatchRules.TryOpen(state, state.Revision, offer,
 				EnabledForNewCauses && KingdomPolityRules.CanEmitOptionalProjection(
 					System.PolityLedger, Tick - Tick % KingdomPolityDispatchRules.PeriodTicks),
-				out List<KingdomPolityDueWork> work, out Failure)) return false;
+				out List<KingdomPolityDueWork> work, out bool factsDrifted, out List<string> withdrawn,
+				out Failure)) return false;
+			NoteDispatch(System, window, factsDrifted, withdrawn);
 			if (!TryOrderFair(System, work, out Failure)) return false;
 			for (int i = 0; i < work.Count; i++)
 			{

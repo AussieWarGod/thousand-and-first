@@ -1,14 +1,42 @@
 # Changelog
 
-Current 3123-file census is line-cap green: 441,887 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `3b909f98cb47433614fa010943764f352494423122efe6de790beeb61aa7b73b`.
-The cold-install inventory contains 3157 files. This is not evidence of a new public installation.
+Current 3126-file census is line-cap green: 442,062 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `7a51c007ec0c53bea707c329540fcc89fd417834e34841d6a28a753e84472675`.
+The cold-install inventory contains 3160 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- Polity dispatch no longer refuses ordinary days inside a dispatch window (#244, #257). The first
+  reconciliation of each 7-day window freezes one fingerprint of every owned settlement's facts,
+  and any later same-window reconciliation whose facts differed was refused with `open polity
+  topology differs from its frozen facts`. Ordinary play changes those facts daily (work and zone
+  reading ticks, free storage, deeds, growth, seat exchange), so days 2-7 refused the daily, zone
+  and active-load reconciliations and skipped due work and loaded-endpoint reconciliation. The
+  fingerprint now authenticates only the window's still-open intents. Drift is accepted with no
+  new dispatch and no state write, and is logged at most once per window per loaded game (any
+  load, cold or in the same process, may log it again) as `polity: dispatch window N continues
+  with endpoint facts changed since it opened; no new dispatch until window N+1`. An open intent
+  is kept only while its live cause and facts re-prove it at its frozen slot. Guard and patrol
+  causes bind the zone read and work ran-through ticks; courier, trader and migrant causes bind
+  the owned topology and their source settlement's deed, market or population fact. A check-in
+  that re-reads the zone, a founding or loss anywhere, or a change at the source therefore
+  withdraws the intents bound to it: the slot is completed and the withdrawal logged as `polity:
+  window N <Purpose> intent for <id> withdrawn: <reason>`, as are intents dropped at rollover or
+  suppressed while new causes are paused. Foreign-realm, clock-regression, forged-state and
+  equal-digest refusals are unchanged. No saved field, version or digest domain changed, so old
+  saves need no migration. Endpoint facts are now built by the engine-free
+  `KingdomPolityEndpointFactRules` and the scheduler's lines by the engine-free
+  `KingdomPolityDispatchRules.DispatchNotes`, so both public suites execute them. A read-only
+  `polity-window-check` harness verb journals `polity-dispatch window=... revision=... count=...
+  mask=... intents=...` rows for the new `polity-window-native-check` persona
+  (`CHECK=polity-window`); personas gain `LOG_REQUIRE` (literal substrings that must appear in
+  Player.log); the turn-clean personas now forbid the three polity refusal prefixes. Native runs
+  log no refusal or withdrawal: the witness, the #257 camp and paid housing warm and cold pass,
+  and the legacy save's cold load is partial (docs/STATUS.md).
 
 - A game whose kingdom has not been founded can now be saved (#271, #272). Every save before
   the first city was founded failed with "growth envelope is not bounded and writable": the

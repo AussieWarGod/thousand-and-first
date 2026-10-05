@@ -101,6 +101,8 @@ class ReloadTests(unittest.TestCase):
                      # this the branch returns before the field is normalised and its raw text
                      # would reach the tab-separated field output.
                      MANIFEST + 'LOG_FORBID=["ignored"]\n',
+                     # And for its positive twin: a required witness is an override as well.
+                     MANIFEST + 'LOG_REQUIRE=["ignored"]\n',
                      MANIFEST + "CHECK=status-digest-stable\n",
                      MANIFEST.replace("founding-first-city", "arch-gallery-slice")):
             with self.subTest(text=text), self.assertRaises(SystemExit): parse_manifest(text, "test")

@@ -107,7 +107,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_LOG_FORBID=""; P_RELOAD=""
+	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_LOG_FORBID=""; P_LOG_REQUIRE=""; P_RELOAD=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -121,6 +121,7 @@ load_persona() {
 			set) P_SET="$value" ;;
 			log_expect) P_LOG_EXPECT="$value" ;;
 			log_forbid) P_LOG_FORBID="$value" ;;
+			log_require) P_LOG_REQUIRE="$value" ;;
 			reload) P_RELOAD="$value" ;;
 		esac
 	done <<< "$fields"
@@ -250,7 +251,7 @@ archive_file() {
 # Each phase keeps its own raw and derived logs; a later refusal cannot erase earlier evidence.
 check_persona_log() {
 	local persona="$1" archived_player_log="$2" artifact="$3"
-	local log_allow="" checked_player_log="$archived_player_log" log_problem forbidden
+	local log_allow="" checked_player_log="$archived_player_log" log_problem forbidden missing
 	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
 	if [ -n "$P_LOG_EXPECT" ]; then
 		log_allow=""
@@ -265,6 +266,16 @@ check_persona_log() {
 		if ! forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
 			"$archived_player_log" 2>&1)"; then
 			echo "Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
+				| tail -n 2 | tr '\n\t' '  ')"
+			return 1
+		fi
+	fi
+	# The positive twin: a witness line the persona cannot spell in full (it names a tick or a
+	# window) must still appear at least once, in the raw archive, before and after shutdown.
+	if [ -n "$P_LOG_REQUIRE" ]; then
+		if ! missing="$(python3 "$MATRIX" required-log "$(persona_path "$persona")" \
+			"$archived_player_log" 2>&1)"; then
+			echo "Player.log lacks a required diagnostic: $(printf '%s' "$missing" \
 				| tail -n 2 | tr '\n\t' '  ')"
 			return 1
 		fi
