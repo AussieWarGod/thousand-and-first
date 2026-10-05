@@ -33,9 +33,8 @@ namespace ThousandAndFirst.Tests
 					foreach (bool inventory in new[] { false, true })
 						foreach (bool liquid in new[] { false, true })
 						{
-							KingdomUpgradeRules.FounderMarks predecessor = Marks(bits, given);
-							KingdomUpgradeRules.FounderMarks carried =
-								KingdomUpgradeRules.CarryFounderMarks(predecessor, inventory, liquid);
+							var predecessor = Marks(bits, given);
+							var carried = KingdomUpgradeRules.CarryFounderMarks(predecessor, inventory, liquid);
 							bool expected = (!predecessor.Larder || inventory)
 								&& (!predecessor.Stores || liquid);
 							ClassicAssert.AreEqual(expected, KingdomUpgradeRules.FounderMarksSettled(
@@ -50,8 +49,7 @@ namespace ThousandAndFirst.Tests
 		public void yielding_predecessor_settles_after_carry()
 		{
 			KingdomUpgradeRules.FounderMarks tent = Marks(16, null);
-			KingdomUpgradeRules.FounderMarks carried =
-				KingdomUpgradeRules.CarryFounderMarks(tent, false, false);
+			var carried = KingdomUpgradeRules.CarryFounderMarks(tent, false, false);
 			ClassicAssert.IsTrue(carried.Yielding, "the yielding promise is carried");
 			ClassicAssert.IsTrue(KingdomUpgradeRules.FounderMarksSettled(tent, carried, false, false));
 			ClassicAssert.IsFalse(KingdomUpgradeRules.FounderMarksSettled(tent, Marks(0, null),
@@ -111,9 +109,7 @@ namespace ThousandAndFirst.Tests
 				ReferenceId, Exact, IntentId, Absent));
 		}
 
-		private const string Predecessor = "pred-1";
-		private const string Successor = "succ-1";
-		private const string Key = "tentrow";
+		private const string Predecessor = "pred-1", Successor = "succ-1", Key = "tentrow";
 
 		private static KingdomConstructionJob StuckJob(string Failure)
 		{
