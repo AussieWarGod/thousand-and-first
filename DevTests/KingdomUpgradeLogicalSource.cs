@@ -51,7 +51,9 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomUpgrade.26.HeartRung.cs",
 			// #283: appended for the same reason; it carries no anchor of the windows above. The
 			// landed-scaffold adapter reads the durable identity HandOver proves against.
-			"Growth/KingdomUpgrade.20b.LandedScaffold.cs"
+			"Growth/KingdomUpgrade.20b.LandedScaffold.cs",
+			// #283: the once-only retired-defect readmission PollHandover asks before HandOver.
+			"Growth/KingdomUpgrade.27.RetiredDefectReadmission.cs"
 		};
 
 		internal static string Read()

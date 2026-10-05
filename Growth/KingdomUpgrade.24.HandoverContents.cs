@@ -161,7 +161,7 @@ namespace ThousandAndFirst
 						Successor, cell, intent, true, out custodyFailure))
 				{
 					r_KingdomImprovement.FailHandover(intent,
-						custodyFailure ?? "Founder marks did not settle exactly on the successor.");
+						custodyFailure ?? KingdomConstructionRules.HandoverMarksFailure);
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return false;
 				}

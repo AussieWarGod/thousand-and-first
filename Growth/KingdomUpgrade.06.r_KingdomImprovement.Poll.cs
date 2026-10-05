@@ -45,6 +45,10 @@ namespace XRL.World.Parts
 						|| job.Route != KingdomConstructionRoute.Improvement
 						|| KingdomConstructionRules.IsTerminal(job.Phase)) return;
 					KingdomConstruction.Bind(successor, job);
+					// #283: a paid improvement a retired handover defect left under inspection is
+					// readmitted once, structurally proven; HandOver below re-proves everything.
+					KingdomUpgrade.TryReadmitRetiredHandoverDefect(ParentObject, successor,
+						SuccessorKey, ref job);
 				}
 				KingdomUpgrade.HandOver(ParentObject, successor, SuccessorKey);
 				return;

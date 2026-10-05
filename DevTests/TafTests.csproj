@@ -1183,6 +1183,7 @@
 	<Compile Include="..\Growth\KingdomUpgradeRules.Parsing.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.FounderMarks.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.LandedScaffold.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.RetiredDefect.cs" />
     <Compile Include="..\Growth\KingdomDesignRules.cs" />
     <Compile Include="..\Growth\KingdomPlotRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotDeclarations.cs" />
@@ -2098,6 +2099,7 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.Funding.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.PlanMarker.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Transitions.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Readmission.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.RegistryCodec.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.PayloadCodec.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.RowCodec.cs" />
