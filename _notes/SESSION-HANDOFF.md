@@ -27,7 +27,7 @@ use remain #230. No new Alpha release or all-building acceptance follows.
 
 ## Residence integration checkpoint
 
-Current development: 3121 staged sources / 3155 package files. City schema 5, archive 20 and
+Current development: 3126 staged sources / 3160 package files. City schema 5, archive 20 and
 residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
 cases and four engine modes pass. Native149daf47 retains the exact home/reservation through a
 controlled same-city visit and ordinary return pass. PR #255 stays draft; unique bed use,
@@ -81,8 +81,8 @@ See STATUS for acceptance; the common Git-directory handoff owns current process
 
 ## Current source census — pending heart repair
 
-3106 staged sources; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
-3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. Native acceptance remains pending.
+3108 staged sources; 440,963 physical lines; 1450 direct-XRL files; zero cap failures;
+3141 cold-install files. Inventory `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`. Native acceptance remains pending.
 Use the shared Git-directory handoff for live process ownership and current validation.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11

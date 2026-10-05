@@ -5,5 +5,6 @@ SCRIPT=stagedigest;realize;advance 1200;beta-local-pause;advance 1200;beta-maste
 VERBS=beta-local-pause,beta-master-pause,beta-stress,beta-present,beta-return,beta-check
 EXPECT=stagedigest:OK,realize:OK,advance:OK,beta-local-pause:OK,advance:OK,beta-master-pause:OK,advance:OK,beta-stress:OK,beta-present:OK,advance:OK,beta-return:OK,advance:OK,yield-frames:OK,beta-check:OK~taf-travel-checked,status:OK,COMPLETE
 CHECK=travel-economic-present
+LOG_FORBID=["polity: daily reconciliation refused","polity: zone reconciliation refused","polity: active load reconciliation refused"]
 SET=beta,economic
 TIMEOUT=1800

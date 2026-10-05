@@ -2,7 +2,7 @@
 
 ## Residence persistence checkpoint
 
-Current development: **3121** production C# files / 3155 package files. City schema 5, archive 20 and
+Current development: **3126** production C# files / 3160 package files. City schema 5, archive 20 and
 residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
 cases and four engine modes pass. PR #255 stays draft: live assignment, remote capacity and
 native home-map acceptance remain open in #230. Current handles live in the common Git handoff;
@@ -36,8 +36,8 @@ Reputation-weighted recruitment remains unfinished under #231.
 
 ## Current source census — pending heart repair
 
-**3106** production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
-3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. This census is not native acceptance.
+**3108** production C# files; 440,963 physical lines; 1450 direct-XRL files; zero cap failures;
+3141 cold-install files. Inventory `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`. This census is not native acceptance.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 

@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
+    <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
+    <Compile Include="KingdomFreshUnfoundedSaveTests.cs" />
     <Compile Include="..\Simulation\City\KingdomResidence.cs" />
     <Compile Include="..\Simulation\City\KingdomResidenceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomResidentRow.Residence.cs" />
@@ -44,6 +47,7 @@
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUnfoundedSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
@@ -368,6 +372,7 @@
     <Compile Include="..\Polity\KingdomPolityRivalTrafficRules.cs" />
     <Compile Include="..\Polity\KingdomPolityDispatchRules.DirectRecords.cs" />
     <Compile Include="..\Polity\KingdomPolityDispatchRules.Aggregates.cs" />
+    <Compile Include="..\Polity\KingdomPolityDispatchRules.Drift.cs" />
     <Compile Include="..\Polity\KingdomPolityDispatchRules.Intents.cs" />
     <Compile Include="..\Growth\KingdomResidentAdmissionRules.cs" />
     <Compile Include="..\Polity\KingdomPolityRules.ValidationCohortResolver.cs" />
@@ -407,6 +412,7 @@
     <Compile Include="..\Polity\KingdomPolityFactionTransitions.cs" />
     <Compile Include="..\Polity\KingdomPolityNpcRules.cs" />
     <Compile Include="..\Polity\KingdomPolityEndpointObservationRules.cs" />
+    <Compile Include="..\Polity\KingdomPolityEndpointFactRules.cs" />
     <Compile Include="..\Polity\KingdomPolityRules.Options.cs" />
     <Compile Include="..\Polity\KingdomPolityDirectRecordPresentationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityArrivalPresentationRules.cs" />
@@ -776,6 +782,13 @@
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
     <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
+    <Compile Include="KingdomSecondCityNativeSourceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteRulesTests.cs" />
+    <Compile Include="KingdomSecondCitySiteEvidenceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteAdjacencyTests.cs" />
+    <Compile Include="KingdomSecondCityReturnWitnessTests.cs" />
+    <Compile Include="..\Harness\KingdomSecondCityScript.cs" />
+    <Compile Include="..\Harness\KingdomSecondCitySiteRules.cs" />
     <Compile Include="KingdomArchitectureRulesTests.cs" />
 	<Compile Include="KingdomArchitectureCorpusFixture.cs" />
 	<Compile Include="KingdomArchitectureEnclosureTests.cs" />
@@ -1486,6 +1499,7 @@
 	<Compile Include="..\Experience\KingdomLifecycleDigestRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleSlotRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
+	<Compile Include="..\Experience\KingdomGrowthEnvelopeRefusalRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceOpportunityRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthArrivalCadenceValidationRules.cs" />
@@ -1526,6 +1540,7 @@
 	<Compile Include="..\Experience\KingdomGrowthLifecycleOutboxValidationRules.cs" />
 	<Compile Include="..\Experience\KingdomGrowthLifecycleLookupRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
+	<Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />
 	<Compile Include="..\Experience\KingdomLifecycleArithmeticHashRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidIncidentRules.cs" />
 	<Compile Include="..\Raids\KingdomRaidOutboxRules.cs" />
@@ -1946,6 +1961,13 @@
 	<Compile Include="KingdomPolityClosureSourceTests.cs" />
 	<Compile Include="KingdomPolityActivationSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Intents.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomPolityWindowReading.cs" />
+	<Compile Include="KingdomPolityWindowWitnessTests.cs" />
+	<Compile Include="KingdomPolityWindowWitnessSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3SourceTests.cs" />
 	<Compile Include="KingdomPolityConsignmentTests.cs" />
 	<Compile Include="KingdomPolityConsignmentSourceTests.cs" />

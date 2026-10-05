@@ -1,6 +1,6 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-Current development census: 3121 production C# files / 3,155 cold-install files.
+Current development census: 3126 production C# files / 3,160 cold-install files.
 Coherent recruitment is under native validation; earlier source/evidence below remains historical.
 
 ## Current development census notice
@@ -12,8 +12,8 @@ findings below. Public 0.3.7 remains the released package.
 
 ## Current source census — pending heart repair
 
-3106 production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
-3,139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. This census is not native acceptance.
+3108 production C# files; 440,963 physical lines; 1450 direct-XRL files; zero cap failures;
+3,141 cold-install files. Inventory `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`. This census is not native acceptance.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 

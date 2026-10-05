@@ -77,7 +77,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DispatcherNeverLoadsRemoteGroundOrReplaysMissedWindows()
 		{
-			string facts = Read("Polity/KingdomPolityEndpointFactRuntime.cs");
+			string facts = Read("Polity/KingdomPolityEndpointFactRuntime.cs")
+				+ Read("Polity/KingdomPolityEndpointFactRules.cs");
 			string rules = Read("Polity/KingdomPolityDispatchRules.cs");
 			string scheduler = Read("Polity/KingdomPolitySchedulerRuntime.cs");
 			string recovery = Read("Polity/KingdomPolityDispatchRules.Recovery.cs");

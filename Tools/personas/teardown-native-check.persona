@@ -54,5 +54,6 @@ START=8.22@40,12
 SCRIPT=stagedigest;teardown-setup;advance 2400;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;stagedigest
 VERBS=teardown-setup,teardown-check
 EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_FORBID=["polity: daily reconciliation refused","polity: zone reconciliation refused","polity: active load reconciliation refused"]
 SET=materials,growth,native-regression
 TIMEOUT=1200

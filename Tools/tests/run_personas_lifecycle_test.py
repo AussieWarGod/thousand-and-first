@@ -572,6 +572,25 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
                 self.assertEqual([target], list(capture_dir.iterdir()))
                 self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
 
+    def test_required_diagnostic_must_appear_in_the_live_raw_log(self):
+        cases = (("present", 'LOG_REQUIRE=["fixture loaded"]\n', 0, "PASS"),
+                 ("absent", 'LOG_REQUIRE=["drift witness"]\n', 1, "FAIL"))
+        for name, fields, code, verdict in cases:
+            with self.subTest(name=name):
+                (self.tools / "personas" / "alpha.persona").write_text(
+                    PERSONA.format(name="alpha") + fields, encoding="utf-8")
+                self.env["LIFECYCLE_PLAYER_LOG"] = PLAYER_LOG
+                events_before = len(self.events())
+                result = self.run_cli()
+                self.assertEqual(code, result.returncode, result.stdout + result.stderr)
+                self.assertEqual(verdict, self.rows()[0]["verdict"])
+                if code:
+                    self.assertIn("Player.log lacks a required diagnostic: missing: drift witness",
+                                  self.rows()[0]["detail"])
+                    self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+                self.assertEqual(PLAYER_LOG, (self.report.parent / "player-alpha.log").read_text())
+                self.assert_new_scoped_cycle(events_before)
+
     def test_prepare_refusal_never_attempts_process_stop(self):
         result = self.run_cli("prepare_refusal")
         self.assertEqual(1, result.returncode, result.stderr)

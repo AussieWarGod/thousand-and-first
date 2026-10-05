@@ -17,6 +17,9 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLifecycleDormantSaveTests.cs" />
+    <Compile Include="KingdomUnfoundedSaveSnapshotTests.cs" />
+    <Compile Include="KingdomFreshUnfoundedSaveTests.cs" />
     <Compile Include="..\Simulation\City\KingdomResidence.cs" />
     <Compile Include="..\Simulation\City\KingdomResidenceRules.cs" />
     <Compile Include="..\Simulation\City\KingdomResidentRow.Residence.cs" />
@@ -39,6 +42,7 @@
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUnfoundedSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
@@ -55,6 +59,12 @@
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
     <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
+    <Compile Include="KingdomSecondCityNativeSourceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteRulesTests.cs" />
+    <Compile Include="KingdomSecondCitySiteEvidenceTests.cs" />
+    <Compile Include="KingdomSecondCitySiteAdjacencyTests.cs" />
+    <Compile Include="..\Harness\KingdomSecondCityScript.cs" />
+    <Compile Include="..\Harness\KingdomSecondCitySiteRules.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
@@ -488,8 +498,10 @@
     <Compile Include="..\Core\KingdomRules.Districts.cs" />
     <Compile Include="..\Core\KingdomRules.Scarcity.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleMigrationRules.cs" />
+    <Compile Include="..\Experience\KingdomGrowthEnvelopeRefusalRules.cs" />
     <Compile Include="..\Experience\KingdomGrowthLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleCommonValidationRules.cs" />
+    <Compile Include="..\Experience\KingdomLifecycleDormantWireRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleNormalizationRules.cs" />
     <Compile Include="..\Experience\KingdomLifecycleRules.cs" />
     <Compile Include="..\Growth\KingdomPlotGroundRules.cs" />
@@ -755,6 +767,7 @@
     <Compile Include="..\Polity\KingdomPolityDirectRecordPresentationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityArrivalPresentationRules.cs" />
     <Compile Include="..\Polity\KingdomPolityEndpointObservationRules.cs" />
+    <Compile Include="..\Polity\KingdomPolityEndpointFactRules.cs" />
     <Compile Include="..\Polity\KingdomPolityExpeditionDeedRules.cs" />
     <Compile Include="..\Polity\KingdomPolityLoadoutCatalogue.cs" />
     <Compile Include="..\Polity\KingdomPolityProfileExpressionCatalogue.cs" />
@@ -831,6 +844,11 @@
 	<Compile Include="KingdomPolityClosureRulesTests.cs" />
 	<Compile Include="KingdomPolityClosureSourceTests.cs" />
 	<Compile Include="KingdomPolityWave3Tests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Fixtures.cs" />
+	<Compile Include="KingdomPolityDispatchWindowDriftTests.Intents.cs" />
+	<Compile Include="..\Harness\KingdomPolityWindowReading.cs" />
+	<Compile Include="KingdomPolityWindowWitnessTests.cs" />
 	<Compile Include="KingdomPolityAmbientTransactionTests.cs" />
 	<Compile Include="KingdomPolityEndpointObservationRulesTests.cs" />
 	<Compile Include="KingdomPolityExpeditionDeedRulesTests.cs" />
@@ -1083,6 +1101,7 @@
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Facts.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.DirectRecords.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Aggregates.cs" />
+	<Compile Include="..\Polity\KingdomPolityDispatchRules.Drift.cs" />
 	<Compile Include="..\Polity\KingdomPolityDispatchRules.Retirement.cs" />
 	<Compile Include="..\Polity\KingdomPolityRivalTrafficRules.cs" />
 	<Compile Include="..\Polity\KingdomPolityCohortRules.Schedule.cs" />

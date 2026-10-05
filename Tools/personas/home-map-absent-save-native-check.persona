@@ -5,5 +5,6 @@ REQUEST=founding-first-city
 SCRIPT=quickstart-lifecycle marsh yes;lifecycle-open;advance 8400;home-map-native;lifecycle-grown;home-map-absent-save-witness;lifecycle-save;stagedigest
 VERBS=lifecycle-open,home-map-native,lifecycle-grown,home-map-absent-save-witness,lifecycle-save
 EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,lifecycle-open:OK,advance:OK,home-map-native:OK~cases=1 passed=1 failed=0,lifecycle-grown:OK,home-map-absent-save-witness:OK~witness=recorded,lifecycle-save:OK~real-save=true,stagedigest:OK,COMPLETE
+LOG_FORBID=["polity: daily reconciliation refused","polity: zone reconciliation refused","polity: active load reconciliation refused"]
 SET=growth,native-regression
 TIMEOUT=1800

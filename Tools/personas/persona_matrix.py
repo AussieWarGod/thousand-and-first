@@ -152,6 +152,12 @@ ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "hall-route-restored", "hall-open-locked", "hall-exterior-locked", "hall-exterior-unlocked", "hall-partitions-restored",
 ))
 
+# Observation emitted inside each polity-window-check (Harness/KingdomPolityWindowNativeProvider.cs):
+# the realm's polity dispatch receipt after an ordinary daily pass, landed immediately before the
+# verb's own row. Positional like every evidence row; Tools/personas/persona_polity.py owns its
+# grammar and the window story a CHECK=polity-window persona must tell (#244/#257).
+POLITY_EVIDENCE_ROWS = ("polity-dispatch",)
+
 # The save verb observes remaining custody before publishing its snapshot.
 CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input",
@@ -162,6 +168,29 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-renovation", "camp-heart-chain-renovation-refusals",
     "camp-heart-chain-renovation-cleared",
 )
+
+# Evidence rows the second-city family writes beside its automatic verb rows: the resolved
+# site (home, bordering zone and its GroundIsTooClose verdict, chosen non-adjacent site)
+# and the published two-city topology. Not callable verbs.
+SECOND_CITY_EVIDENCE_ROWS = ("second-city-site", "second-city-topology")
+
+# The unfounded cold-load route (#272, #271): the save leg seals exactly this script and verb
+# (Harness/KingdomUnfoundedSave.cs) on the requested start; the host then cold-loads the save in a
+# fresh descendant profile (Tools/persona_reload.py). The start is the canonical
+# <wx>.<wy>@<x>,<y> spelling of Tools/scenario_profile.py parse_start, bounded the same way.
+UNFOUNDED_RELOAD_SCRIPT = ("stagedigest", "unfounded-save", "stagedigest")
+UNFOUNDED_RELOAD_VERB = "unfounded-save"
+RELOAD_START = re.compile(r"(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)@(0|[1-9][0-9]?),(0|[1-9][0-9]?)\Z")
+RELOAD_START_BOUNDS = (80, 25, 80, 25)
+
+
+def reload_start(value: str) -> bool:
+    """True only for a canonical, on-map `<wx>.<wy>@<x>,<y>` unfounded reload start."""
+    found = RELOAD_START.match(value)
+    return bool(found) and all(
+        int(part) < bound for part, bound in zip(found.groups(), RELOAD_START_BOUNDS)
+    )
+
 
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
@@ -200,6 +229,7 @@ VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
 CHECKS = (
+    "polity-window",
     "quickstart-housing",
     "status-digest-stable",
     "travel-away",
@@ -218,6 +248,7 @@ OPTIONAL_KEYS = (
     "SET",
     "LOG_EXPECT",
     "LOG_FORBID",
+    "LOG_REQUIRE",
 )
 
 # Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
@@ -269,7 +300,14 @@ def parse_manifest(text: str, name: str) -> dict:
     found["VERBS"] = ",".join(extra)
     if found["SCRIPT"].startswith("reload-descendant "):
         parts = found["SCRIPT"].split()
-        if (
+        unfounded = parts[1:2] == ["unfounded"]
+        if unfounded:
+            if len(parts) != 3 or not reload_start(parts[2]):
+                fail(
+                    name
+                    + " reload requires exactly: reload-descendant unfounded <wx>.<wy>@<x>,<y>"
+                )
+        elif (
             len(parts) != 4
             or parts[:2] != ["reload-descendant", "quickstart"]
             or parts[2] not in ("marsh", "canyon", "dunes")
@@ -284,15 +322,22 @@ def parse_manifest(text: str, name: str) -> dict:
             or found["REQUEST"] != "founding-first-city"
             or any(
                 found.get(key)
-                for key in ("START", "CHECK", "VERBS", "LOG_EXPECT", "LOG_FORBID")
+                for key in ("START", "CHECK", "VERBS", "LOG_EXPECT", "LOG_FORBID", "LOG_REQUIRE")
             )
         ):
             fail(
                 name
                 + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides"
             )
-        found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
-        found["RELOAD"] = "quickstart"
+        if unfounded:
+            # The save leg's exact sealed recipe; the host prepares from these normalized fields.
+            found["SCRIPT_WORDS"] = " ".join(UNFOUNDED_RELOAD_SCRIPT)
+            found["START"] = parts[2]
+            found["VERBS"] = UNFOUNDED_RELOAD_VERB
+            found["RELOAD"] = "unfounded"
+        else:
+            found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
+            found["RELOAD"] = "quickstart"
         found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
         found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
         return found
@@ -315,6 +360,11 @@ def parse_manifest(text: str, name: str) -> dict:
     if "LOG_FORBID" in found:
         found["LOG_FORBID"] = json.dumps(
             parse_log_forbid(found["LOG_FORBID"], name),
+            ensure_ascii=False, separators=(",", ":"),
+        )
+    if "LOG_REQUIRE" in found:
+        found["LOG_REQUIRE"] = json.dumps(
+            parse_log_require(found["LOG_REQUIRE"], name),
             ensure_ascii=False, separators=(",", ":"),
         )
     return found
@@ -375,19 +425,36 @@ def parse_log_forbid(value: str, name: str) -> list[str]:
     tick or an id the persona cannot know in advance, and one occurrence anywhere fails the run.
     Bounded exactly like LOG_EXPECT so a persona cannot smuggle a regex or an essay in here.
     """
+    return parse_log_substrings(value, name, "LOG_FORBID")
+
+
+def parse_log_require(value: str, name: str) -> list[str]:
+    """Diagnostics that MUST appear in Player.log at least once.
+
+    The positive twin of LOG_FORBID, for a witness line whose exact text the persona cannot know
+    in advance: the #244/#257 drift line names the dispatch window, and a new game's start day is
+    random (XRLGame.CreateNewGame), so LOG_EXPECT's complete-line form cannot name it. Each entry
+    is a literal SUBSTRING bounded exactly like LOG_FORBID; absence anywhere fails the run, and it
+    never excuses a MODERROR, MODWARN or any other line the strict checker refuses.
+    """
+    return parse_log_substrings(value, name, "LOG_REQUIRE")
+
+
+def parse_log_substrings(value: str, name: str, key: str) -> list[str]:
+    """The shared bounded literal-substring list behind LOG_FORBID and LOG_REQUIRE."""
     if len(value) > 8192:
-        fail("%s LOG_FORBID exceeds 8192 characters" % name)
+        fail("%s %s exceeds 8192 characters" % (name, key))
     try:
         lines = json.loads(value)
     except (ValueError, RecursionError):
-        fail("%s LOG_FORBID must be a JSON array of literal substrings" % name)
+        fail("%s %s must be a JSON array of literal substrings" % (name, key))
     if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
-        fail("%s LOG_FORBID must contain 1..4 literal substrings" % name)
+        fail("%s %s must contain 1..4 literal substrings" % (name, key))
     if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
            or not line.isprintable() for line in lines):
-        fail("%s LOG_FORBID lines must be 1..1024 printable characters" % name)
+        fail("%s %s lines must be 1..1024 printable characters" % (name, key))
     if len(set(lines)) != len(lines) or sum(map(len, lines)) > 8192:
-        fail("%s LOG_FORBID lines must be unique and total at most 8192 characters" % name)
+        fail("%s %s lines must be unique and total at most 8192 characters" % (name, key))
     return lines
 
 
@@ -404,6 +471,18 @@ def forbidden_log(manifest: dict, raw: bytes, name: str) -> list[str]:
                 found.append("line %d: %s" % (number, forbidden))
                 break
     return found
+
+
+def required_log(manifest: dict, raw: bytes, name: str) -> list[str]:
+    """Every required substring that did NOT appear on any line, in declaration order."""
+    if "LOG_REQUIRE" not in manifest:
+        fail("%s requires LOG_REQUIRE for required-log" % name)
+    lines = raw.replace(b"\r\n", b"\n").split(b"\n")
+    return [
+        required
+        for required in parse_log_require(manifest["LOG_REQUIRE"], name)
+        if not any(required.encode("utf-8") in line for line in lines)
+    ]
 
 
 def parse_set(value: str, name: str) -> tuple[str, ...]:
@@ -560,6 +639,8 @@ def parse_expect(
             and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
+            and verb not in POLITY_EVIDENCE_ROWS
+            and verb not in SECOND_CITY_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
@@ -712,7 +793,7 @@ def home_damage(rows: list[tuple[str, str, str]]) -> list[str]:
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
     if manifest.get("RELOAD"):
         return [
-            "reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"
+            "reload requires both strict phase checks and receipt-owned process workflow; journal alone is insufficient"
         ]
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
@@ -726,6 +807,12 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
         problems.extend(housing.assess(read_journal(journal)))
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
+    if manifest.get("CHECK") == "polity-window":
+        spec = importlib.util.spec_from_file_location(
+            "taf_persona_polity", os.path.join(os.path.dirname(__file__), "persona_polity.py"))
+        polity = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(polity)
+        problems.extend(polity.assess(rows))
     if manifest.get("CHECK", "").startswith("travel-"):
         spec = importlib.util.spec_from_file_location(
             "taf_persona_travel",
@@ -759,7 +846,8 @@ def load(path: str) -> tuple[dict, str]:
 def main(argv: list[str]) -> int:
     if len(argv) < 3:
         fail(
-            "usage: persona_matrix.py <fields|assert|terminal|warnings|expected-log|forbidden-log>"
+            "usage: persona_matrix.py"
+            " <fields|assert|terminal|warnings|expected-log|forbidden-log|required-log>"
             " <persona|journal>"
             " [journal|Player.log]"
         )
@@ -777,6 +865,7 @@ def main(argv: list[str]) -> int:
             "SET",
             "LOG_EXPECT",
             "LOG_FORBID",
+            "LOG_REQUIRE",
             "RELOAD",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
@@ -793,6 +882,14 @@ def main(argv: list[str]) -> int:
             seen = forbidden_log(manifest, handle.read(), name)
         if seen:
             print("; ".join(seen))
+            return 1
+        return 0
+    if action == "required-log" and len(argv) == 4:
+        manifest, name = load(argv[2])
+        with open(argv[3], "rb") as handle:
+            missing = required_log(manifest, handle.read(), name)
+        if missing:
+            print("missing: " + "; ".join(missing))
             return 1
         return 0
     if action == "terminal" and len(argv) == 3:

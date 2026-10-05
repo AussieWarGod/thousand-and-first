@@ -9,6 +9,12 @@ namespace ThousandAndFirst
 		internal static bool TerminalizeOpenIntents(KingdomPolityDispatchState State,
 			out string Failure)
 		{
+			return TerminalizeOpenIntents(State, null, out Failure);
+		}
+
+		internal static bool TerminalizeOpenIntents(KingdomPolityDispatchState State,
+			List<string> Withdrawn, out string Failure)
+		{
 			Failure = null; List<KingdomPolityDirectRecord> intents =
 				new List<KingdomPolityDirectRecord>();
 			for (int i = 0; i < State.DirectRecords.Count; i++)
@@ -20,6 +26,8 @@ namespace ThousandAndFirst
 				if (intents[i].AmbientTransaction == null)
 				{
 					// A crash cut before semantic freezing cannot become a prose claim.
+					Withdrawn?.Add(DescribeWithdrawal(intents[i],
+						"its window closed before the visit was frozen"));
 					State.DirectRecords.Remove(intents[i]);
 					if (ordinal >= 0 && ordinal < State.EndpointCount)
 						State.CompletedMask |= 1 << ordinal;
@@ -37,10 +45,20 @@ namespace ThousandAndFirst
 		internal static bool SuppressOpenIntents(KingdomPolityDispatchState State,
 			out string Failure)
 		{
+			return SuppressOpenIntents(State, null, out Failure);
+		}
+
+		internal static bool SuppressOpenIntents(KingdomPolityDispatchState State,
+			List<string> Withdrawn, out string Failure)
+		{
 			Failure = null;
 			for (int i = State.DirectRecords.Count - 1; i >= 0; i--)
 				if (IsKind(State.DirectRecords[i], IntentPrefix))
+				{
+					Withdrawn?.Add(DescribeWithdrawal(State.DirectRecords[i],
+						"new polity causes are paused"));
 					State.DirectRecords.RemoveAt(i);
+				}
 			State.CompletedMask = State.HasWindow
 				? (1 << State.EndpointCount) - 1 : 0;
 			return true;
