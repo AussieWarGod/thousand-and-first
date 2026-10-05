@@ -4,8 +4,36 @@ import argparse
 import json
 from pathlib import Path
 import re
+from xml.etree import ElementTree
 from guest_save_check import field, one, require
 from personas import persona_matrix
+
+CATALOGUE = Path(__file__).resolve().parents[1] / 'RuntimeData' / 'KingdomBuildings.xml'
+
+
+def catalogue_brush(text):
+    """Brush units in one authored bill; the catalogue spells brush 'canvas' (KingdomMaterialRules)."""
+    total = 0
+    for term in (text or '').split(','):
+        name, _, units = term.partition(':')
+        if name.strip().lower() in ('canvas', 'brush'):
+            total += int(units)
+    return total
+
+
+def saved_brush(catalogue=CATALOGUE):
+    """Sentinel brush the paid camp tent leaves (#282): one fewer than the tent's own upgrade asks
+    for, as Harness/KingdomCampHeartTentRules.cs derives it, read from the catalogue."""
+    try:
+        root = ElementTree.parse(catalogue).getroot()
+    except ElementTree.ParseError as error:
+        raise ValueError('catalogue unreadable: ' + str(error)) from error
+    tents = [b for b in root.iter('building') if b.get('Key') == 'tent']
+    require(len(tents) == 1, 'catalogue lacks exactly one tent design')
+    tent_brush = catalogue_brush(tents[0].get('Materials'))
+    upgrade_brush = catalogue_brush(tents[0].get('UpgradeMaterials'))
+    require(tent_brush > 0 and upgrade_brush >= 2, 'catalogue tent bill leaves no lawful sentinel brush')
+    return upgrade_brush - 1
 
 
 def equal_fields(detail, expected):
@@ -13,7 +41,8 @@ def equal_fields(detail, expected):
         require(field(detail, name) == value, 'camp invariant differs: ' + name)
 
 
-def judge(source, loaded):
+def judge(source, loaded, brush=None):
+    brush = str(saved_brush() if brush is None else brush)
     for rows in (source, loaded):
         require(persona_matrix.terminal_row(rows) == 'SCRIPT-COMPLETE', 'session did not complete')
         require(all(outcome == 'OK' for _, outcome, _ in rows), 'session contains a refusal')
@@ -34,10 +63,10 @@ def judge(source, loaded):
         require(prior < at < checked and detail == f'{count} turn(s) elapsed of {count} requested',
                 'source ordinary turn interval differs')
         prior = checked
-    equal_fields(save, {'paid-camp-save': 'true', 'rung': '2', 'synthetic-next-job-timber': '1', 'brush': '21'})
+    equal_fields(save, {'paid-camp-save': 'true', 'rung': '2', 'synthetic-next-job-timber': '1', 'brush': brush})
     identities = {name: field(save, name) for name in ('heart', 'store', 'fire')}
-    equal_fields(custody, {'store': identities['store'], 'before': 'r_KingdomBrush=21',
-                           'after': 'r_KingdomBrush=21,r_KingdomTimber=1'})
+    equal_fields(custody, {'store': identities['store'], 'before': 'r_KingdomBrush=' + brush,
+                           'after': 'r_KingdomBrush=' + brush + ',r_KingdomTimber=1'})
     require(field(custody, 'added-timber') not in identities.values(), 'new timber reuses a camp object')
     require(len(set(identities.values())) == 3, 'camp object identities collide')
     tent_job = field(save, 'tent-job')
@@ -57,20 +86,20 @@ def judge(source, loaded):
     equal_fields(begin, {'game-id': game, 'new-game': 'false', 'mod-restore': 'false'})
     saved_fields = dict(identities, **{'snapshot-sha256': digest, 'tent-job': tent_job, 'time-ticks': ticks})
     equal_fields(preactivation, dict(saved_fields, **{'before-AfterGameLoaded': 'true'}))
-    equal_fields(restored, dict(saved_fields, rung='2', basin='48', brush='21', timber='1'))
+    equal_fields(restored, dict(saved_fields, rung='2', basin='48', brush=brush, timber='1'))
     equal_fields(paid, {'water-debited': '2', 'timber-debited': '1', 'synthetic-materials-after-load': '0'})
     next_job, upgrade = field(paid, 'new-job'), field(paid, 'upgrade-job')
     require(len({next_job, upgrade, tent_job}) == 3, 'new job, upgrade and paid tent identities collide')
     equal_fields(resumed, {'vanilla-Continue': 'true', 'saved-script-considered': 'true', 'requested-turns': '3600'})
     require(elapsed == '3600 turn(s) elapsed of 3600 requested', 'loaded ordinary wait incomplete')
-    equal_fields(completed, dict(identities, phase='Complete', brush='21', **{'new-job': next_job, 'effects-settled': 'true'}))
+    equal_fields(completed, dict(identities, phase='Complete', brush=brush, **{'new-job': next_job, 'effects-settled': 'true'}))
     output = field(completed, 'output')
     require(output not in identities.values(), 'completed next output reuses existing camp object')
     require(re.fullmatch('[1-9][0-9]*', field(completed, 'turns')), 'completed game clock absent')
     equal_fields(terminal, {'real-save-quit-load': 'true', 'next-paid-job-complete': 'true',
                            'new-game-script-replayed': 'false', 'ordinary-acceptance': 'false'})
     return dict(verdict='PASS', gameId=game, snapshotSha256=digest, newJobId=next_job, outputId=output,
-                **identities, sourceTurns=6000, loadedTurns=3600, brush=21,
+                **identities, sourceTurns=6000, loadedTurns=3600, brush=int(brush),
                 scope='Synthetic paid camp journal proof only; require closed profiles, source/runtime/harness bindings, strict logs and owned stops.')
 
 

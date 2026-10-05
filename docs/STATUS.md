@@ -1,5 +1,44 @@
 # Current implementation and release evidence
 
+## Camp-heart fixtures follow the Medium tent bill (#282): native acceptance owed
+
+Since 561bffd3 (v0.3.7) the tent is a Medium lot billed `canvas:12,timber:1`, and since 7403458b
+its own tent-row improvement asks for `canvas:2` alone. The camp-heart fixtures still minted for
+the old Small tent's two-brush bill, so the phase-2 real tent commission refused
+`InsufficientMaterial`: `camp-heart-save` stopped before its save, and `camp-heart-chain` (with the
+draft chain-save and rung-5 variants) refused at chain setup with `chain sentinel brush census
+differs`. Production is unchanged; this is a harness, persona and host-oracle fix.
+
+The fixture now reads the tent bill from the running catalogue. Scripts that continue past the
+camp checks (the save variant and every chain form) pay the tent: they mint the rung-2 bill plus
+the tent's own brush and one fewer than its canvas-only upgrade asks for (13 brush, not the plain
+case's 23), quote the real commission before paying, mint only the tent's non-brush input (one
+timber) at the phase-2 boundary, and commit against that exact quote. One sentinel brush survives
+the tent: too few for its automatic upgrade, which at 499357a8 spent heart materials before the
+fixture held it. A tent whose own improvement has begun refuses at chain setup, at the hold and
+before save. The plain 1->2 regression and the rung-3 run keep their fills and still record
+whatever the real commission answers.
+
+The chain founder now walks to a cell derived from the tent lot, (20,13), and the commission must
+quote the pinned source tent (22,6)-(29,11) with labour inside one paid day, so a different siting
+refuses before anything is paid. All eight legacy water courts and 16 of the 18 Native30 tent rows
+are kept. The tent's approach removes two grid rows; transposed 4x6 lots (16,3)-(19,8) and
+(74,2)-(77,7) replace them, and (74,9)-(77,14) is a spare. Every row uses the retained S canvas
+binding, which no native run has exercised since tentrow moved to Medium lots; the transposed
+poses and the east lot's lane to the zone edge are new. The tent's lane, like Native30's, ends
+inside the north court's persisted footprint, never on its producer root.
+
+Source evidence: engine-free cases in both suites derive the bill and sentinel from the catalogue,
+pin which scripts pay the tent, replay the fixture's home loop (18 rows beside the Medium tent, 16
+from the grid alone), check every court reservation and derive the commission cell. Main-suite
+cases replay production siting (`KingdomPlotRules.ChooseRect`) for every settled heart from x 30
+to 41 and y 8 to 13, check every authored lane of the rows, the tent and the final heart against
+the architecture corpus, and show that eight courts and seventeen rows are the City minimum. The
+host oracle derives the saved brush from the catalogue. Native acceptance is owed:
+`camp-heart-native-checks`, `camp-heart-save` with its cold load, and `camp-heart-chain`. The
+player-facing tent cost in the Next-need line and Quickstart guide is still the pre-0.3.7 two-brush
+bill; that production text is outside this fixture fix.
+
 ## Polity dispatch window drift fix (#244, #257): targeted native runs pass
 
 `KingdomPolityDispatchRules.TryOpen` froze one endpoint digest over every owned settlement's

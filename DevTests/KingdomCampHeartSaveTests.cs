@@ -209,8 +209,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
 			var occupied = new System.Collections.Generic.List<KingdomPlotRules.PlotRect> {
-				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
-				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21), KingdomCampHeartChainGrid.SourceTent };
 			int accepted = 0;
 			foreach (var rect in KingdomCampHeartChainGrid.Candidates())
 			{
@@ -231,8 +230,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
 			var occupied = new List<KingdomPlotRules.PlotRect> {
-				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
-				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21), KingdomCampHeartChainGrid.SourceTent };
 			foreach (var home in KingdomCampHeartChainGrid.Candidates())
 			{
 				if (!KingdomPlotRules.Fits(home, usable)
@@ -263,13 +261,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ChainHousingProtectsPaidLaneBeyondReservedMargin()
 		{
-			var tent = new KingdomPlotRules.PlotRect(24, 7, 29, 10);
-			var blocker = new KingdomPlotRules.PlotRect(23, 2, 28, 5);
+			var tent = KingdomCampHeartChainGrid.SourceTent;
+			var blocker = new KingdomPlotRules.PlotRect(24, 1, 29, 4);
 			Assert.That(KingdomPlotRules.CrowdsExisting(blocker, new[] { tent }), Is.False);
-			Assert.That(blocker.Contains(26, 5), Is.True, "recorded north-facing tent lane endpoint");
+			Assert.That(blocker.Contains(26, 4), Is.True, "authored lane endpoint of the south-facing Medium tent");
 			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(blocker, tent), Is.False);
 			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(
-				new KingdomPlotRules.PlotRect(16, 2, 21, 5), tent), Is.True);
+				new KingdomPlotRules.PlotRect(16, 2, 21, 5), tent), Is.False, "the old grid lot now blocks the approach");
+			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(
+				new KingdomPlotRules.PlotRect(16, 3, 19, 8), tent), Is.True);
 		}
 
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")

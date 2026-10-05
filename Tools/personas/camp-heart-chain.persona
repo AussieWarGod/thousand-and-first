@@ -1,7 +1,16 @@
 # Physical input isolated for this exact dedicated game, through owned shutdown.
 # Synthetic city support: 50 enrolled bodies, 18 authored tent rows via setup-only calendar completion,
 # 3600 additional drams, 1728 food, foundry knowledge, one supplemental granary stockpile.
-# Founder walks west before the source tent commission; its reserved lane must clear the final heart.
+# Tent rows: 16 of the accepted grid plus transposed 4x6 lots (16,3)-(19,8) and (74,2)-(77,7);
+# (74,9)-(77,14) is the spare. Every row uses the retained S canvas binding (housing-s-canvas,
+# Retained=yes), not exercised natively since tentrow moved to Medium lots (561bffd3); neither are the
+# transposed poses nor the east lot's lane to the zone edge (x 78-79).
+# Paid-tent script (#282): the camp mints 13 brush (Medium tent 12 + its canvas-only upgrade 2 - 1), not
+# the plain case's 23, so one sentinel brush survives the tent, too few for its own upgrade before hold.
+# Founder walks west then one row south (cell derived from the catalogue tent lot). The real commission
+# is quoted first and must name the source tent (22,6)-(29,11) with labour inside one paid day; only then
+# is its other input (one disclosed timber) minted and the tent paid against that quote. Its reserved
+# lane must clear the final heart.
 # The source paid tent completes during an ordinary day, then its improvement is held.
 # All non-heart improvements held before the exact next heart material bill is supplied per leg.
 # At paid handover, place a real resident on annexed and renovated interior wall ground; protect founder/stranger,

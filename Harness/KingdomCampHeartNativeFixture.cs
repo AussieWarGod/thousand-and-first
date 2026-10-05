@@ -224,10 +224,13 @@ namespace ThousandAndFirst.Harness
 			/// <c>Unasked</c> brush the bill does not ask for. The brush count is conditional on the
 			/// sealed target rung and read off the accessor: <c>MintedBrushUnits</c> on a rung-2 run
 			/// fills the declared capacity exactly, <c>Rung3UnaskedBrushUnits</c> on a rung-3 run
-			/// leaves room for the next authored bill. The bill is therefore paid out of the very
-			/// store under test, and the brush is what must still be there afterwards.</summary>
+			/// leaves room for the next authored bill, and a paid-tent script mints the
+			/// catalogue-derived <c>PaidTentBrushUnits</c> (#282). The bill is therefore paid out of
+			/// the very store under test, and the brush is what must still be there afterwards.
+			/// </summary>
 			private void MintStoreContents()
 			{
+				RequirePaidTentArithmetic();
 				Mint(KingdomMaterial.Stone, MintedStoneUnits, MintedStone);
 				Mint(KingdomMaterial.Timber, MintedTimberUnits, MintedTimber);
 				Mint(KingdomMaterial.Brush, Unasked, MintedBrush);

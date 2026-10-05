@@ -53,6 +53,9 @@
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartTentRules.cs" />
+    <Compile Include="KingdomCampHeartMediumTentTests.cs" />
+    <Compile Include="KingdomCampHeartMediumTentSitingTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
     <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
