@@ -110,7 +110,7 @@ namespace ThousandAndFirst.Tests
 				"private static bool ProjectImprovement(", "public static void HandOver(",
 				"private static bool ExactHandoverEndpointsAfterCallback(",
 				"public static int CarryLiquid(", "public static int CarryInventory(",
-				"public static void CarryMarks(", "public static void ShowImprovements(",
+				"public static bool CarryMarks(", "public static void ShowImprovements(",
 				"public static string EntryLine(", "private static bool TryCarryHandoverContents(",
 				"private static bool TryRemoveHandoverPredecessor(");
 		}

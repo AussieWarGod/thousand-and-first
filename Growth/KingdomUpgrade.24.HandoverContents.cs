@@ -155,8 +155,8 @@ namespace ThousandAndFirst
 					if (job != null) KingdomConstruction.Quarantine(ref job, intent.HandoverFailure);
 					return false;
 				}
-				CarryMarks(Predecessor, Successor, SuccessorKey);
-				if (!ExactCarriedMarks(Predecessor, Successor, SuccessorKey)
+				bool marked = CarryMarks(Predecessor, Successor, SuccessorKey);
+				if (!marked || !ExactCarriedMarks(Predecessor, Successor, SuccessorKey)
 					|| !r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor,
 						Successor, cell, intent, true, out custodyFailure))
 				{
