@@ -42,10 +42,14 @@ namespace ThousandAndFirst
 		/// <para>
 		/// Signature A (the dropped yielding mark): the predecessor yields and the successor does
 		/// not, every other founder mark and the wear state settled, the predecessor's authored
-		/// upgrade reached phase 5 and the successor's layout verifies complete. Signature B (the
-		/// nulled scaffold reference): the scaffold reference is not live. Every HandOver endpoint
-		/// predicate other than the phase test is already in the common gate, evaluated with the
-		/// durable landed-scaffold identity.
+		/// upgrade reached phase 5 and the successor's layout verifies complete. That structure
+		/// cannot arise on a build with the fix: CarryMarks publishes the successor's yielding
+		/// mark before the marks check, and nothing removes it. Signature B (the nulled scaffold
+		/// reference): the endpoint refusal text only builds before the fix wrote (this build
+		/// writes <c>KingdomConstructionRules.HandoverEndpointsUnproven</c>), with every HandOver
+		/// endpoint predicate other than the phase test held by the common gate, evaluated with
+		/// the durable landed-scaffold identity. A live scaffold reference refuses too, though the
+		/// landed-scaffold proof already implies it is not live.
 		/// </para>
 		/// </summary>
 		public static KingdomRetiredHandoverDefect ClassifyRetiredHandoverDefect(

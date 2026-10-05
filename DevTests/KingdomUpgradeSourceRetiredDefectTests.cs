@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -158,26 +159,132 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReadmitIsCalledOnlyFromTheReadmission()
 		{
-			string root = TestMain.RepositoryRoot;
 			int callers = 0;
+			foreach (KeyValuePair<string, string> source in ProductionSources())
+			{
+				if (source.Value.Contains("KingdomConstruction.Readmit("))
+				{
+					callers++;
+					ClassicAssert.AreEqual(ReadmissionFile, source.Key);
+				}
+				if (source.Key != "Growth/KingdomConstructionRules.Readmission.cs")
+					StringAssert.DoesNotContain("readmitted after retired handover defect", source.Value,
+						source.Key);
+			}
+			ClassicAssert.AreEqual(1, callers);
+		}
+
+		private static IEnumerable<KeyValuePair<string, string>> ProductionSources()
+		{
+			string root = TestMain.RepositoryRoot;
 			foreach (string directory in new[] { "Growth", "Core", "Simulation", "Integrations" })
 			{
 				string full = Path.Combine(root, directory);
 				if (!Directory.Exists(full)) continue;
 				foreach (string file in Directory.GetFiles(full, "*.cs", SearchOption.AllDirectories))
-				{
-					string text = File.ReadAllText(file).Replace("\r\n", "\n");
-					string relative = file.Substring(root.Length + 1).Replace('\\', '/');
-					if (text.Contains("KingdomConstruction.Readmit("))
-					{
-						callers++;
-						ClassicAssert.AreEqual(ReadmissionFile, relative);
-					}
-					if (relative != "Growth/KingdomConstructionRules.Readmission.cs")
-						StringAssert.DoesNotContain("readmitted after retired handover defect", text, relative);
-				}
+					yield return new KeyValuePair<string, string>(
+						file.Substring(root.Length + 1).Replace('\\', '/'),
+						File.ReadAllText(file).Replace("\r\n", "\n"));
 			}
-			ClassicAssert.AreEqual(1, callers);
+		}
+
+		/// <summary>Signature B's endpoints text is retired: only builds before the #283 fix
+		/// wrote it. No production file but the readmission rules names it, and those only declare
+		/// it and recognize it.</summary>
+		[Test]
+		public void NoProductionCodeWritesSignatureBsText()
+		{
+			const string Rules = "Growth/KingdomConstructionRules.Readmission.cs";
+			int scanned = 0;
+			foreach (KeyValuePair<string, string> source in ProductionSources())
+			{
+				scanned++;
+				if (source.Key == Rules) continue;
+				StringAssert.DoesNotContain("HandoverEndpointsFailure", source.Value, source.Key);
+				StringAssert.DoesNotContain(KingdomConstructionRules.HandoverEndpointsFailure,
+					source.Value, source.Key);
+			}
+			ClassicAssert.Greater(scanned, 1000, "the production tree was not found");
+			string code = Regex.Replace(Read(Rules), @"^\s*///.*$", "", RegexOptions.Multiline);
+			ClassicAssert.AreEqual(2, Regex.Matches(code, @"\bHandoverEndpointsFailure\b").Count);
+			StringAssert.Contains("public const string HandoverEndpointsFailure =", code);
+			StringAssert.Contains(": Failure == HandoverEndpointsFailure ? KingdomRetiredHandoverDefect.LandedScaffold",
+				code);
+		}
+
+		/// <summary>A quarantine the fixed HandOver writes is never readmitted. The failure its
+		/// endpoint refusal publishes, read from the source, names no retired signature, so the
+		/// classifier refuses it with every structural conjunct held and the registry gate refuses
+		/// its readmission. Before, the refusal published signature B's own text, so a transient
+		/// landed-scaffold refusal (the scaffold id still live somewhere, or past the global
+		/// lookup bound) quarantined on this build was readmitted as defect B on a later pass.
+		/// </summary>
+		[Test]
+		public void AQuarantineTheFixedHandOverWritesIsNeverReadmitted()
+		{
+			Match refusal = Regex.Match(Body(Read(HandOverFile), "public static void HandOver("),
+				@"\|\| !landed[^{]*\{\s*FailExactHandover\(Predecessor, Successor, SuccessorKey,\s*"
+				+ @"KingdomConstructionRules\.(\w+)\);");
+			ClassicAssert.IsTrue(refusal.Success, "the endpoint refusal after the landed proof");
+			FieldInfo field = typeof(KingdomConstructionRules).GetField(refusal.Groups[1].Value,
+				BindingFlags.Public | BindingFlags.Static);
+			ClassicAssert.IsNotNull(field, refusal.Groups[1].Value);
+			string text = (string)field.GetRawConstantValue();
+			ClassicAssert.AreEqual(KingdomRetiredHandoverDefect.None,
+				KingdomConstructionRules.RetiredHandoverDefectFor(text), text);
+			KingdomConstructionJob job = new KingdomConstructionJob
+			{
+				Id = "00000000000000000000000000000283", Route = KingdomConstructionRoute.Improvement,
+				Phase = KingdomConstructionPhase.InspectionRequired, PhysicalPhase = KingdomPhysicalPhase.None,
+				SubjectId = "pred-1", SourceId = "pred-1", OutputId = "succ-1", TargetKey = "tentrow",
+				X = 29, Y = 9, Failure = text
+			};
+			KingdomUpgradeRules.RetiredHandoverObservation held = new KingdomUpgradeRules.RetiredHandoverObservation
+			{
+				Owned = true, Current = true, PredecessorReceipt = true, SuccessorReceipt = true,
+				SuccessorPending = true, SuccessorExact = true, Working = true, PredecessorExact = true,
+				ScaffoldLanded = true, ContentCustody = true
+			};
+			ClassicAssert.AreEqual(KingdomRetiredHandoverDefect.None, KingdomUpgradeRules
+				.ClassifyRetiredHandoverDefect(job, "pred-1", 29, 9, "succ-1", "tentrow", held));
+			foreach (KingdomRetiredHandoverDefect defect in new[] {
+				KingdomRetiredHandoverDefect.FounderMarks, KingdomRetiredHandoverDefect.LandedScaffold })
+			{
+				string failure;
+				ClassicAssert.IsFalse(KingdomConstructionRules.TryReadmissionFailure(job, defect, out failure));
+				KingdomConstructionJob next = KingdomConstructionRules.Transition(job,
+					KingdomConstructionPhase.Outstanding, 412800L,
+					KingdomConstructionRules.ReadmissionPrefix(defect) + text);
+				ClassicAssert.IsFalse(KingdomConstructionRules.IsRetiredDefectReadmission(job, next),
+					defect.ToString());
+			}
+		}
+
+		/// <summary>Signature A is retired by structure: CarryMarks writes the successor's yielding
+		/// mark before anything can refuse, and no production code removes or lowers that mark, so
+		/// a marks quarantine this build writes never shows A's yielding predecessor beside a
+		/// successor that does not yield. The generated removal coverage (mod uninstall) is apart.
+		/// </summary>
+		[Test]
+		public void NoProductionCodeRemovesTheYieldingMark()
+		{
+			int writers = 0;
+			foreach (KeyValuePair<string, string> source in ProductionSources())
+			{
+				if (source.Key == "Core/KingdomRemovalCoverage.Generated.cs") continue;
+				foreach (Match match in Regex.Matches(source.Value,
+					@"\b(\w+)IntProperty\(\s*(?:KingdomPlots\.)?YieldingProperty\b\s*(,[^)]*)?\)"))
+				{
+					string verb = match.Groups[1].Value;
+					if (verb == "Get" || verb == "Has") continue;
+					ClassicAssert.AreEqual("Set", verb, source.Key + ": " + match.Value);
+					ClassicAssert.AreEqual(", 1", match.Groups[2].Value, source.Key + ": " + match.Value);
+					writers++;
+				}
+				if (source.Key != "Growth/KingdomPlot2.03.RegistryAndDeclarations.cs")
+					StringAssert.DoesNotContain("\"r_TAF_Yielding\"", source.Value, source.Key);
+			}
+			ClassicAssert.GreaterOrEqual(writers, 4, "the yielding writers were not found");
 		}
 	}
 }

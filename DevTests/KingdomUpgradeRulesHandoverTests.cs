@@ -263,6 +263,7 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		[TestCase(KingdomConstructionRules.HandoverEndpointsUnproven)]
 		[TestCase("Scaffold-removal proof is absent, malformed, or foreign.")]
 		[TestCase("The improved successor could not be verified before handover.")]
 		[TestCase("readmitted after retired handover defect #283 (A): Founder marks did not settle exactly on the successor.")]

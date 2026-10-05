@@ -17,7 +17,8 @@ namespace ThousandAndFirst.Tests
 		private static string Read(string Path) => TestMain.ReadRepositoryText(Path);
 
 		private static readonly string[] FixSymbols = {
-			"HandoverMarksFailure", "HandoverEndpointsFailure", "KingdomRetiredHandoverDefect",
+			"HandoverMarksFailure", "HandoverEndpointsFailure", "HandoverEndpointsUnproven",
+			"KingdomRetiredHandoverDefect",
 			"ReadmittedProperty", "FounderMarks", "LandedScaffoldIdentity", "ClassifyRetiredHandoverDefect",
 			"TryReadmitRetiredHandoverDefect", "KingdomConstruction.Readmit", "IsRetiredDefectReadmission",
 			"ReadmissionPrefix", "TryLandedScaffoldId" };

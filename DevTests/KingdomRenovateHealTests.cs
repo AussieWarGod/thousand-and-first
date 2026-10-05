@@ -49,7 +49,8 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>Session one's build predates the constants, so the harness spells the texts;
-		/// they must be exactly the ones production writes and the readmission keys on.</summary>
+		/// they must be exactly the ones that build writes and the readmission keys on. The
+		/// endpoints text is retired: only builds before the fix write it.</summary>
 		[Test]
 		public void TheSpelledFailureTextsAreTheProductionLiterals()
 		{

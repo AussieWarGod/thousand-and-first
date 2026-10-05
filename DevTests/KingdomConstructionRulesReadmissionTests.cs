@@ -120,6 +120,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(removing, removingNext));
 		}
 
+		[TestCase(KingdomConstructionRules.HandoverEndpointsUnproven)]
 		[TestCase("Scaffold-removal proof is absent, malformed, or foreign.")]
 		[TestCase("The improved successor could not be verified before handover.")]
 		public void AnyOtherQuarantineStaysUnderInspection(string Failure)

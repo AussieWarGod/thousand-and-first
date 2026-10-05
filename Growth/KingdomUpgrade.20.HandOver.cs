@@ -149,7 +149,9 @@ namespace ThousandAndFirst
 				// #283: the landed scaffold's identity comes from the successor's durable removal
 				// intent. PollHandover nulls the scaffold reference before every call, so refusing
 				// on a null reference quarantined any handover still unsettled after its landing
-				// pass. Computed before the predicate chain because of its out parameter.
+				// pass. Computed before the predicate chain because of its out parameter. The
+				// refusal below never writes the retired endpoints text (signature B), so nothing
+				// this build quarantines here can be readmitted.
 				bool landed = TryLandedScaffoldId(intent, Successor, out scaffoldId);
 				if (!KingdomConstruction.TryFind(receipt, out job)
 					|| !KingdomConstruction.Owns(ownerSystem, Predecessor.CurrentZone, job)
@@ -171,7 +173,7 @@ namespace ThousandAndFirst
 						cell, job, intent.SuccessorBlueprint))
 				{
 					FailExactHandover(Predecessor, Successor, SuccessorKey,
-						KingdomConstructionRules.HandoverEndpointsFailure);
+						KingdomConstructionRules.HandoverEndpointsUnproven);
 					return;
 				}
 				// No reference is passed as the expected predecessor: TryLandedScaffoldId has

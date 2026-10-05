@@ -14,14 +14,25 @@ namespace ThousandAndFirst
 	public static partial class KingdomConstructionRules
 	{
 		/// <summary>The handover's founder-marks refusal
-		/// (<c>Growth/KingdomUpgrade.24.HandoverContents.cs</c>). Signature A's text.</summary>
+		/// (<c>Growth/KingdomUpgrade.24.HandoverContents.cs</c>). Signature A's text. This build
+		/// still writes it, never with signature A's structure: CarryMarks publishes the successor's
+		/// yielding mark before the marks check, and no code removes that mark.</summary>
 		public const string HandoverMarksFailure =
 			"Founder marks did not settle exactly on the successor.";
 
-		/// <summary>The handover's endpoint refusal (<c>Growth/KingdomUpgrade.20.HandOver.cs</c>).
-		/// Signature B's text.</summary>
+		/// <summary>The endpoint refusal HandOver wrote before the #283 fix, which is how it
+		/// refused the nulled reference of a landed scaffold. Signature B's text, recognized only
+		/// for saves those builds quarantined: no code in this build writes it. The fixed HandOver
+		/// publishes <see cref="HandoverEndpointsUnproven"/> instead, so no quarantine this build
+		/// creates carries signature B.</summary>
 		public const string HandoverEndpointsFailure =
 			"The paid improvement job no longer matches its exact physical endpoints.";
+
+		/// <summary>The fixed HandOver's endpoint refusal, landed-scaffold proof included
+		/// (<c>Growth/KingdomUpgrade.20.HandOver.cs</c>). Deliberately not a retired signature's
+		/// text, so its quarantine stays under inspection.</summary>
+		public const string HandoverEndpointsUnproven =
+			"The paid improvement job could not prove its exact physical endpoints and landed scaffold.";
 
 		/// <summary>The retired defect a quarantine failure text can name. Text only narrows the
 		/// candidates; the readmission gate is structural and never admits on text alone.

@@ -31,7 +31,8 @@ namespace ThousandAndFirst
 
 		/// <summary>Quarantines an ambiguous external mutation. No automatic retry may cross it;
 		/// the only automatic crossing is <see cref="Readmit"/>, the ruled, once-only, structurally
-		/// proven readmission of a retired #283 handover defect.</summary>
+		/// proven readmission of a quarantine a retired #283 handover defect left. No quarantine
+		/// a build with the fix writes qualifies.</summary>
 		public static bool Quarantine(ref KingdomConstructionJob Job, string Failure)
 		{
 			string ignored;

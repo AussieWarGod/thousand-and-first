@@ -14,8 +14,9 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Readmits, once, a paid improvement that a retired #283 defect left in
 		/// InspectionRequired: signature A (the authored lane dropped the yielding mark after the
-		/// layout was rebuilt) or signature B (HandOver refused the nulled reference of a landed
-		/// scaffold). Ruled by the root (Q1) for dev and the 0.3.9 hotfix.
+		/// layout was rebuilt) or signature B (a build before the fix refused the nulled reference
+		/// of a landed scaffold). Neither can be written by a build with the fix. Ruled by the
+		/// root (Q1) for dev and the 0.3.9 hotfix.
 		/// <para>
 		/// Plan before effect: every fact is read and judged by the engine-free
 		/// <see cref="KingdomUpgradeRules.ClassifyRetiredHandoverDefect"/> first. Only then does it
