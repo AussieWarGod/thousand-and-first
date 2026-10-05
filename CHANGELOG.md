@@ -161,10 +161,10 @@ records current acceptance.
   Native founding, independent city regard, personal spillover and cold-load persistence pass.
   Historical interrupted founding remains unproved natively; this is not in public 0.3.7.
 
-## [0.3.8] — 2026-10-04 (Alpha)
+## [0.3.8] — 2026-10-05 (Alpha)
 
-Alpha hotfix candidate: a game whose kingdom has not been founded can now be saved. Private
-candidate; not yet uploaded or accepted. Public Alpha remains 0.3.7.
+Alpha hotfix: a game whose kingdom has not been founded can now be saved.
+Public 0.3.8 is published, verified and finalized on one subscribed client.
 
 - Save a game before its kingdom is founded (#271, #272). Since 0.3.0, every save made before
   the first city was founded failed with "growth envelope is not bounded and writable": the
