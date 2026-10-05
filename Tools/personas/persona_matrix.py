@@ -174,6 +174,11 @@ CAMP_HEART_EVIDENCE_ROWS = (
 # and the published two-city topology. Not callable verbs.
 SECOND_CITY_EVIDENCE_ROWS = ("second-city-site", "second-city-topology")
 
+# #283 (design A4): the fresh post-wait evidence the final tier-upgrade check lands immediately
+# before its own verdict row (Harness/KingdomTierUpgradeAfterWait.cs). Positional; a stall names
+# its first cause in it. Not a callable verb.
+TIER_UPGRADE_EVIDENCE_ROWS = ("tier-upgrade-after-wait",)
+
 # The unfounded cold-load route (#272, #271): the save leg seals exactly this script and verb
 # (Harness/KingdomUnfoundedSave.cs) on the requested start; the host then cold-loads the save in a
 # fresh descendant profile (Tools/persona_reload.py). The start is the canonical
@@ -641,6 +646,7 @@ def parse_expect(
             and verb not in ROOM_EVIDENCE_ROWS
             and verb not in POLITY_EVIDENCE_ROWS
             and verb not in SECOND_CITY_EVIDENCE_ROWS
+            and verb not in TIER_UPGRADE_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))

@@ -259,6 +259,7 @@ namespace ThousandAndFirst.Tests
 				+ "tier-upgrade-check:OK~native-tier-upgrade phase=2,"
 				+ "tier-upgrade-short:OK~native-tier-upgrade phase=3,advance:OK,"
 				+ "tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,"
+				+ "tier-upgrade-after-wait:OK~native-tier-upgrade after-wait,"
 				+ "tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,"
 				+ "stagedigest:OK~founded=true,COMPLETE"));
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"improvement refused cleanly:\","

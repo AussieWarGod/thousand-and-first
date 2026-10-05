@@ -1259,6 +1259,7 @@ class ShippedPersonaTest(unittest.TestCase):
                  "camp-heart-chain-check"),
                 (("second-city-site",), "second-city-setup"),
                 (("second-city-topology",), "second-city-check"),
+                (matrix.TIER_UPGRADE_EVIDENCE_ROWS, "tier-upgrade-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),

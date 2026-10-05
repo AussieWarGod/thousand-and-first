@@ -119,6 +119,7 @@ namespace ThousandAndFirst.Harness
 					.Append("; brush=").Append(QuoteBrush)
 					.Append("; due=").Append(job.DueTick)
 					.Append("; scaffold=").Append(scaffold.IDIfAssigned);
+				RecordBegunMarks(tent);
 			}
 
 			/// <summary>Why no completed tent stands after leg one, journaled before the refusal:
@@ -204,6 +205,7 @@ namespace ThousandAndFirst.Harness
 			/// by the typed physical lookup, not by a census of what happens to be alive.</summary>
 			private void HandedOverAndRetired()
 			{
+				RecordAfterWait();
 				GameObject successor = Standing(ToKey);
 				Require(successor != null, "no completed tent-row stands after the handover wait");
 				SuccessorId = successor.IDIfAssigned;
@@ -241,6 +243,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomPlotRules.HeartRungOf(ToKey) == 0
 					&& successor.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1,
 					"the ordinary climb settled a founding-heart rung");
+				RequireCarriedMarksAndCleanSeal(successor);
 				Evidence.Append("\nsuccessor=").Append(SuccessorId)
 					.Append("; predecessor=").Append(PredecessorId)
 					.Append("; predecessor-lookup=Absent")
