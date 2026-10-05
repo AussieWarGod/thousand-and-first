@@ -43,10 +43,12 @@ namespace ThousandAndFirst.Harness
 				KingdomRules.BuildEntry entry = null;
 				Require(KingdomData.TryGetBuilding(ClaimKey, out entry) && entry != null,
 					"taf-camp-claim-nodesign: the catalogue has no '" + ClaimKey + "' design");
+				// Paid-tent scripts lock the exact quote, then mint the tent's non-brush inputs.
+				KingdomPlotQuote quote = PaysTent ? QuotePaidTent(entry) : null;
 				List<KingdomPlotRules.PlotRect> before = KingdomPlots.ReadPlots(Zone);
 				string failure;
 				bool commissioned = KingdomPlots.Commission(System, Zone, entry, null,
-					out failure);
+					KingdomPlotRules.PlotSize.None, quote, out failure);
 				List<KingdomPlotRules.PlotRect> after = KingdomPlots.ReadPlots(Zone);
 				if (commissioned)
 				{
@@ -54,6 +56,8 @@ namespace ThousandAndFirst.Harness
 						"taf-camp-claim-unstaked: the commission reported success but staked "
 							+ (after.Count - before.Count) + " plot(s)");
 					KingdomPlotRules.PlotRect laid = Added(before, after);
+					Require(quote == null || Same(laid, quote.Rect),
+						"taf-camp-claim-off-quote: the paid tent was staked off its locked quote");
 					RequireChainCommissionClear(laid);
 					Require(!KingdomPlotRules.Overlaps(laid,
 						KingdomPlotRules.Reserved(heart)),
@@ -65,6 +69,8 @@ namespace ThousandAndFirst.Harness
 				{
 					Require(!string.IsNullOrEmpty(failure),
 						"taf-camp-claim-silent: the commission refused without a reason");
+					Require(!PaysTent, "taf-camp-claim-paid-refused: the paid-tent script's real "
+						+ "commission refused: " + KingdomScenarioRules.Bounded(failure));
 					Require(after.Count == before.Count,
 						"taf-camp-claim-staked-on-refusal: a refused commission staked ground");
 					// Recorded verbatim, and NOT required to name the stockpile: production

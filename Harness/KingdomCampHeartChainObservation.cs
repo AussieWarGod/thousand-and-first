@@ -18,24 +18,52 @@ namespace ThousandAndFirst.Harness
 				ChainCommission = KingdomCampHeartChainScript.Matches(script);
 				if (!ChainCommission) return;
 				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var outer), "final heart envelope absent");
-				int destination = outer.X1 - KingdomPlotRules.SmallWidth - KingdomPlotRules.RoadMargin - 2;
+				// The founder's cell, derived from the catalogue tent lot (Medium since 561bffd3),
+				// steers the founder-ground rule to the pinned source tent (#282).
+				Require(KingdomPlots.TryGetSpec(ClaimKey, out var spec), "source tent lot spec absent");
+				Require(KingdomPlotRules.TryDimensions(spec.Size, out int width, out int height),
+					"source tent lot dimensions absent");
+				int destination = KingdomCampHeartChainGrid.CommissionX(outer, width);
+				int row = KingdomCampHeartChainGrid.CommissionY(height);
 				var player = The.Player;
-				Require(destination >= 1 && GameObject.Validate(player) && player.CurrentZone == Zone
-					&& player.CurrentCell != null, "chain commission has no western approach");
+				Require(destination >= 1 && row >= 1 && row < Zone.Height - 1 && GameObject.Validate(player)
+					&& player.CurrentZone == Zone && player.CurrentCell != null, "chain commission has no western approach");
 				long tick = Game.TimeTicks;
-				int moves = 0;
+				int moves = 0, rowMoves = 0;
 				while (player.CurrentCell.X > destination)
-				{
-					int x = player.CurrentCell.X, y = player.CurrentCell.Y;
-					Require(++moves <= 40 && player.Move("W", AllowDashing: false, DoConfirmations: false)
-						&& ReferenceEquals(The.Player, player) && player.CurrentZone == Zone
-						&& player.CurrentCell.X == x - 1 && player.CurrentCell.Y == y,
-						"founder could not walk to the chain commission approach");
-				}
+					ChainStep(player, "W", -1, 0, ++moves);
+				while (player.CurrentCell.Y != row)
+					ChainStep(player, player.CurrentCell.Y < row ? "S" : "N", 0,
+						player.CurrentCell.Y < row ? 1 : -1, moves + ++rowMoves);
 				Require(Game.TimeTicks == tick && ReferenceEquals(The.Game, Game),
 					"commission approach changed the game or clock");
 				Evidence.Append("\nchain-commission normal-west-moves=").Append(moves)
+					.Append("; row-moves=").Append(rowMoves)
 					.Append("; founder-cell=").Append(player.CurrentCell.X).Append(",").Append(player.CurrentCell.Y);
+			}
+
+			private void ChainStep(GameObject Player, string Direction, int DX, int DY, int Moves)
+			{
+				int x = Player.CurrentCell.X, y = Player.CurrentCell.Y;
+				Require(Moves <= 40 && Player.Move(Direction, AllowDashing: false, DoConfirmations: false)
+					&& ReferenceEquals(The.Player, Player) && Player.CurrentZone == Zone
+					&& Player.CurrentCell.X == x + DX && Player.CurrentCell.Y == y + DY,
+					"founder could not walk to the chain commission approach");
+			}
+
+			/// <summary>The chain's paid tent is locked to its quote before anything is minted or
+			/// paid: the pinned source tent, and labour inside the one paid daily window before
+			/// <c>HoldChainTent</c> (the first window after a commission may be unpriced).</summary>
+			private void RequireChainQuote(KingdomPlotQuote Quote)
+			{
+				if (!ChainCommission) return;
+				var tent = KingdomCampHeartChainGrid.SourceTent;
+				Require(Same(Quote.Rect, tent), "chain tent quote " + Quote.Rect.X1 + "," + Quote.Rect.Y1
+					+ " " + Quote.Rect.X2 + "," + Quote.Rect.Y2 + " differs from the source tent "
+					+ tent.X1 + "," + tent.Y1 + " " + tent.X2 + "," + tent.Y2 + "; nothing was paid");
+				Require(Quote.LabourTicks >= 1 && Quote.LabourTicks <= KingdomRules.TicksPerDay,
+					"chain tent labour " + Quote.LabourTicks + " exceeds the one paid day before its hold");
+				Evidence.Append("; one-day-labour-window=").Append(KingdomRules.TicksPerDay);
 			}
 
 			private void RequireChainCommissionClear(KingdomPlotRules.PlotRect Plot)

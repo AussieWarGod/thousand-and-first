@@ -1,13 +1,17 @@
 # Synthetic paid camp 1->2, next-day recovery, then an actual save for a separate cold load.
-# Inherits six synthetic residents, 400 drams and 48 initial material units from the camp case.
-# Save adds one explicitly disclosed timber unit. Loaded continuation spends it on a new fire.
-# The existing tent commission pays two brush; preserve its receipt and the 21 remaining brush across load.
+# Inherits six synthetic residents and 400 drams from the camp case. As a paid-tent script (#282) it
+# mints the rung-2 bill plus brush read from the catalogue: the Medium tent's 12 plus one fewer than
+# the tent's own canvas-only upgrade asks for (13 brush, 38 initial units, not the plain case's 48).
+# At the phase-2 boundary it quotes the real tent commission, mints the tent's other input (one
+# disclosed timber) and pays against that quote. The paid tent leaves one sentinel brush, too few for
+# its own upgrade; preserve its receipt and that brush across load. Save adds one explicitly disclosed
+# timber unit. Loaded continuation spends it on a new fire.
 DESCRIPTION=paid rung-2 camp save for separate cold-load and independently completed next construction
 REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;stagedigest;camp-heart-save
 VERBS=camp-heart-setup,camp-heart-check,camp-heart-save
-EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,camp-heart-save-custody:OK~before=r_KingdomBrush=21,camp-heart-save:OK~paid-camp-save=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,camp-heart-save-custody:OK~before=r_KingdomBrush=1,camp-heart-save:OK~paid-camp-save=true,COMPLETE
 LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
 LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
 SET=camp,native-regression,test-only
