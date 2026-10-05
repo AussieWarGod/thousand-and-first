@@ -2,7 +2,9 @@
 # Session one runs on a tree WITHOUT the fix: this tree with exactly the #283 production files
 # restored from the pre-fix base and nothing else changed (Tools/persona_reload_heal.py FIX_NEW
 # and FIX_CHANGED; the host proves that delta, the identical harness and the identical tools
-# before anything launches). Name it with TAF_RELOAD_SOURCE_TREE. It runs the tier-upgrade
+# before anything launches). Name it with TAF_RELOAD_SOURCE_TREE; without it, or when that proof
+# fails, the helper refuses before any effect (exit 3) and the matrix records this persona as
+# failed and runs the rest. It carries no acceptance set of its own. It runs the tier-upgrade
 # legs and the third ordinary wait into the retired handover stall, journals the fresh after-wait
 # evidence and saves the stall for real; its seal reports of that stall are the defect evidence.
 # Session two cold-loads that exact save in a fresh descendant profile whose staged runtime comes
@@ -16,5 +18,5 @@ DESCRIPTION=save a paid tent renovate stuck by #283 on an unfixed build, cold-lo
 REQUEST=founding-first-city
 SCRIPT=reload-descendant renovate-heal 8.22@40,12
 EXPECT=RELOAD-COMPLETE
-SET=reload,save-load,tier-upgrade
+SET=reload,save-load
 TIMEOUT=3600

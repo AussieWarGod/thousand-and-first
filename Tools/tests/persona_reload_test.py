@@ -165,7 +165,12 @@ class ReloadTests(unittest.TestCase):
         main_block = source[source.index("def main():"):source.index("def interrupted(")]
         handler = main_block.index("signal.signal(signal.SIGTERM, interrupted)")
         arm_call = main_block.index("arm_parent_death_signal()")
-        manifest_load = main_block.index('load(str(args.persona))')
+        # All persona work begins in preflight(), the only persona load, which main() calls
+        # only after arming.
+        manifest_load = main_block.index("preflight(args, tools)")
+        preflight = source[source.index("def preflight("):source.index("def main():")]
+        self.assertIn('load(str(args.persona))', preflight)
+        self.assertEqual(1, source.count('load(str(args.persona))'))
         self.assertGreater(arm_call, handler,
             "the explicit SIGTERM handler must be registered before the kernel is armed to send it")
         self.assertGreater(manifest_load, arm_call,

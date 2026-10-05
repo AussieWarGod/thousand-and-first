@@ -1,4 +1,6 @@
 """#283 heal route host tests: fake effects and synthetic trees only, never native acceptance."""
+import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -217,6 +219,50 @@ class SourceTreeTests(unittest.TestCase):
             for candidate in (fixed_tree, Path("relative/tree")):
                 with self.subTest(candidate=candidate), self.assertRaisesRegex(ValueError, "separate TAF checkout"):
                     heal.validate_source_tree(candidate, fixed_tree)
+
+
+
+class PreflightCliTests(unittest.TestCase):
+    """The real CLI and the real heal persona: an absent or unproved unfixed tree is refused
+    before any effect, with the distinct status run-personas.sh does not treat as an ownership
+    failure, and without creating so much as an evidence directory."""
+
+    def run_cli(self, extra):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            game = base / "CoQ.exe"
+            game.write_text("inert fixture, never launched\n", encoding="utf-8")
+            report = base / "report"
+            env = {key: value for key, value in os.environ.items() if not key.startswith("TAF_")}
+            env.update(extra, PYTHONDONTWRITEBYTECODE="1")
+            result = subprocess.run(
+                [sys.executable, str(TOOLS / "run-persona-reload.py"),
+                 str(TOOLS / "personas" / "renovate-heal-reload.persona"),
+                 "--game", str(game), "--report-dir", str(report)],
+                env=env, capture_output=True, text=True, timeout=120)
+            left = sorted(path.name for path in report.iterdir()) if report.exists() else []
+        return result, left
+
+    def assert_refused_before_any_effect(self, extra, reason):
+        result, left = self.run_cli(extra)
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        verdict = json.loads(result.stdout)
+        self.assertEqual("REFUSED", verdict["verdict"])
+        self.assertIs(True, verdict["beforeAnyEffect"])
+        self.assertIsNone(verdict["evidence"])
+        self.assertIn(reason, verdict["reason"])
+        self.assertEqual([], left)
+
+    def test_absent_unfixed_tree_is_refused_before_any_effect(self):
+        self.assert_refused_before_any_effect({}, "needs TAF_RELOAD_SOURCE_TREE")
+
+    def test_unproved_unfixed_tree_is_refused_before_any_effect(self):
+        self.assert_refused_before_any_effect({"TAF_RELOAD_SOURCE_TREE": "relative/not-a-tree"},
+                                              "not a separate TAF checkout")
+
+    def test_the_heal_persona_carries_no_acceptance_set(self):
+        text = (TOOLS / "personas" / "renovate-heal-reload.persona").read_text(encoding="utf-8")
+        self.assertIn("\nSET=reload,save-load\n", text)
 
 
 if __name__ == "__main__":
