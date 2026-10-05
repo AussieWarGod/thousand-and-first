@@ -1,8 +1,8 @@
 # Release and Steam Workshop Procedure
 
-**Current public Alpha: 0.3.7, published and finalized.** Release run `34896457046` passed
+**Current public Alpha: 0.3.8, published and finalized.** Release run `37258356731` passed
 all applicable hosted, licensed, submission, subscribed verification and finalization jobs.
-[Exact public receipts and one-client limits](STATUS.md#public-037--published-and-finalized).
+[Exact public receipts and one-client limits](STATUS.md#public-038--published-and-finalized).
 Earlier release narratives below remain historical evidence, not current acceptance claims.
 
 ## Standing author ruling — 2026-09-11
@@ -488,6 +488,8 @@ python3 Tools/workshop_metadata.py alpha-candidate \
 ```
 
 Commit only the exact reviewed public metadata, status, changelog, and candidate-record files.
+When `Tools/dev-check.sh docs` demands it, the flip also moves the README status expectation in
+`Tools/check-doc-freshness.py` to the new version, as the 0.3.7 and 0.3.8 flips did.
 From that clean public-candidate commit, run the gates, create its new annotated tag, and package:
 
 ```bash
