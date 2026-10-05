@@ -27,8 +27,10 @@ namespace ThousandAndFirst.Tests
 			string source = Upgrade();
 			ClassicAssert.AreEqual(15, Count(source, "public partial class r_KingdomImprovement"));
 			// 23 since #138: the extracted handover proof and the heart-rung caller are two more
-			// partials of the same class, both registered in the logical source above.
-			ClassicAssert.AreEqual(23, Count(source, "public static partial class KingdomUpgrade"));
+			// partials of the same class, both registered in the logical source above. 25 since
+			// #283: the landed-scaffold adapter and the retired-defect readmission are two more,
+			// registered the same way.
+			ClassicAssert.AreEqual(25, Count(source, "public static partial class KingdomUpgrade"));
 			StringAssert.Contains(
 				"[Serializable]\n\tpublic partial class r_KingdomImprovement : IPart", source);
 			string part = Between(source,
@@ -110,7 +112,7 @@ namespace ThousandAndFirst.Tests
 				"private static bool ProjectImprovement(", "public static void HandOver(",
 				"private static bool ExactHandoverEndpointsAfterCallback(",
 				"public static int CarryLiquid(", "public static int CarryInventory(",
-				"public static void CarryMarks(", "public static void ShowImprovements(",
+				"public static bool CarryMarks(", "public static void ShowImprovements(",
 				"public static string EntryLine(", "private static bool TryCarryHandoverContents(",
 				"private static bool TryRemoveHandoverPredecessor(");
 		}

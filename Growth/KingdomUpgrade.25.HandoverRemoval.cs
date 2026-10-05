@@ -21,7 +21,7 @@ namespace ThousandAndFirst
 
 		private static bool TryRemoveHandoverPredecessor(GameObject Predecessor,
 			GameObject Successor, Cell cell, string predecessorId, string SuccessorKey,
-			r_KingdomImprovement intent, KingdomSystem ownerSystem,
+			r_KingdomImprovement intent, string ScaffoldId, KingdomSystem ownerSystem,
 			ref KingdomConstructionJob job, int carriedLiquid, int carriedItems,
 			out string predecessorName)
 		{
@@ -62,7 +62,7 @@ namespace ThousandAndFirst
 						|| KingdomConstruction.FindExactId(Predecessor.CurrentZone,
 							Successor.IDIfAssigned, out exactSuccessor) != KingdomPhysicalLookupState.Exact
 						|| !ReferenceEquals(exactSuccessor, Successor)
-						|| !ExactPendingRemovalProof(Successor, intent.Scaffold.IDIfAssigned,
+						|| !ExactPendingRemovalProof(Successor, ScaffoldId,
 							predecessorId, job)
 					|| !KingdomConstruction.IsCurrent(job))))
 			{
@@ -89,7 +89,7 @@ namespace ThousandAndFirst
 			{
 				string proof = Successor.GetStringProperty(r_KingdomScaffold.RemovalProofProperty);
 				if (Successor.HasIntProperty(r_KingdomScaffold.RemovalProofProperty)
-					|| proof != predecessorId && proof != intent.Scaffold.IDIfAssigned)
+					|| proof != predecessorId && proof != ScaffoldId)
 				{
 					r_KingdomImprovement.FailHandover(intent,
 						"The successor carries foreign predecessor-removal proof.");

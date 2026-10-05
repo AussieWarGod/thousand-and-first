@@ -53,6 +53,11 @@ namespace ThousandAndFirst.Harness
 				if (ReferenceEquals(__instance, The.Player)) KingdomUnfoundedLoad.BeforeActivation();
 				return;
 			}
+			if (KingdomScenarioLoadEntry.HealSnapshot != null)
+			{
+				if (ReferenceEquals(__instance, The.Player)) KingdomRenovateHealLoad.BeforeActivation();
+				return;
+			}
 			try
 			{
 				if (!ReferenceEquals(__instance, The.Player)) return;

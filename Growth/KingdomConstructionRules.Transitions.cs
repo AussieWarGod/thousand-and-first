@@ -69,6 +69,9 @@ namespace ThousandAndFirst
 						|| Current.Phase == KingdomConstructionPhase.Projected
 						|| Current.Phase == KingdomConstructionPhase.Working
 						|| Current.Phase == KingdomConstructionPhase.Outstanding);
+			// #283: the ruled, once-only readmission of a retired handover defect is the one
+			// automatic exit from InspectionRequired; every other exit below stays refused.
+			if (IsRetiredDefectReadmission(Current, Next)) return true;
 			switch (Current.Phase)
 			{
 				case KingdomConstructionPhase.Published:

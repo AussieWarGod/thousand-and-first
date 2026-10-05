@@ -1,5 +1,115 @@
 # Current implementation and release evidence
 
+## Paid renovate handover stall (#283): fix built, native acceptance owed
+
+Native run 4ea54bb9 of the ordinary tier-upgrade persona (#266) paid for and began the camp's
+tent -> tentrow renovate, then stalled mid-handover. The tent had been staked inside the heart's
+survey, so it carried `r_TAF_Yielding`. The authored renovation lane rebuilt the layout and staged
+both new beds, but CarryMarks never carried the yielding mark, so ExactCarriedMarks refused and the
+job went to InspectionRequired with `Founder marks did not settle exactly on the successor.` (R1).
+Separately, PollHandover nulls the scaffold reference of a landed scaffold and HandOver refused a
+null reference, so any handover still unsettled after its landing pass was quarantined instead of
+retried (R3). InspectionRequired had no exit and the working improvement froze every other work in
+the zone, heart climbs included (R4). The seal only reported the half-renovated tent, Malformed every
+pass and after each save and load (R2). The defect ships in v0.3.7 and the unpublished 0.3.8; root
+rulings keep 0.3.8 unchanged and route this fix to a later 0.3.9 from main.
+
+The fix is the design's hotfix half (A1-A3), plus A4 evidence:
+
+- A1: the scalar founder marks (larder, stores, certification, given name, adoption, yielding) are
+  one engine-free rule, `Growth/KingdomUpgradeRules.FounderMarks.cs`. CarryMarks writes exactly what
+  `CarryFounderMarks` returns and carries yielding in the legacy growth lane's shape, returning
+  false if `r_KingdomYielding` cannot attach; ExactCarriedMarks checks `FounderMarksSettled`.
+  Yielding stays one-directional.
+- A2: HandOver and the predecessor removal read the landed scaffold's identity from the successor's
+  write-once scaffold-removal intent through `KingdomUpgradeRules.LandedScaffoldIdentity`: a live
+  reference refuses, a stale one must agree, and the id must be globally absent
+  (`Growth/KingdomUpgrade.20b.LandedScaffold.cs`). Poll keeps `Validate(ref Scaffold)`.
+- A3 (ruled Q1): PollHandover asks `TryReadmitRetiredHandoverDefect` before HandOver. Everything is
+  read first and judged by the engine-free `ClassifyRetiredHandoverDefect`: the common gate (job
+  identity and phase, receipts, pending successor, working intent, landed scaffold, no stamper
+  quarantine or layout fault, content custody), no prior readmission, and exactly one signature. A:
+  the founder-marks text, the predecessor yields and the successor does not, every other mark and
+  the wear settled, upgrade phase 5 and a complete successor layout. B: the endpoints text and a
+  non-live scaffold reference. Only builds before the fix wrote B's text (the fixed HandOver
+  publishes `KingdomConstructionRules.HandoverEndpointsUnproven` instead), and A's structure cannot
+  arise on this build (CarryMarks writes the yielding mark before the marks check and no code
+  removes it), so only their quarantines qualify. After that judgement, and only then, it marks
+  `r_TAF_ImprovementReadmitted` on the predecessor, clears the improvement's own quarantine flags,
+  moves the job to Outstanding through `KingdomConstruction.Readmit` and logs
+  `improvement readmitted: job=... defect=A|B ...`; HandOver re-proves everything in the same call.
+  `KingdomConstructionRules.IsRetiredDefectReadmission` is the only exit `ValidPhaseUpdate` admits
+  out of InspectionRequired besides cancellation.
+- A4 (ruled Q5): the tier-upgrade check journals `tier-upgrade-after-wait`, read fresh after the
+  handover wait (job phase and first failure, intent flags, both yielding marks, readmission
+  marker, successor layout state, one capture-only seal reading), and then requires the carried
+  yielding mark and a seal reading without a fault. Its LOG_FORBID refuses
+  `improvement readmitted:` (design 8.1): the after-wait row cannot show a readmission once the
+  predecessor is gone and Complete clears the job failure.
+
+Not included, by ruling: the seal-side Pending witness and deferral (B1, B2; never before A1 and
+A2), the typed failure cause and handover-refusal log line (B3, Q7), an abandon-with-refund action
+(Q2, follow-up), and phase-1 yielding publication (Q6). FrozenUnderInspection stays Malformed (Q3).
+No saved field, format or version changed; the readmission marker is one new object property,
+regenerated into removal coverage.
+
+Source evidence. Engine-free cases run in both suites: 23 founder-mark, landed-scaffold and
+classifier cases and 12 readmission-gate cases on the real registry update. On the pre-fix tree with
+today's semantics they fail 5 of 23 and 2 of 12; with the fix all pass. Seven source pins (main
+suite) fail 7 of 7 before and pass after, including the writer/reader parity pin that named
+`YieldingProperty` as unwritten. Eleven guard mutations are each killed by a named case; one
+survived until a same-projection route-change case was added. The
+engine-bound adapters, Poll wiring and harness meet a compiler only in the canonical gate.
+
+Review round 2 (of 35909706). The fixed HandOver had kept publishing signature B's text for every
+endpoint refusal, the new landed-scaffold proof included, so a transient refusal on this build (the
+scaffold id still live elsewhere, or past the global lookup bound) could be readmitted as #283 (B);
+it now publishes its own text. The tier-upgrade persona and the fixed-build regressions
+(`camp-heart-native-checks`, `camp-heart-rung3-native-check`, `camp-heart-chain`,
+`paid-housing-native-check`, `unfounded-save-native-check`) forbid the readmission line, and the
+Quickstart reload checker refuses it, because reload personas carry no LOG_FORBID; LOG_FORBID now
+takes up to eight entries, as a forbid can only fail a run. A reload persona refused before any
+effect exits 3 and fails alone instead of stopping the persona matrix, and the heal persona left
+the tier-upgrade set. On 35909706 with only the new tests applied, 2 of 10 retired-defect source
+pins and the three moved persona pins fail, and the 31 selected host tests report 13 failures
+(counting subtests) and 2 errors; on this head all pass. Eleven mutations (B's text written again, the new text given B's literal, a yielding
+removal or zero write, the forbid dropped, the cap back to four, exit 3 treated as an ownership
+failure or as a pass, exit 1 for a preflight refusal, evidence created before the preflight, the
+Quickstart forbid dropped) are each killed by a named case.
+
+Native stuck-save heal route: `renovate-heal-reload` (reload grammar `reload-descendant
+renovate-heal <start>`). Session one runs on this head with exactly the fifteen #283 production
+files restored from dev `ec762424` (`Tools/persona_reload_heal.py` lists them and proves that delta,
+the identical harness and the identical tools before anything launches; name the tree with
+`TAF_RELOAD_SOURCE_TREE`). It drives the renovate into the stall, journals the after-wait row and
+saves the stall for real. Session two cold-loads that save in a fresh profile whose runtime comes
+from this head (`prepare-scenario-load.py --runtime`), resumes 2400 ordinary turns and must show the
+one readmission line, the completed handover, the finished tent-row with the carried yielding mark,
+a seal reading without a fault and a second real save. `Tools/check-renovate-heal-results.py` is
+the verdict: session one's only diagnostics may be the seal's reports of the journaled stall, kept
+as the defect evidence; session two passes the unchanged strict Player.log checker from its
+readmission line on. Before that line it may carry only the seal's load-time report of the same
+stall, because the seal reconciles a loaded world before the first settlement pass can heal it; a
+player loading a stuck save sees that one report too. Without `TAF_RELOAD_SOURCE_TREE`, or when
+its proof fails, the helper refuses before preparing or launching anything (exit 3); the persona
+matrix records that persona as failed and runs the rest. Host tests cover the grammar,
+orchestration, cross-build transport, source-tree proof and checker with synthetic fixtures;
+nothing has run natively.
+
+Native acceptance owed on the final head: `tier-upgrade-native-check` with
+`TAF_PERSONA_SEED=#922453088` (the 4ea54bb9 siting inside the heart's survey; expected: handover
+completes, the tent-row stands, the after-wait row shows yielding carried and a seal reading
+without a fault, MODERROR 0); `renovate-heal-reload` (session one expected to stall and retained as
+defect evidence, session two expected to pass); `quickstart-reload` and
+`unfounded-save-native-check` as regressions, and `paid-housing-native-check`,
+`camp-heart-native-checks`, `camp-heart-rung3-native-check` and `camp-heart-chain` for the
+changed HandOver gate (design 8.4). Every one of them now refuses a readmission line.
+
+Current census: 3132 staged C# files; 442,595 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1461 files, 0 over the line limit. Cold-install inventory: 3166 files.
+Inventory SHA-256: `407fe63b3c26099b225eaf6dc16c265f747dda3596be694068c88ab8442a3541`.
+Engine gate passes for 3132 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Polity dispatch window drift fix (#244, #257): targeted native runs pass
 
 `KingdomPolityDispatchRules.TryOpen` froze one endpoint digest over every owned settlement's

@@ -4,11 +4,12 @@
 # SaveGameError witness armed, then reports the growth-free v5 frame the live book chose. On a
 # writer without the fix the engine save itself refuses; retain that failed run as evidence that
 # this persona detects the defect. No founding, no reload claim; see unfounded-reload.persona.
+# The #283 readmission line is forbidden like every regression persona's on the fixed build.
 DESCRIPTION=an unfounded world saves through the engine and its dormant lifecycle book takes the v5 frame
 REQUEST=arch-gallery-slice;facing=north
 SCRIPT=stagedigest;unfounded-save;stagedigest
 VERBS=unfounded-save
 EXPECT=stagedigest:OK~founded=false,unfounded-save:OK~real-save=true dormant-frame=5,stagedigest:OK~founded=false,COMPLETE
-LOG_FORBID=["growth envelope is not bounded and writable","exception serializing object"]
+LOG_FORBID=["growth envelope is not bounded and writable","exception serializing object","improvement readmitted:"]
 SET=save-load,native-regression
 TIMEOUT=600

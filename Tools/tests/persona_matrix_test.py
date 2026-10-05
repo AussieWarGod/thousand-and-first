@@ -370,9 +370,19 @@ class ForbiddenLogTest(unittest.TestCase):
         for value in bad:
             with self.subTest(value=value), self.assertRaises(SystemExit):
                 matrix.parse_manifest(GREEN + "LOG_FORBID=" + value + "\n", "x")
-        for lines in (["x" * 1025], [str(index) for index in range(5)]):
+        for lines in (["x" * 1025], [str(index) for index in range(9)]):
             with self.subTest(lines=lines), self.assertRaises(SystemExit):
                 self.manifest(lines)
+
+    def test_up_to_eight_forbidden_substrings_parse_and_each_still_fails_the_run(self):
+        # A forbid only ever fails a run, so LOG_FORBID alone takes eight entries; LOG_REQUIRE
+        # and LOG_EXPECT keep four.
+        lines = ["halt %d" % index for index in range(8)]
+        found = self.manifest(lines)
+        self.assertEqual(lines, json.loads(found["LOG_FORBID"]))
+        self.assertEqual(["line 1: halt 7"], matrix.forbidden_log(found, b"[TAF] halt 7\n", "x"))
+        with self.assertRaises(SystemExit):
+            matrix.parse_manifest(GREEN + "LOG_REQUIRE=" + json.dumps(lines[:5]) + "\n", "x")
 
     def test_a_forbidden_substring_is_found_anywhere_in_the_log(self):
         manifest = self.manifest(["recovery requires inspection", "was not staged"])
@@ -1008,7 +1018,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(112, len(self.personas()))
+        self.assertEqual(114, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -1189,10 +1199,15 @@ class ShippedPersonaTest(unittest.TestCase):
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             if found.get("RELOAD"):
-                self.assertIn(found["RELOAD"], ("quickstart", "unfounded"))
+                self.assertIn(found["RELOAD"], ("quickstart", "unfounded", "renovate-heal"))
                 self.assertEqual(found["EXPECT"], "RELOAD-COMPLETE")
                 if found["RELOAD"] == "quickstart":
                     self.assertTrue(found["SCRIPT_WORDS"].startswith("quickstart-save "))
+                elif found["RELOAD"] == "renovate-heal":
+                    # #283: session one seals exactly the heal script and verbs on the unfixed tree.
+                    self.assertEqual(found["SCRIPT_WORDS"], " ".join(matrix.RENOVATE_HEAL_RELOAD_SCRIPT))
+                    self.assertEqual(found["VERBS"], ",".join(matrix.RENOVATE_HEAL_RELOAD_VERBS))
+                    self.assertTrue(matrix.reload_start(found["START"]), path.name)
                 else:
                     # The unfounded save leg seals exactly this script, verb and start.
                     self.assertEqual(found["SCRIPT_WORDS"], " ".join(matrix.UNFOUNDED_RELOAD_SCRIPT))
@@ -1259,6 +1274,7 @@ class ShippedPersonaTest(unittest.TestCase):
                  "camp-heart-chain-check"),
                 (("second-city-site",), "second-city-setup"),
                 (("second-city-topology",), "second-city-check"),
+                (matrix.TIER_UPGRADE_EVIDENCE_ROWS, "tier-upgrade-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
                 (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),
@@ -1318,6 +1334,12 @@ POLITY_REFUSALS = (
     "polity: daily reconciliation refused",
     "polity: zone reconciliation refused",
     "polity: active load reconciliation refused",
+)
+READMITTED = "improvement readmitted:"
+# #283 design 8.1 and its native plan: the acceptance persona and the fixed-build regressions.
+READMISSION_FREE_PERSONAS = (
+    "tier-upgrade-native-check", "camp-heart-native-checks", "camp-heart-rung3-native-check",
+    "camp-heart-chain", "paid-housing-native-check", "unfounded-save-native-check",
 )
 # docs/polity-reconcile spec section 7.2: every family that refused in every archived process.
 TURN_CLEAN_PERSONAS = (
@@ -1529,16 +1551,42 @@ class PolityWindowWitnessTest(unittest.TestCase):
                 found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
                 forbidden = json.loads(found["LOG_FORBID"])
                 if name == "camp-heart-chain":
-                    # At the four-entry cap it keeps both #162 halts and one shared literal.
-                    self.assertEqual(["construction: founding heart recovery requires inspection",
-                                      "seal: settlement pass was not staged",
-                                      "reconciliation refused ("], forbidden)
+                    # It keeps both #162 halts and one shared polity literal.
+                    expected = ["construction: founding heart recovery requires inspection",
+                                "seal: settlement pass was not staged",
+                                "reconciliation refused ("]
                 else:
-                    self.assertEqual(list(POLITY_REFUSALS), forbidden)
+                    expected = list(POLITY_REFUSALS)
+                if name in READMISSION_FREE_PERSONAS:
+                    expected.append(READMITTED)
+                self.assertEqual(expected, forbidden)
                 for prefix in POLITY_REFUSALS:
                     line = ("[TAF] " + prefix + " (open polity topology differs from its frozen "
                             "facts)\n").encode("utf-8")
                     self.assertTrue(matrix.forbidden_log(found, line, path.name), prefix)
+
+
+class ReadmissionForbidTest(unittest.TestCase):
+    def test_fixed_build_regressions_forbid_the_283_readmission_line(self):
+        """#283 design 8.1: on a fresh game on the fixed build every readmission readmits a
+        quarantine that build created, so the acceptance and regression personas forbid the
+        readmission line production writes (the heal route alone expects one)."""
+        emitter = (ROOT / "Growth/KingdomUpgrade.27.RetiredDefectReadmission.cs").read_text(
+            encoding="utf-8")
+        self.assertIn('KingdomLog.Log("' + READMITTED + ' job="', emitter)
+        line = (b"[TAF] " + READMITTED.encode("utf-8") + b" job=00000000000000000000000000000283"
+                b" defect=B design=tent->tentrow at 29,9\n")
+        for name in READMISSION_FREE_PERSONAS:
+            with self.subTest(persona=name):
+                path = ROOT / "Tools" / "personas" / (name + ".persona")
+                found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+                self.assertIn(READMITTED, json.loads(found["LOG_FORBID"]))
+                self.assertEqual(["line 2: " + READMITTED], matrix.forbidden_log(
+                    found, b"[TAF] survey: zone=JoppaWorld.8.22.1.1.10\n" + line, path.name))
+        heal = matrix.parse_manifest(
+            (ROOT / "Tools/personas/renovate-heal-reload.persona").read_text(encoding="utf-8"),
+            "renovate-heal-reload.persona")
+        self.assertNotIn("LOG_FORBID", heal)
 
 
 if __name__ == "__main__":

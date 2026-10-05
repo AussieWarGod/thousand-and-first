@@ -320,6 +320,11 @@ run_persona() {
 		rm -f "$reload_out"
 		if [ "$reload_status" -eq 0 ]; then
 			VERDICT=PASS
+		elif [ "$reload_status" -eq 3 ]; then
+			# run-persona-reload.py's PREFLIGHT_REFUSED: refused before preparing or launching
+			# anything, so no profile or process exists to own. This persona fails; the matrix
+			# goes on.
+			DETAIL="refused before any effect: $DETAIL"
 		else
 			# The helper owns exact-profile cleanup; no later persona may assume it succeeded.
 			LIFECYCLE_BROKEN=1

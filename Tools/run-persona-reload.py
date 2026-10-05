@@ -10,9 +10,18 @@ import signal
 import tempfile
 
 from persona_reload import NativeBackend, UnfoundedNativeBackend, execute, execute_unfounded, require
+from persona_reload_heal import RenovateHealNativeBackend, execute_renovate_heal, validate_source_tree
 from personas.persona_matrix import load
 
 _PR_SET_PDEATHSIG = 1
+# Exit status for a refusal made before anything was prepared or launched (see preflight()).
+PREFLIGHT_REFUSED = 3
+
+
+class PreflightRefused(ValueError):
+    """Refused before any effect: no profile, process, save or evidence directory exists yet, so
+    there is nothing to own and run-personas.sh records this persona as failed and goes on with
+    the matrix. Every later refusal keeps exit status 1, which stops the matrix for inspection."""
 
 
 class ParentDeathSignalUnavailable(RuntimeError):
@@ -69,6 +78,32 @@ def arm_parent_death_signal():
         refuse_as_orphaned("orphaned while the parent-death signal was being armed")
 
 
+def preflight(args, tools):
+    """Judges the persona, the configuration and (for the heal route) the operator's unfixed
+    tree before any effect: it only reads, so every refusal here is PreflightRefused."""
+    try:
+        manifest, _ = load(str(args.persona))
+        route = manifest.get("RELOAD")
+        require(route in ("quickstart", "unfounded", "renovate-heal"), "not a cold-reload persona")
+        require(not os.environ.get("TAF_PERSONA_CAPTURE_DIR"),
+                "reload persona has no screenshot contract; omit TAF_PERSONA_CAPTURE_DIR")
+        require(args.game.is_file(), "configured game executable is missing")
+        timeout = os.environ.get("TAF_PERSONA_TIMEOUT", manifest["TIMEOUT"])
+        require(timeout.isascii() and timeout.isdecimal() and 1 <= int(timeout) <= 3600,
+                "reload timeout must be 1..3600 seconds")
+        source_tree, proof = "", None
+        if route == "renovate-heal":
+            # #283: session one's tree is named by the operator and proved to be this tree minus
+            # exactly the fix BEFORE anything is prepared or launched.
+            source_tree = os.environ.get("TAF_RELOAD_SOURCE_TREE", "")
+            require(source_tree, "the heal route needs TAF_RELOAD_SOURCE_TREE: this tree with the "
+                    "#283 production files restored from the pre-fix base")
+            proof = validate_source_tree(Path(source_tree), tools.parent)
+    except ValueError as error:
+        raise PreflightRefused(str(error)) from error
+    return manifest, route, timeout, source_tree, proof
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("persona", type=Path)
@@ -79,22 +114,19 @@ def main():
     try:
         signal.signal(signal.SIGTERM, interrupted)
         arm_parent_death_signal()
-        manifest, _ = load(str(args.persona))
-        route = manifest.get("RELOAD")
-        require(route in ("quickstart", "unfounded"), "not a cold-reload persona")
-        require(not os.environ.get("TAF_PERSONA_CAPTURE_DIR"),
-                "reload persona has no screenshot contract; omit TAF_PERSONA_CAPTURE_DIR")
-        require(args.game.is_file(), "configured game executable is missing")
-        timeout = os.environ.get("TAF_PERSONA_TIMEOUT", manifest["TIMEOUT"])
-        require(timeout.isascii() and timeout.isdecimal() and 1 <= int(timeout) <= 3600,
-                "reload timeout must be 1..3600 seconds")
+        tools = Path(__file__).resolve().parent
+        manifest, route, timeout, source_tree, proof = preflight(args, tools)
         args.report_dir.mkdir(parents=True, exist_ok=True)
         evidence = Path(tempfile.mkdtemp(prefix="reload-", dir=args.report_dir))
         seed = os.environ.get("TAF_PERSONA_SEED", "")
-        tools = Path(__file__).resolve().parent
         if route == "unfounded":
             backend = UnfoundedNativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)
             result = execute_unfounded(backend, manifest["START"])
+        elif route == "renovate-heal":
+            backend = RenovateHealNativeBackend(tools, args.game.resolve(), evidence, int(timeout),
+                                                seed, Path(source_tree))
+            result = execute_renovate_heal(backend, manifest["START"])
+            result["sourceTreeProof"] = proof
         else:
             _, location, advisor = manifest["SCRIPT_WORDS"].split()
             backend = NativeBackend(tools, args.game.resolve(), evidence, int(timeout), seed)
@@ -102,6 +134,11 @@ def main():
         result["evidence"] = str(evidence)
         print(json.dumps(result, sort_keys=True))
         return 0
+    except PreflightRefused as error:
+        print(json.dumps(dict(verdict="REFUSED", reason=str(error), evidence=None,
+                              beforeAnyEffect=True, releaseAcceptance=False,
+                              ordinaryAcceptance=False)))
+        return PREFLIGHT_REFUSED
     except (Exception, KeyboardInterrupt) as error:
         print(json.dumps(dict(verdict="REFUSED", reason=str(error), evidence=str(evidence),
                               releaseAcceptance=False, ordinaryAcceptance=False)))

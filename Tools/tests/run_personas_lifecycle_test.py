@@ -259,6 +259,20 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         self.assertEqual([], self.events("launch"))
         self.assertEqual([], self.events("stop"))
 
+    def test_reload_refusal_before_any_effect_fails_only_that_persona(self):
+        # run-persona-reload.py's PREFLIGHT_REFUSED (exit 3): nothing was prepared or launched,
+        # so the matrix records the refusal and still runs every later persona.
+        self.install_reload_fixture(exit_code=3)
+        result = self.run_cli(names=("reload", "alpha"))
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        rows = self.rows()
+        self.assertEqual([("reload", "FAIL"), ("alpha", "PASS")],
+                         [(row["persona"], row["verdict"]) for row in rows])
+        self.assertTrue(rows[0]["detail"].startswith("refused before any effect: {"), rows[0]["detail"])
+        self.assertEqual(1, len(self.events("launch")))
+        self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+        self.assert_scoped_calls()
+
     def test_prior_ownership_failure_blocks_reload_helper(self):
         self.install_reload_fixture()
         result = self.run_cli(mode="missing_receipt", names=("alpha", "reload"))

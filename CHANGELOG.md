@@ -1,14 +1,41 @@
 # Changelog
 
-Current 3126-file census is line-cap green: 442,062 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `7a51c007ec0c53bea707c329540fcc89fd417834e34841d6a28a753e84472675`.
-The cold-install inventory contains 3160 files. This is not evidence of a new public installation.
+Current 3132-file census is line-cap green: 442,595 physical lines; direct `XRL`
+imports occur in 1461 files, 0 of them over the line limit. Inventory SHA-256: `407fe63b3c26099b225eaf6dc16c265f747dda3596be694068c88ab8442a3541`.
+The cold-install inventory contains 3166 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- A paid in-place renovation no longer stalls halfway through its handover (#283). A building
+  staked on ground set aside for the settlement's heart carries a "yields to the heart" mark. Its
+  paid improvement (for example a settler's tent raised into a staked tent-row, which automatic
+  improvement begins by default) paid, rebuilt the layout and then refused to hand over, because
+  the authored renovation lane never carried that mark onto the new building. The job stayed
+  under inspection for good: the tent-row never appeared, every other improvement and heart climb
+  in the zone froze, and the seal reported a fault every day and after each save and load. The
+  founder marks (larder, stores, certification, given name, adoption and now yielding) are carried
+  and checked through one shared engine-free rule, so the writer and the check cannot drift. The
+  handover proves the landed scaffold from the successor's durable removal intent, not from a
+  scaffold reference the poll clears, so a handover still unsettled after its landing day retries
+  instead of being quarantined. A save already stuck this way is readmitted once at the next
+  settlement pass: only an improvement under inspection with one of the two retired causes and an
+  otherwise intact handover qualifies, the old building records the readmission so it can never
+  repeat, Player.log says `improvement readmitted: job=... defect=A|B ...`, and the handover then
+  re-proves everything; any other cause stays under inspection. The fixed handover's endpoint
+  refusal has its own text, so no quarantine this build writes can match either retired cause.
+  Loading such a save still reports the stuck seal once before that pass heals it. No saved field
+  or format changed; one new object property marks a readmission. The tier-upgrade persona now
+  journals a fresh `tier-upgrade-after-wait` row that names a stall's first cause, and it and the
+  fixed-build regressions (heart rungs, paid housing, the unfounded save and the Quickstart reload
+  checker) forbid the readmission line; `LOG_FORBID` now takes up to eight entries. The new
+  `renovate-heal-reload` persona saves a stuck renovation on a build without the fix and cold-loads
+  it on this one (`prepare-scenario-load.py --runtime`); refused before any effect, as without
+  `TAF_RELOAD_SOURCE_TREE`, it fails alone instead of stopping the persona matrix. Native acceptance
+  is owed (docs/STATUS.md).
 
 - Polity dispatch no longer refuses ordinary days inside a dispatch window (#244, #257). The first
   reconciliation of each 7-day window freezes one fingerprint of every owned settlement's facts,

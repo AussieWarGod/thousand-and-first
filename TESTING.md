@@ -1,7 +1,7 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-All four engine compile modes pass across 3126 production C# sources;
-the cold-install inventory contains 3160 files. Unfounded worlds now save: dormant lifecycle
+All four engine compile modes pass across 3132 production C# sources;
+the cold-install inventory contains 3166 files. Unfounded worlds now save: dormant lifecycle
 books use the growth-free v5 frame (#271, #272). Source suites prove the frame, cold load and
 first founding; the native unfounded save and cold-load personas remain owed.
 See [current status](docs/STATUS.md) for scoped acceptance.

@@ -388,7 +388,61 @@ def ownership_shape(raw: bytes, root: Path) -> None:
     # The Windows helper, not this shape check, proves exact process policy and absence.
 
 
-def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], None]) -> dict:
+HARNESS_KEY = "mods/thousandandfirst/harness/"
+RUNTIME_KEY = "mods/thousandandfirst/"
+RUNTIME_SENTINELS = ("process-ownership.json", "Player.log", "scenario-journal.tsv",
+                     "scenario-save-receipt.txt", "scenario-save-snapshot.txt")
+
+
+def runtime_local(runtime: Path, source: Path, destination: Path, request_bytes: bytes,
+                  script_bytes: bytes, expected: dict, seal_bytes: bytes):
+    """#283 cross-build load: a second sealed profile, never launched, prepared from another tree
+    with the same request, frozen seed and script, whose closed Local replaces the source's in the
+    destination. Only the staged runtime may differ; the harness overlay must be byte-identical.
+    Returns the Local to copy, its files, its seal and the runtime evidence."""
+    require(ROOT_NAME.fullmatch(runtime.name) and runtime.parent == source.parent
+            and runtime.name.lower() not in (source.name.lower(), destination.name.lower()),
+            "runtime must be a distinct canonical sibling scenario root")
+    directory(runtime)
+    runtime_seal = Path(str(runtime) + ".seal")
+    directory(runtime_seal)
+    for name in RUNTIME_SENTINELS:
+        require(not os.path.lexists(runtime / name), "runtime profile was launched or saved: " + name)
+    saves = runtime / "Synced/Saves"
+    if os.path.lexists(saves):
+        directory(saves)
+        require(not any(saves.iterdir()), "runtime profile carries a save")
+    require(read_bytes(runtime_seal / "request.txt", 1024) == request_bytes,
+            "runtime request or frozen seed differs from the source")
+    local = runtime / "Local"
+    found = tree_files(local, MAX_LOCAL_FILE)
+    runtime_seal_bytes = read_bytes(runtime_seal / "profile.sha256", 4 * 1024 * 1024)
+    runtime_expected = scenario_profile.read_seal(str(runtime_seal / "profile.sha256"))
+    require(scenario_profile.inventory(str(local)) == runtime_expected,
+            "runtime Local differs from its closed seal")
+    require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE) == script_bytes,
+            "runtime script differs from the source")
+    require(not os.path.lexists(local / "scenario-load.txt")
+            and not os.path.lexists(local / "scenario-load-snapshot.txt"),
+            "runtime already carries a load request")
+    harness = {key: value for key, value in expected.items() if key.startswith(HARNESS_KEY)}
+    require(harness and harness == {key: value for key, value in runtime_expected.items()
+                                    if key.startswith(HARNESS_KEY)},
+            "runtime harness overlay differs from the source")
+    delta = sorted(key for key in set(expected) | set(runtime_expected)
+                   if expected.get(key) != runtime_expected.get(key))
+    require(delta and all(key.startswith(RUNTIME_KEY) and not key.startswith(HARNESS_KEY)
+                          for key in delta),
+            "runtime differs outside the staged runtime, or not at all")
+    evidence = {"schema": "taf-scenario-load-runtime-v1", "runtimeRoot": str(runtime),
+                "crossBuild": True, "harnessIdentical": True, "runtimeDelta": delta,
+                "sourceSealSha256": hashlib.sha256(seal_bytes).hexdigest(),
+                "runtimeSealSha256": hashlib.sha256(runtime_seal_bytes).hexdigest()}
+    return local, found, runtime_expected, evidence
+
+
+def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], None],
+            runtime: Path | None = None) -> dict:
     """Filesystem core; tests use canonical-name roots under TemporaryDirectory.
 
     Production main additionally requires the exact /mnt/c root domain and always supplies
@@ -420,7 +474,8 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         files = tree_files(local, MAX_LOCAL_FILE)
         expected = scenario_profile.read_seal(str(profile_seal))
         require(scenario_profile.inventory(str(local)) == expected, "source Local differs from its closed seal")
-        require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE), "source has no sealed script")
+        script_bytes = read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE)
+        require(script_bytes, "source has no sealed script")
         embark = read_bytes(local / "Mods/ThousandAndFirst/Harness/EmbarkModules.xml", MAX_LOCAL_FILE).decode("utf-8")
         marker = 'Name="r_TAF_ScenarioRequest_v1" Value="'
         require(embark.count(marker) == 1 and embark.split(marker)[1].split('"', 1)[0] == request,
@@ -454,6 +509,12 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
                         else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
                     "saveHashes": {name: hashes[name] for name in SAVE_FILES}}
         counters["localFiles"] = len(files)
+    copy_local, copy_files, copy_expected, runtime_evidence = local, files, expected, None
+    if runtime is not None:
+        with timer.measure("runtime-validation") as counters:
+            copy_local, copy_files, copy_expected, runtime_evidence = runtime_local(
+                runtime, source, destination, request_bytes, script_bytes, expected, seal_bytes)
+            counters["runtimeDelta"] = len(runtime_evidence["runtimeDelta"])
     with timer.measure("destination-setup"):
         empty_destination(destination); empty_destination(destination_seal)
         create_directory(destination, allow_empty=True)
@@ -464,18 +525,19 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         # relative to its own already-anchored parent fd -- never by resolving a multi-component
         # path -- so a swap of any intermediate ancestor's NAME during the copy phase below cannot
         # redirect a worker's write (see make_directory_tree/open_directory_chain docstrings).
-        directory_fds = make_directory_tree(target_local, local)
+        directory_fds = make_directory_tree(target_local, copy_local)
     try:
-        with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
-            pairs = [(path, target_local / path.relative_to(local),
-                      expected[scenario_profile.normalize(str(path.relative_to(local)))],
-                      directory_fds[path.relative_to(local).parent]) for path in files]
+        with timer.measure("local-copy", {"files": len(copy_files),
+                                          "bytes": sum(os.path.getsize(path) for path in copy_files)}):
+            pairs = [(path, target_local / path.relative_to(copy_local),
+                      copy_expected[scenario_profile.normalize(str(path.relative_to(copy_local)))],
+                      directory_fds[path.relative_to(copy_local).parent]) for path in copy_files]
             copy_new_files(pairs, MAX_LOCAL_FILE)
     finally:
         for fd in directory_fds.values():
             os.close(fd)
     with timer.measure("post-copy-target-inventory"):
-        require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
+        require(scenario_profile.inventory(str(target_local)) == copy_expected, "copied Local differs from original closed inventory")
         write_new(target_local / "scenario-load.txt", load_request)
         write_new(target_local / "scenario-load-snapshot.txt", snapshot)
     with timer.measure("save-copy"):
@@ -490,6 +552,7 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         for path, data in frozen.items():
             require(read_bytes(path, max(len(data), 1)) == data, "source receipt/seal/snapshot changed during copy")
         require(scenario_profile.inventory(str(local)) == expected, "source Local changed during copy")
+        require(scenario_profile.inventory(str(copy_local)) == copy_expected, "runtime Local changed during copy")
         tree_files(source, MAX_FILE)
         require(sorted(path.name for path in saves.iterdir()) == [game_id] and {path.name for path in save.iterdir()} == children,
                 "source save inventory changed during copy")
@@ -497,7 +560,7 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
             require(digest(save / name) == before, "source save file changed during copy: " + name)
     with timer.measure("seal-computation"):
         inventory = scenario_profile.inventory(str(target_local))
-        target_expected = dict(expected)
+        target_expected = dict(copy_expected)
         target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
         target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
         require(inventory == target_expected, "destination Local acquired unproved content during copy")
@@ -511,6 +574,10 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
     write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
     write_new(destination_seal / "request.txt", request_bytes)
     write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    if runtime_evidence is not None:
+        write_new(destination / "load-runtime-evidence.json", (json.dumps(
+            runtime_evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+        return dict(evidence, runtime=runtime_evidence)
     seal_load_record(source, destination)
     return evidence
 
@@ -555,12 +622,19 @@ def assert_source_stopped(source: Path) -> None:
 
 
 def main(argv: list[str]) -> int:
+    runtime = None
+    if len(argv) == 5 and argv[1] == "--runtime":
+        runtime, argv = argv[2], [argv[0]] + argv[3:]
     if len(argv) != 3:
-        print("usage: prepare-scenario-load.py sourceRoot destRoot", file=sys.stderr)
+        print("usage: prepare-scenario-load.py [--runtime runtimeRoot] sourceRoot destRoot", file=sys.stderr)
         return 2
     try:
-        require(all(CLI_ROOT.fullmatch(root) for root in argv[1:]), "CLI roots must be exact /mnt/c/taf-scenario.<alnum>")
-        prepare(Path(argv[1]), Path(argv[2]), assert_source_stopped)
+        require(all(CLI_ROOT.fullmatch(root) for root in argv[1:] + ([runtime] if runtime else [])),
+                "CLI roots must be exact /mnt/c/taf-scenario.<alnum>")
+        if runtime:
+            prepare(Path(argv[1]), Path(argv[2]), assert_source_stopped, runtime=Path(runtime))
+        else:
+            prepare(Path(argv[1]), Path(argv[2]), assert_source_stopped)
     except (OSError, ValueError, SystemExit, subprocess.SubprocessError) as error:
         print("scenario load preparation refused: " + str(error), file=sys.stderr)
         return 2

@@ -46,6 +46,9 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomTierUpgradeScript.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.Preflight.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
@@ -223,6 +226,12 @@
 	<Compile Include="KingdomUpgradeSnapshotTests.cs" />
 	<Compile Include="KingdomUpgradeNativeSourceTests.cs" />
 	<Compile Include="KingdomUpgradeUnattendedSourceTests.cs" />
+	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
+	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
+	<Compile Include="KingdomRenovateHealTests.cs" />
+	<Compile Include="KingdomRenovateHealSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealScript.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealSnapshot.cs" />
 	<Compile Include="KingdomDowngradeRequestTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
@@ -966,6 +975,7 @@
 	<Compile Include="..\Growth\KingdomMaterialDebitResult.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Transitions.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Readmission.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Canonical.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Funding.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Costs.cs" />
@@ -973,6 +983,9 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.InputContract.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.OutboxCas.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.ScaffoldWork.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.FounderMarks.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.LandedScaffold.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.RetiredDefect.cs" />
 	<Compile Include="..\Growth\KingdomConstructionClaims.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.Claims.cs" />
