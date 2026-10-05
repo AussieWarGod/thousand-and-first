@@ -39,6 +39,9 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomTierUpgradeScript.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.cs" />
+    <Compile Include="KingdomTierUpgradeNativeSourceTests.Preflight.cs" />
     <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
@@ -758,7 +761,14 @@
 	<Compile Include="KingdomCovenantRulesTests.cs" />
 	<Compile Include="KingdomUpgradeLogicalSource.cs" />
     <Compile Include="KingdomUpgradeRulesTests.cs" />
+	<Compile Include="KingdomUpgradeRulesHandoverTests.cs" />
+	<Compile Include="KingdomConstructionRulesReadmissionTests.cs" />
+	<Compile Include="KingdomRenovateHealTests.cs" />
+	<Compile Include="KingdomRenovateHealSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealScript.cs" />
+	<Compile Include="..\Harness\KingdomRenovateHealSnapshot.cs" />
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
+	<Compile Include="KingdomUpgradeSourceRetiredDefectTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
@@ -1176,6 +1186,9 @@
 	<Compile Include="..\Growth\KingdomUpgradeRules.Assessment.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.Reasoning.cs" />
 	<Compile Include="..\Growth\KingdomUpgradeRules.Parsing.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.FounderMarks.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.LandedScaffold.cs" />
+	<Compile Include="..\Growth\KingdomUpgradeRules.RetiredDefect.cs" />
     <Compile Include="..\Growth\KingdomDesignRules.cs" />
     <Compile Include="..\Growth\KingdomPlotRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotDeclarations.cs" />
@@ -2091,6 +2104,7 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.Funding.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.PlanMarker.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.Transitions.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Readmission.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.RegistryCodec.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.PayloadCodec.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.RowCodec.cs" />

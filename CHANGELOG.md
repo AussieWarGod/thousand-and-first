@@ -1,12 +1,48 @@
 # Changelog
 
-Current 3108-file census is line-cap green: 440,963 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `cdb361018c945f31416ea81252d453ca0043f17c1bb726408e740deae03cdc16`.
-The cold-install inventory contains 3141 files. This is not evidence of a new public installation.
+Current 3114-file census is line-cap green: 441,477 physical lines; direct `XRL`
+imports occur in 1452 files, 0 of them over the line limit. Inventory SHA-256: `7f9ce838bff0ebfeb92d6b56b711ed501d3fac8d541903b92427ff99dce96313`.
+The cold-install inventory contains 3147 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
+
+## [0.3.9] - 2026-10-05 (Alpha)
+
+Alpha hotfix candidate: paid building improvements finish again, and a settlement already stuck
+in a tent-to-tent-row improvement heals. Private candidate; not yet uploaded or accepted. Public
+Alpha remains 0.3.8.
+
+- Fix paid building improvements that could stall forever (#283). When a building had been
+  placed on ground set aside for the settlement's heart, its paid in-place improvement (for
+  example a settler's tent being raised into a tent row) could take its payment, rebuild most of
+  the building, and then stop before finishing. The half-finished building blocked every other
+  improvement in the settlement, including the heart's own growth, and the mod reported a "seal
+  daily stage failed closed" error once per session. The improvement now carries the building's
+  "yields to the heart" mark across correctly and finishes: new improvements of this kind
+  complete. A handover that must wait for a later settlement pass now keeps retrying instead of
+  stopping for inspection, because it no longer depends on a scaffold reference the game clears
+  once the scaffold has landed; while it waits, the seal still reports the unfinished building.
+- Heal a save already stuck this way. A save stuck in a tent-to-tent-row improvement heals once
+  on load: the next settlement pass readmits the paid improvement, exactly once, and finishes it,
+  so no progress or payment is lost. On that first load the mod reports the old seal error one
+  last time before the improvement finishes. The same once-only rule covers other improvements
+  stuck by the same two causes; only the tent-to-tent-row case has an in-game check. An
+  improvement stuck for any other reason is still left for inspection.
+- No save-format change: a readmission records one new marker on the building being replaced.
+  Loading a newer save with older mod code remains unsupported (PLAYTESTING.md): to roll back,
+  restore the backed-up save together with its matching package.
+- Built for Caves of Qud core build 2.0.211.56, like 0.3.8. Gameplay is otherwise unchanged from
+  0.3.8.
+
+Source tests pin the shared founder-mark table that the writer and the handover check now both
+read, the landed-scaffold identity guards, both retired-defect signatures and the single
+readmission exit from inspection; without the fix they fail. Native checks are required before
+publication: a real paid tent-to-tent-row improvement handed over by the settlement pass, a save
+made stuck by the unfixed 0.3.8 build and healed by this one, the heart's paid first climb, and
+the unfounded save, unfounded reload and Quickstart reload regressions. docs/STATUS.md records
+their status.
 
 ## [0.3.8] — 2026-10-05 (Alpha)
 

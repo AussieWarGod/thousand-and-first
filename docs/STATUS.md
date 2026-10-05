@@ -1,5 +1,86 @@
 # Current implementation and release evidence
 
+## 0.3.9 hotfix candidate: paid renovates complete and stuck renovates heal (#283)
+
+Private hotfix candidate built from main (public 0.3.8 plus this fix only); not yet uploaded or
+accepted. Public Alpha remains 0.3.8.
+
+A paid same-lot renovate (tent -> tentrow) of a work staked inside the heart's survey stalled
+mid-handover in public 0.3.7 and 0.3.8. Stake marks such a work `r_TAF_Yielding`; the legacy
+growth lane carries that mark onto a successor, the authored renovation lane did not, so
+`ExactCarriedMarks` refused the handover after `TryApplyUpgrade` had rebuilt the layout and the job
+was quarantined (R1). `PollHandover` nulls the landed scaffold's reference before every
+`HandOver`, which refused a null reference, so any handover still unsettled after its landing
+pass became permanent (R3). InspectionRequired had no exit, and the working improvement froze
+every other work in the zone, heart climbs included (R4). The seal only reported the stall: it
+read the half-renovated work as Malformed and raised a MODERROR per session (R2).
+
+The fix is the root-approved hotfix scope of the #283 design, ported from dev PR #289:
+
+- A1: the scalar founder marks live in one engine-free rule,
+  `Growth/KingdomUpgradeRules.FounderMarks.cs`. `CarryMarks` writes exactly what
+  `CarryFounderMarks` returns and carries yielding in the legacy lane's shape (`RequirePart`
+  inside `try`, a refusal routed to the existing quarantine branch); `ExactCarriedMarks` checks
+  the same table with `FounderMarksSettled`. Yielding stays one-directional.
+- A2: `HandOver` reads the landed scaffold's identity from the successor's durable removal intent
+  (`Growth/KingdomUpgrade.20b.LandedScaffold.cs`, decided by the engine-free
+  `KingdomUpgradeRules.LandedScaffoldIdentity`): a live reference, a missing or inexact intent, a
+  stale reference naming another id, or a live object with that id all refuse. No
+  `intent.Scaffold` read remains in the handover partials, so a retryable refusal stays
+  Outstanding and is retried.
+- A3 (root ruling Q1): `PollHandover` asks `KingdomUpgrade.TryReadmitRetiredHandoverDefect`
+  before `HandOver`. Every fact is read first and judged by the engine-free
+  `ClassifyRetiredHandoverDefect`: the job's identity, phase, receipts, pending successor,
+  working intent, landed scaffold, no stamper quarantine or layout fault, content custody, plus
+  exactly one signature (A: the founder-marks text, a yielding predecessor and a non-yielding
+  successor with every other mark and the wear settled, upgrade phase 5 and a complete successor
+  layout; B: the endpoints text and a non-live scaffold reference). Only then does it write the
+  once-only `r_TAF_ImprovementReadmitted` marker, clear the improvement's own quarantine flags,
+  move the job to Outstanding through `KingdomConstruction.Readmit` and log
+  `improvement readmitted: job=... defect=A|B`.
+  `KingdomConstructionRules.IsRetiredDefectReadmission` is the one exit `ValidPhaseUpdate` admits
+  from InspectionRequired besides cancellation. `HandOver` re-proves everything in the same call.
+
+The fourteen hand-written #283 production files are byte-identical to PR #289 head `35909706`;
+`Core/KingdomRemovalCoverage.Generated.cs` is regenerated on main's base and adds the same single
+property name. Not included (rulings H1, Q2, Q3, Q6): the seal Pending witness and its deferral,
+a typed handover failure cause, a player-facing "abandon with refund", softer reporting of a
+frozen renovate, and publishing yielding in phase 1.
+
+Engine-free evidence (Linux source route, focused, pinned SDK). On a scratch copy of the harness
+commit with these tests and today's-semantics stubs of the new rule files, the fixtures fail:
+`KingdomUpgradeRulesHandoverTests` 18 passed, 5 failed of 23 (both suites);
+`KingdomConstructionRulesReadmissionTests` 10 passed, 2 failed of 12 (both suites);
+`KingdomUpgradeSourceRetiredDefectTests` 0 of 7; `KingdomRenovateHeal` 15 passed, 1 failed of 16
+(both suites). On this candidate all pass.
+
+Native acceptance is owed, not claimed:
+
+- `tier-upgrade-native-check`: a real paid tent -> tentrow renovate handed over by the settlement
+  pass, with the after-wait row showing Complete/EffectsSettled, the predecessor absent, the
+  successor yielding, no seal fault and no MODERROR.
+- `renovate-heal-reload`: session one runs on the harness commit, whose staged runtime is the
+  published 0.3.8 runtime, drives the same renovate into the retired stall and saves it (retained
+  as the defect evidence); session two cold-loads that save on this candidate and must log one
+  readmission line, complete the handover, show the tent row standing, read the seal without a
+  fault and write a second real save. Loading the stuck save raises one last seal MODERROR
+  (loaded-stage reconciliation of the stall) before the first settlement pass heals it; the
+  checker admits only that report, and only before the readmission line.
+- `camp-heart-native-checks`: the heart's paid rung 1 -> 2 climb, because A2 changes the handover
+  gate every paid improvement uses.
+- `unfounded-save-native-check`, `unfounded-reload` and `quickstart-reload` (regressions;
+  docs/RELEASING.md requires the unfounded pair).
+
+Disclosed gaps: only tent -> tentrow is driven natively; the other renovate tiers that reach the
+same handover are covered by the source rules alone. A retryable refusal that spans a pass still
+reads Malformed at the seal while it waits (the Pending witness is dev-only). A save stuck with
+any other cause, a stamper upgrade fault or a layout fault has no recovery (follow-up for Q2).
+
+Candidate census: 3114 staged C# files; 441,477 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1452 files, 0 over the line limit. Cold-install inventory: 3147 files.
+Inventory SHA-256: `7f9ce838bff0ebfeb92d6b56b711ed501d3fac8d541903b92427ff99dce96313`.
+Engine gate passes for 3114 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Public 0.3.8 — published and finalized
 
 Public Alpha 0.3.8 is published, verified and finalized, superseding 0.3.7. Earlier candidate

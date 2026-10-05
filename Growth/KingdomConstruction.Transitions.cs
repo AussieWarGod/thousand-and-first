@@ -29,12 +29,30 @@ namespace ThousandAndFirst
 			return TransitionAndPublish(ref Job, KingdomConstructionPhase.Complete, Failure, out ignored);
 		}
 
-		/// <summary>Quarantines an ambiguous external mutation. No automatic retry may cross it.</summary>
+		/// <summary>Quarantines an ambiguous external mutation. No automatic retry may cross it;
+		/// the only automatic crossing is <see cref="Readmit"/>, the ruled, once-only, structurally
+		/// proven readmission of a retired #283 handover defect.</summary>
 		public static bool Quarantine(ref KingdomConstructionJob Job, string Failure)
 		{
 			string ignored;
 			return TransitionAndPublish(ref Job, KingdomConstructionPhase.InspectionRequired,
 				Failure, out ignored);
+		}
+
+		/// <summary>Moves an improvement job quarantined by a retired #283 handover defect back to
+		/// Outstanding, failure prefixed with the readmission and its retired cause
+		/// (<see cref="KingdomConstructionRules.IsRetiredDefectReadmission"/>). Called only by
+		/// <c>KingdomUpgrade.TryReadmitRetiredHandoverDefect</c>, after its structural gate and
+		/// once-only marker; HandOver then re-proves everything.</summary>
+		internal static bool Readmit(ref KingdomConstructionJob Job,
+			KingdomRetiredHandoverDefect Defect)
+		{
+			string failure;
+			if (Job == null || !KingdomConstructionRules.TryReadmissionFailure(Job, Defect,
+				out failure)) return false;
+			string ignored;
+			return TransitionAndPublish(ref Job, KingdomConstructionPhase.Outstanding, failure,
+				out ignored);
 		}
 
 		/// <summary>Publishes the exact live predecessor identity before work may advance.</summary>

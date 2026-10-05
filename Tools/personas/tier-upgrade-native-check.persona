@@ -1,0 +1,37 @@
+# Ordinary (non-heart) building tier upgrade: a real settlement raises its own paid tent
+# into a staked tent-row through the real settlement pass. Behaviour-coverage row 8, scoped
+# to this one chain: the catalogue's other ordinary chains are not exercised here.
+# Synthetic: the camp founding; the rung-one founding heart's completion through the shared
+# completed-heart helper (the founder's westward walk off the heart's footprint by ordinary
+# movement, and the explicit future calendar frontier it hands the production labour driver);
+# the dedicated water, six enrolled residents and their born provenance, the minted canvas
+# and timber units, and the pre-marked once-per-game first notice. The tent itself is NOT
+# synthetic: it is commissioned and built by production.
+# LOG_FORBID lists lines production writes to Player.log through KingdomLog.Log on this
+# path: a funded begin refused or left waiting for its scaffold, an unstaged seal, and a
+# founding-heart recovery halt. Begin's outstanding-funding and scaffold waits reach only the
+# in-memory ledger, so the second check scans it and refuses on either (journaling whether the
+# twelve-note ledger kept every note); its zoning gate is asked before the begin leg, and the
+# ledger tail is journaled when a ready-looking begin never starts.
+# The canvas is minted one unit short of the tent's bill plus the upgrade's, so the real passes
+# can begin nothing on the standing tent; the shortfall verb mints only the missing unit.
+# Legs count daily settlement passes (1200 ticks each). A freshly staked raising's first
+# interval is priced at zero until a pass stamps its crew, as teardown-native-check and
+# camp-heart-native-checks observed natively: 3600 = zero interval, priced 900-tick tent,
+# spare; 2400 = begin, the improvement's zero-priced first interval (still Working when read);
+# 3600 = priced 900-tick improvement, handover and settled telling, two spares.
+# #283: the final check first journals tier-upgrade-after-wait, read fresh after that wait: the
+# job's phase, physical phase, failure and update tick, the improvement's quarantine flags, the
+# predecessor's upgrade phase and fault, both works' yielding marks, the readmission marker, the
+# successor's layout state and one capture-only seal reading. It then requires the successor to
+# carry the tent's yielding mark and the seal reading to be no fault. Seed #922453088 sites the
+# tent inside the heart's survey (the 4ea54bb9 run), which is the yielding case #283 needs.
+DESCRIPTION=ordinary tent to tent-row tier upgrade paid and handed over by the settlement pass
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;tier-upgrade-setup;advance 3600;tier-upgrade-check;tier-upgrade-short;advance 2400;tier-upgrade-check;advance 3600;tier-upgrade-check;stagedigest
+VERBS=tier-upgrade-setup,tier-upgrade-check,tier-upgrade-short
+EXPECT=stagedigest:OK~founded=false,tier-upgrade-setup:OK~native-tier-upgrade phase=1,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=2,tier-upgrade-short:OK~native-tier-upgrade phase=3,advance:OK,tier-upgrade-check:OK~native-tier-upgrade phase=4,advance:OK,tier-upgrade-after-wait:OK~native-tier-upgrade after-wait,tier-upgrade-check:OK~native-tier-upgrade cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_FORBID=["improvement refused cleanly:","construction: improvement projection waits:","seal: settlement pass was not staged","construction: founding heart recovery requires inspection"]
+SET=tier-upgrade,native-regression,test-only
+TIMEOUT=3600
