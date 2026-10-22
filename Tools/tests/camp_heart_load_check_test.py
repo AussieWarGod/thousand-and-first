@@ -1,8 +1,11 @@
 import sys
+import tempfile
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import camp_heart_load_check as check
+
+BRUSH = check.saved_brush()
 
 
 class CampHeartLoadCheckTests(unittest.TestCase):
@@ -15,22 +18,22 @@ class CampHeartLoadCheckTests(unittest.TestCase):
         for n in (1200, 3600, 1200):
             source += [('advance-complete', 'OK', wait(n)), ('camp-heart-check', 'OK', 'phase')]
         source[-1] = ('camp-heart-check', 'OK', 'native-camp-heart cases=1 passed=1 failed=0; next-day=true')
-        source += [('camp-heart-save-custody', 'OK', 'store=store; before=r_KingdomBrush=21; after=r_KingdomBrush=21,r_KingdomTimber=1; added-timber=timber'),
-                   ('camp-heart-save', 'OK', 'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; time-ticks=265527; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
+        source += [('camp-heart-save-custody', 'OK', f'store=store; before=r_KingdomBrush={BRUSH}; after=r_KingdomBrush={BRUSH},r_KingdomTimber=1; added-timber=timber'),
+                   ('camp-heart-save', 'OK', f'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush={BRUSH}; time-ticks=265527; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
                    ('SCRIPT-COMPLETE', 'OK', 'done')]
         loaded = [('LOAD-BEGIN', 'OK', 'exact sealed save; game-id=' + game + '; new-game=false; mod-restore=false'),
                   ('camp-heart-preactivation', 'OK', 'before-AfterGameLoaded=true; tent-job=tent-job; time-ticks=265527; ' + physical + '; ' + digest),
-                  ('camp-heart-loaded', 'OK', 'rung=2; basin=48; brush=21; timber=1; time-ticks=265527; tent-job=tent-job; ' + physical + '; ' + digest),
+                  ('camp-heart-loaded', 'OK', f'rung=2; basin=48; brush={BRUSH}; timber=1; time-ticks=265527; tent-job=tent-job; ' + physical + '; ' + digest),
                   ('camp-heart-next', 'OK', 'new-job=next; upgrade-job=upgrade; water-debited=2; timber-debited=1; synthetic-materials-after-load=0'),
                   ('camp-heart-resume', 'OK', 'vanilla-Continue=true; saved-script-considered=true; requested-turns=3600'),
                   ('advance-complete', 'OK', wait(3600)),
-                  ('camp-heart-completed', 'OK', 'new-job=next; phase=Complete; effects-settled=true; output=new-fire; ' + physical + '; brush=21; turns=9602'),
+                  ('camp-heart-completed', 'OK', 'new-job=next; phase=Complete; effects-settled=true; output=new-fire; ' + physical + f'; brush={BRUSH}; turns=9602'),
                   ('SCRIPT-COMPLETE', 'OK', 'native-camp-heart cold-load complete; real-save-quit-load=true; next-paid-job-complete=true; new-game-script-replayed=false; ordinary-acceptance=false')]
         return source, loaded
 
     def test_paid_loaded_job_really_completed(self):
         result = check.judge(*self.fixture())
-        self.assertEqual(('PASS', 'next', 'new-fire', 6000, 3600, 21),
+        self.assertEqual(('PASS', 'next', 'new-fire', 6000, 3600, BRUSH),
                          tuple(result[key] for key in ('verdict', 'newJobId', 'outputId', 'sourceTurns', 'loadedTurns', 'brush')))
 
     def test_missing_duplicate_reordered_or_refused_phase_fails(self):
@@ -52,7 +55,7 @@ class CampHeartLoadCheckTests(unittest.TestCase):
         changes = ((0, 'game-id=01234567', 'game-id=11234567'), (0, 'new-game=false', 'new-game=true'),
                    (1, 'heart=heart', 'heart=other'), (1, 'store=store', 'store=other'),
                    (1, 'fire=fire', 'fire=other'), (1, 'basin=48', 'basin=24'),
-                   (1, 'brush=21', 'brush=22'), (1, 'a' * 64, 'b' * 64),
+                   (1, f'brush={BRUSH}', f'brush={BRUSH + 1}'), (1, 'a' * 64, 'b' * 64),
                    (1, 'tent-job=tent-job', 'tent-job=another-tent'),
                    (2, 'new-job=next', 'new-job=tent-job'),
                    (2, 'new-job=next', 'new-job=upgrade'), (2, 'water-debited=2', 'water-debited=0'),
@@ -61,7 +64,7 @@ class CampHeartLoadCheckTests(unittest.TestCase):
                    (4, '3600 turn(s) elapsed', '3599 turn(s) elapsed'),
                    (5, 'phase=Complete', 'phase=Working'), (5, 'effects-settled=true', 'effects-settled=false'),
                    (5, 'output=new-fire', 'output=fire'), (5, 'new-job=next', 'new-job=old'),
-                   (5, 'brush=21', 'brush=22'), (6, 'new-game-script-replayed=false', 'new-game-script-replayed=true'))
+                   (5, f'brush={BRUSH}', f'brush={BRUSH + 1}'), (6, 'new-game-script-replayed=false', 'new-game-script-replayed=true'))
         for index, before, after in changes:
             source, loaded = self.fixture()
             if index >= 1: index += 1
@@ -77,7 +80,7 @@ class CampHeartLoadCheckTests(unittest.TestCase):
             with self.assertRaises(ValueError): check.judge(source, loaded)
         source, loaded = self.fixture()
         event, status, detail = loaded[2]
-        loaded[2] = event, status, detail + '; brush=21'
+        loaded[2] = event, status, detail + f'; brush={BRUSH}'
         with self.assertRaises(ValueError): check.judge(source, loaded)
         source, loaded = self.fixture()
         loaded.append(('extra', 'OK', 'after terminal'))
@@ -91,6 +94,35 @@ class CampHeartLoadCheckTests(unittest.TestCase):
                 event, status, detail = loaded[index]
                 loaded[index] = event, status, detail.replace(before, after)
                 with self.subTest(index=index, before=before), self.assertRaises(ValueError): check.judge(source, loaded)
+
+    def catalogue(self, materials, upgrade):
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        path = Path(folder.name) / 'KingdomBuildings.xml'
+        path.write_text(f'<KingdomBuildings><building Key="tent" Materials="{materials}" '
+                        f'UpgradeMaterials="{upgrade}" /></KingdomBuildings>', encoding='utf-8')
+        return path
+
+    def test_sentinel_brush_is_read_from_the_catalogue_tent_upgrade(self):
+        self.assertEqual(BRUSH, check.catalogue_brush(
+            [b for b in check.ElementTree.parse(check.CATALOGUE).getroot().iter('building')
+             if b.get('Key') == 'tent'][0].get('UpgradeMaterials')) - 1)
+        self.assertEqual(2, check.saved_brush(self.catalogue('canvas:12,timber:1', 'canvas:3')))
+        self.assertEqual(4, check.saved_brush(self.catalogue('brush:2', 'Canvas:2, brush:3')))
+        for materials, upgrade in (('canvas:12', 'canvas:1'), ('timber:1', 'canvas:2'), ('canvas:12', 'timber:1')):
+            with self.subTest(materials=materials, upgrade=upgrade), self.assertRaises(ValueError):
+                check.saved_brush(self.catalogue(materials, upgrade))
+
+    def test_save_persona_expects_the_catalogue_sentinel(self):
+        persona = (Path(__file__).resolve().parents[1] / 'personas' / 'camp-heart-save.persona').read_text(encoding='utf-8')
+        expect = [line for line in persona.splitlines() if line.startswith('EXPECT=')]
+        self.assertEqual(1, len(expect))
+        self.assertIn(f',camp-heart-save-custody:OK~before=r_KingdomBrush={BRUSH},', expect[0])
+
+    def test_journal_brush_must_equal_the_catalogue_sentinel(self):
+        self.assertEqual('PASS', check.judge(*self.fixture(), brush=BRUSH)['verdict'])
+        with self.assertRaises(ValueError):
+            check.judge(*self.fixture(), brush=BRUSH + 1)
 
 
 if __name__ == '__main__': unittest.main()

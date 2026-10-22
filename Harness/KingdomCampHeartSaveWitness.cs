@@ -24,7 +24,8 @@ namespace ThousandAndFirst.Harness
 					timber = unit.Id;
 				}
 			}
-			Require(brush.Count == SavedBrushUnits && timber != null, "saved camp lacks 21 brush and one timber: store="
+			Require(brush.Count == SavedBrushUnits && timber != null, "saved camp lacks " + SavedBrushUnits
+				+ " brush and one timber: store="
 				+ frame.StoreId + "; brush=" + brush.Count + "; timber=" + (timber ?? "absent")
 				+ "; raw=" + KingdomCampHeartNativeCensus.Describe(units));
 			return new KingdomCampHeartSaveSnapshot(Game.GameID, frame.System.RealmId,

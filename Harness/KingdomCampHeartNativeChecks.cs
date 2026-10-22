@@ -17,8 +17,9 @@ namespace ThousandAndFirst.Harness
 	/// physical units inside the authored camp stockpile (the rung-2 bill plus <c>Unasked</c>
 	/// brush). All three are conditional on the sealed target rung and read off those accessors
 	/// (<c>ResidentCount</c> / <c>TownResidentCount</c>, <c>DedicatedDrams</c> /
-	/// <c>TownDedicatedDrams</c>, <c>MintedBrushUnits</c> / <c>Rung3UnaskedBrushUnits</c>). Not
-	/// ordinary play, not a rendered Charter, not save/load, and not overall camp acceptance.
+	/// <c>TownDedicatedDrams</c>, <c>MintedBrushUnits</c> / <c>Rung3UnaskedBrushUnits</c>, and
+	/// the catalogue-derived <c>PaidTentBrushUnits</c> on a paid-tent script). Not ordinary
+	/// play, not a rendered Charter, not save/load, and not overall camp acceptance.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
@@ -193,10 +194,12 @@ namespace ThousandAndFirst.Harness
 
 			/// <summary>Units the rung-2 bill never asks for, minted so the store can be proved
 			/// untouched where the bill did not reach. Fewer on the rung-3 run, which needs the
-			/// room for the next authored bill.</summary>
+			/// room for the next authored bill, and on a paid-tent script, which mints the
+			/// catalogue-derived <c>PaidTentBrushUnits</c> (#282).</summary>
 			internal int Unasked
 			{
-				get { return TargetRung >= 3 ? Rung3UnaskedBrushUnits : MintedBrushUnits; }
+				get { return TargetRung >= 3 ? Rung3UnaskedBrushUnits
+					: PaysTent ? PaidTentBrushUnits : MintedBrushUnits; }
 			}
 
 			/// <summary>Real founding, real rung-1 rite-ground completion, <c>Residents</c> really
@@ -208,6 +211,7 @@ namespace ThousandAndFirst.Harness
 			/// Town and mints the rung-3 bill later, at the phase-2 boundary.</summary>
 			internal void Start()
 			{
+				PaysTent = SealedPaysTent();
 				System = KingdomNativeCampFounding.Found(Game, Zone, RequirePair);
 				Require(System != null && System.Founded && System.Population == 0
 					&& System.ClaimedZones.Contains(Zone.ZoneID),

@@ -45,7 +45,11 @@ namespace ThousandAndFirst.Harness
 						KingdomPlots.HeartBasinRole, out ChainBasin, out string failure), failure);
 					var units = ContentUnits(out ChainBrush);
 					ChainBrushDigest = KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units);
-					Require(units.Count == 21 && ChainBrushDigest != null, "chain sentinel brush census differs");
+					Require(units.Count == SavedBrushUnits && ChainBrushDigest != null,
+						"chain sentinel brush census differs: expected " + SavedBrushUnits
+						+ "; store=" + KingdomCampHeartNativeCensus.Describe(units));
+					Require(KingdomConstruction.TryRead(out var jobs, out failure), failure);
+					IdlePaidTent(jobs);
 					SeedChainSupport();
 					ClearChainFounder();
 					ChainPhase = 1;
@@ -87,7 +91,7 @@ namespace ThousandAndFirst.Harness
 			{
 				return "stage=" + System.Stage + "; population=" + System.Population
 					+ "; heart=" + StandingHeart().IDIfAssigned + "; store=" + StoreId
-					+ "; basin=" + ChainBasin.IDIfAssigned + "; brush=21; turns=" + Game.Turns;
+					+ "; basin=" + ChainBasin.IDIfAssigned + "; brush=" + SavedBrushUnits + "; turns=" + Game.Turns;
 			}
 		}
 	}

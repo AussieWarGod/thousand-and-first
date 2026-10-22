@@ -18,5 +18,14 @@ namespace ThousandAndFirst.Harness
 			for (int i = 0; i < Steps.Length; i++) if (Script[i] != Steps[i]) return false;
 			return true;
 		}
+
+		/// <summary>Every sealed camp-heart form that continues past the last camp check: the
+		/// save variant and every paid-chain form. Each depends on the real paid source tent
+		/// (#282); the plain 1 -> 2 regression and the rung-3 run still record whatever the real
+		/// commission answers, verbatim.</summary>
+		internal static bool PaysTent(IList<string> Script)
+		{
+			return Matches(Script) && Script.Count > Steps.Length;
+		}
 	}
 }

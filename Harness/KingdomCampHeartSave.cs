@@ -35,9 +35,13 @@ namespace ThousandAndFirst.Harness
 				foreach (string path in Directory.GetFiles(directory))
 					Require(Path.GetFileName(path) == "Cache.db", "camp save already has primary or backup evidence");
 				RequireStoreIdentity();
+				Require(KingdomConstruction.TryRead(out var jobs, out string failure), failure);
+				IdlePaidTent(jobs);
 				var before = ContentUnits(out var beforeBodies);
-				Require(ClaimOutcome == "staked-clear-of-the-heart" && before.Count == SavedBrushUnits
-					&& RetainedBrush.Count == MintedBrushUnits, "the paid tent did not leave exactly 21 of the original 23 brush units");
+				Require(PaysTent && ClaimOutcome == "staked-clear-of-the-heart" && before.Count == SavedBrushUnits
+					&& RetainedBrush.Count == PaidTentBrushUnits, "the paid tent did not leave exactly "
+					+ SavedBrushUnits + " of the original " + PaidTentBrushUnits + " brush units: "
+					+ KingdomCampHeartNativeCensus.Describe(before));
 				RequireHeld(before, RetainedBrush, "surviving pre-tent brush");
 				foreach (var body in beforeBodies)
 					Require(RetainedBrushBodies.Exists(original => ReferenceEquals(original, body)),
@@ -72,7 +76,7 @@ namespace ThousandAndFirst.Harness
 				KingdomScenarioSaveFiles.WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), receipt);
 				Require(KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) == receipt,
 					"camp save receipt changed");
-				return "paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; tent-job=" + witness.TentJobId + "; save="
+				return "paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=" + SavedBrushUnits + "; tent-job=" + witness.TentJobId + "; save="
 					+ Game.GameID + "; time-ticks=" + witness.TimeTicks + "; heart=" + witness.HeartId + "; store=" + witness.StoreId
 					+ "; fire=" + witness.FireId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire);
 			}

@@ -26,7 +26,7 @@ namespace ThousandAndFirst.Harness
 			foreach (var body in bodies)
 				if (body.Blueprint == KingdomMaterials.BlueprintFor(KingdomMaterial.Brush)) frame.RetainedBrushBodies.Add(body);
 			Require(KingdomScenarioJournal.Append("camp-heart-loaded", true,
-				"rung=2; basin=48; brush=21; timber=1; heart=" + observed.HeartId + "; store=" + observed.StoreId
+				"rung=2; basin=48; brush=" + SavedBrushUnits + "; timber=1; heart=" + observed.HeartId + "; store=" + observed.StoreId
 				+ "; time-ticks=" + observed.TimeTicks + "; fire=" + observed.FireId + "; tent-job=" + observed.TentJobId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)) == null,
 				"loaded camp proof journal unavailable");
 			Require(KingdomPlots.RecoverFoundingHeart(frame.System, zone), "loaded camp founding heart cannot recover");
@@ -78,7 +78,7 @@ namespace ThousandAndFirst.Harness
 				"loaded completed fire has no distinct functional standing output with its own receipt");
 			return "new-job=" + finished.Id + "; phase=" + finished.Phase + "; effects-settled=true; output="
 				+ output.IDIfAssigned + "; heart=" + frame.HeartId + "; store=" + frame.StoreId
-				+ "; fire=" + frame.FireId + "; brush=21; turns=" + Game.Turns;
+				+ "; fire=" + frame.FireId + "; brush=" + SavedBrushUnits + "; turns=" + Game.Turns;
 		}
 
 		private static Frame PreservedLoaded(XRLGame Game, KingdomCampHeartSaveSnapshot Witness)

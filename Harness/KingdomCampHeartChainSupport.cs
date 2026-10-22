@@ -106,14 +106,13 @@ namespace ThousandAndFirst.Harness
 			private void HoldChainTent()
 			{
 				Require(KingdomConstruction.TryRead(out var jobs, out string failure), failure);
-				TentJobId = PaidTent(this, jobs);
+				var tent = IdlePaidTent(jobs);
 				Require(KingdomConstruction.TryFind(TentJobId, out var job) && job != null
 					&& job.Phase == KingdomConstructionPhase.Complete
 					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled,
 					"source tent must complete through ordinary turns before heart materials arrive: phase="
 					+ job?.Phase + "; physical=" + job?.PhysicalPhase + "; tick=" + Game.TimeTicks);
-				Require(KingdomConstruction.FindExactId(Zone, job.OutputId, out var tent)
-					== KingdomPhysicalLookupState.Exact, "completed source tent lacks exact physical output");
+				Require(job.OutputId == tent.IDIfAssigned, "completed source tent lacks exact physical output");
 				tent.RequirePart<r_KingdomImprovement>().Held = true;
 				Require(tent.GetPart<r_KingdomImprovement>().Held, "source tent improvement hold did not persist");
 				RequireChainCustody();

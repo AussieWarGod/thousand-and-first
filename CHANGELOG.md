@@ -10,6 +10,16 @@ records current acceptance.
 
 **Unreleased development**
 
+- The camp-heart test fixtures follow the Medium tent the catalogue has billed since 0.3.7
+  (`canvas:12,timber:1`, #282). The save and paid-chain scenarios read the tent bill from the
+  catalogue, mint the tent's own brush plus one fewer than its canvas-only upgrade asks for, quote
+  the real commission before paying and commit against that exact quote, minting only the tent's
+  timber at the paid-tent boundary. The single surviving sentinel brush keeps the tent's automatic
+  upgrade unpayable until the fixture holds it. The chain founder's commission cell is derived from
+  the tent lot and the quote must name the pinned source tent; all eight water courts and 16 of the
+  18 tent rows stay, with two transposed rows and a spare replacing the rows the tent's approach
+  takes. The host save/load oracle derives the saved brush from the catalogue. Production is
+  unchanged; native runs are owed (docs/STATUS.md).
 - Polity dispatch no longer refuses ordinary days inside a dispatch window (#244, #257). The first
   reconciliation of each 7-day window freezes one fingerprint of every owned settlement's facts,
   and any later same-window reconciliation whose facts differed was refused with `open polity
