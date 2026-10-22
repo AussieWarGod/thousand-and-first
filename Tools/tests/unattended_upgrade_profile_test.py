@@ -51,6 +51,15 @@ def configuration(mode, receipt="a" * 64):
         donor=dict(root="/mnt/c/taf-scenario.Donor", probe=PIN, receiptSha256=receipt) if mode == "source" else None)
 
 
+def donor_witness(**overrides):
+    """Canonical shape for upgrade_profile_inputs.donor_wire; no native run is implied."""
+    value = dict(gameId=GAME, origin=NEXT_GAME, legacyId="L1", lineageId="N1", generation=0)
+    for name in inputs.DONOR_FIELDS[5:] + ("cacheSha256", "journalSha256", "logSha256"):
+        value[name] = "a" * 64
+    value.update(overrides)
+    return value
+
+
 def journal(mode):
     verb = "upgrade-source-donor" if mode == "source-donor" else "upgrade-source-reserved"
     entries = [("RUNNER-ARMED", "armed by BeginTakeActionEvent; popups suppressed from IGameSystem.OnAdded"),
@@ -110,6 +119,40 @@ class UnattendedRecipeTest(unittest.TestCase):
                 self.assertNotIn("scenario-load.txt", local)
                 runtime = PIN if mode == "stage-source" else inputs.OLD_PIN
                 self.assertEqual(local["Mods/ThousandAndFirst/Core/Runtime.cs"], runtime.encode())
+
+    def test_each_v2_old_source_recipe_pins_its_birth_import_option(self):
+        """Issue #87: the inheritor must be BORN opted in, the donor born opted out.
+
+        QudGameBootModule.BootGame runs every IGameStateSingleton.Initialize (where 0.3.1 reserves
+        the copied legacy and requires KingdomInheritanceLifecycle) before the [PlayerMutator] that
+        commits the save-system roster marker. Opting in after that point leaves the marker without
+        the Inheritance bit while the carrier exists, and 0.3.1 refuses the save outright.
+        """
+        for mode, expected in (("source-donor", "No"), ("source", "Yes")):
+            with self.subTest(mode=mode), mock.patch.object(inputs, "Commit", PersonaCommit):
+                local = inputs.local_inputs(TOOLS.parent, configuration(mode),
+                    donor_witness=donor_witness() if mode == "source" else None)
+                options = json.loads(local["PlayerOptions.json"])
+                self.assertEqual(expected, options["r_TAF_OptionLegacyImport"])
+
+    def test_reserved_recipe_carries_no_runtime_import_opt_in(self):
+        driver = (TOOLS.parent / "Harness" / "KingdomUpgradeSourceDriver.cs").read_text(encoding="utf-8")
+        self.assertNotIn('SetOption("r_TAF_OptionLegacyImport"', driver)
+        self.assertNotIn("Inheritance.Initialize()", driver)
+        self.assertIn('Options.GetOption("r_TAF_OptionLegacyImport", "No") == "Yes"', driver)
+        provider = (TOOLS.parent / "Harness" / "KingdomUpgradeSourceProvider.cs").read_text(encoding="utf-8")
+        self.assertIn('(verb == ReservedVerb ? "Yes" : "No")', provider)
+
+    def test_detached_transition_source_refusal_message_is_pinned(self):
+        message = "unattended detached-transition source is not implemented"
+        for call in (lambda: inputs.configuration("source", inputs.OLD_PIN, PIN, "detached-transition", "#123"),
+                     lambda: inputs.configuration("source-donor", inputs.OLD_PIN, PIN, "detached-transition", "#123")):
+            with self.subTest(call=call):
+                with self.assertRaises(ValueError) as raised:
+                    call()
+                self.assertEqual(message, str(raised.exception))
+        prepare = (TOOLS / "prepare-upgrade-profile.py").read_text(encoding="utf-8")
+        self.assertIn('require(args.case == "inheritance", "' + message + '")', prepare)
 
     def test_inheritor_refuses_untrusted_donor_input(self):
         with mock.patch.object(inputs, "Commit", PersonaCommit), self.assertRaises(ValueError):
