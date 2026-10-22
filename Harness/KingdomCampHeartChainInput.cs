@@ -30,9 +30,22 @@ namespace ThousandAndFirst
 			else Interlocked.Increment(ref ChainInputSkipped);
 		}
 
-		private bool VerifyChainInput()
+		internal void RearmLoadedChainInput(XRLGame Game)
 		{
-			if (!Harness.KingdomCampHeartChainScript.Matches(Verbs)) return true;
+			Harness.KingdomCampHeartNativeProvider.Require(!ChainInputOwned && HasConsideredScript
+				&& ReferenceEquals(The.Game, Game) && ReferenceEquals(Game.GetSystem<KingdomScenarioAutoRunner>(), this)
+				&& Harness.KingdomScenarioLoadEntry.Armed && Harness.KingdomScenarioLoadEntry.ChainSnapshot?.GameId == Game.GameID
+				&& Harness.KingdomScenarioScript.TryRead(out var script, out _)
+				&& Harness.KingdomCampHeartChainScript.Matches(script, true), "loaded higher-heart input ownership is not exact");
+			ChainInputOwned = true;
+			if (VerifyChainInput(true)) return;
+			ChainInputOwned = false;
+			Harness.KingdomCampHeartNativeProvider.Require(false, "loaded higher-heart input isolation failed");
+		}
+
+		private bool VerifyChainInput(bool Loaded = false)
+		{
+			if (!Loaded && !Harness.KingdomCampHeartChainScript.Matches(Verbs)) return true;
 			var target = AccessTools.Method(typeof(GameManager), nameof(GameManager.UpdateInput));
 			var patches = Harmony.GetPatchInfo(target);
 			var prefix = AccessTools.Method(typeof(Harness.KingdomCampHeartChainInputPatch), "Prefix");
@@ -42,7 +55,7 @@ namespace ThousandAndFirst
 			if (installed && owned && GameManager.Instance != null) GameManager.Instance.UpdateInput();
 			bool skipped = Interlocked.Read(ref ChainInputSkipped) > before;
 			bool ok = installed && owned && skipped && Interlocked.Read(ref ChainInputLeaked) == 0;
-			Harness.KingdomScenarioJournal.Append("camp-heart-chain-input", ok,
+			Harness.KingdomScenarioJournal.Append(Loaded ? "camp-heart-chain-load-input" : "camp-heart-chain-input", ok,
 				"original-update-skipped=" + (skipped ? "true" : "false")
 				+ "; scope=dedicated-game-lifetime; installed=" + installed + "; owned=" + owned
 				+ "; original-ran=" + Interlocked.Read(ref ChainInputLeaked));

@@ -525,7 +525,8 @@ namespace ThousandAndFirst.Tests
 		public void SourceContract_LoadFailuresRemainTerminalAndNeverStartOrdinaryTurnsOrRestoreMods()
 		{
 			Contains(Read(Load), "KingdomScenarioJournal.Append(\"SCRIPT-STOPPED\", false", "native-load refused; evidence retained",
-				"Armed = false", "if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups) Popup.Suppress = false",
+				"Armed = false", "if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups"
+					+ " && !KingdomCampHeartChainLoad.OwnsPopups) Popup.Suppress = false",
 				"\"; recovery=\" + route", "ordinary-acceptance=false", "profiles-and-effects-retained=true");
 			foreach (string path in new[] { Save, Files, Load, Witness })
 			{
